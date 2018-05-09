@@ -4,7 +4,7 @@
   "description": "An ethereum layer 2 scalability js library",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/layer2libTest.js"
   },
   "repository": {
     "type": "git",

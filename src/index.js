@@ -8,10 +8,11 @@ exports = module.exports
 class Layer2lib {
   constructor(provider) {
     web3.setProvider(new web3.providers.HttpProvider(provider))
-    console.log(web3.eth.accounts[0])
+  }
+
+  async getMainnetBalance(address) {
+    return web3.fromWei(web3.eth.getBalance(address), 'ether')
   }
 }
-
-var l = new Layer2lib('http://localhost:8545')
 
 module.exports = Layer2lib
