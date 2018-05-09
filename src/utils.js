@@ -1,4 +1,6 @@
 const Buffer = require('buffer').Buffer
+const Web3 = require('web3')
+const web3 = new Web3()
 
 module.exports = {
   latestTime: function latestTime() {
@@ -59,6 +61,10 @@ module.exports = {
     if(Buffer.isBuffer(input)) input = '0x' + input.toString('hex')
     if(66-input.length <= 0) return web3.toHex(input)
     return this.padBytes32(web3.toHex(input))
+  },
+
+  sha3: function sha3(input) {
+    return web3.sha3(input, {encoding: 'hex'})
   },
 
   marshallState: function marshallState(inputs) {

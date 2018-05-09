@@ -50,7 +50,7 @@ function getNextLayer (elements) {
   }, [])
 }
 
-export default class MerkleTree {
+module.exports = class MerkleTree {
 
   constructor(_elements) {
     if(!_elements.every(localUtils.isHash)){

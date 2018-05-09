@@ -12,6 +12,15 @@ async function test() {
   } catch (e) { console.log(e) }
 
   console.log(l.gsc.get())
+
+  let elem = l.utils.sha3('wubalubadubdub')
+  let elems = []
+  elems.push(l.utils.hexToBuffer(elem))
+
+  try {
+    let merkle = new l.merkleTree(elems)
+    console.log(merkle.getRoot())
+  } catch (e) { console.log (e) }
 }
 
 test()
