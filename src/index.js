@@ -15,12 +15,13 @@ exports = module.exports
 
 class Layer2lib {
   constructor(provider) {
+    web3.setProvider(new web3.providers.HttpProvider(provider))
+    this.web3 = web3
+    
     this.merkleTree = Merkle
     this.utils = utils
 
     this.gsc = GSC(this)
-
-    web3.setProvider(new web3.providers.HttpProvider(provider))
   }
 
   async getMainnetBalance(address) {
