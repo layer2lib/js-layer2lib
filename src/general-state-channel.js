@@ -1,7 +1,7 @@
 'use strict'
 
 const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
-const repo = require('./repo/repo-node')
+const repo = require('./repo/repo-mem')
 
 module.exports = function gsc (self) {
   return {
@@ -10,11 +10,12 @@ module.exports = function gsc (self) {
       self.storage = repo(self)
     },
 
-    openAgreement: async function(options) {
+    openAgreement: async function(agreement) {
       let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
+      Object.assign(agreements[agreement.ID], agreement)
 
-      if(!agreements.hasOwnProperty('agreements')) agreements.agreements = {}
-      agreements.agreements[options.ID] = options
+      //agreements.agreements[options.ID] = options
 
       // {
       //   agreements: {
@@ -33,7 +34,7 @@ module.exports = function gsc (self) {
       //   }
       // }
 
-      await self.storage.set(agreements)
+      await self.storage.set('agreements', agreements)
     },
 
     findAgreement: async function(agreementID) {
@@ -48,7 +49,6 @@ module.exports = function gsc (self) {
     getSubchannel: async function(agreementID, channelID) {
       let agreement = self.storage.get(agreementID)
       //console.log(chan)
-
     },
 
     _getMetaChannelBytecode: function() {

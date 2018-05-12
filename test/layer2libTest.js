@@ -25,18 +25,33 @@ async function test() {
     ID: 'spankHub1337',
     partyA: web3.eth.accounts[0], // Viewer or performer public key
     partyB: web3.eth.accounts[1], // Spank Hub public key
+    openPending: true,
+    inDispute: false,
     subChannels: {}
-  }
-
-  let subChan = {
-    type: 'ether'
   }
 
   await l.createGSCAgreement(agreement)
 
-  let col = await l.getGSCAgreement(agreement.ID)
+  agreement = {
+    ID: 'Bob4206969',
+    partyA: web3.eth.accounts[0], // Viewer or performer public key
+    partyB: web3.eth.accounts[1], // Spank Hub public key
+    openPending: true,
+    inDispute: false,
+    subChannels: {}
+  }
 
+  await l.createGSCAgreement(agreement)
+
+  let col = await l.getGSCAgreement('spankHub1337')
   console.log(col)
+
+  col = await l.getGSCAgreement('Bob4206969')
+  console.log(col)
+
+  let subChan = {
+    type: 'ether'
+  }
 
   let elem = l.utils.sha3('wubalubadubdub')
   let elems = []

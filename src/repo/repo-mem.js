@@ -3,7 +3,7 @@
 // Using in memory data storage for now to define structures
 //const MongoClient = require('mongodb').MongoClient
 
-module.exports = function reponode (self) {
+module.exports = function repomem (self) {
   return {
     connect: async function(url) {	
       //self.db = await MongoClient.connect(url)
@@ -11,8 +11,9 @@ module.exports = function reponode (self) {
     terminate: async function() {
       //self.db.close()
     },
-    set: async function(table) {
-      self.db = Object.assign(self.db, table)
+    set: async function(k, v) {
+      if(!self.db.hasOwnProperty(k)) self.db[k] = {}
+      Object.assign(self.db[k], v)
 
       // let _db = await MongoClient.connect('mongodb://localhost:27017/layer2db-test')
       // let _dbo = await _db.db(collection)
@@ -31,7 +32,8 @@ module.exports = function reponode (self) {
       // return _r
       if(!self.db.hasOwnProperty(query)) return {}
 
-      return self.db[query]
+      let newObj = JSON.parse(JSON.stringify(self.db))
+      return newObj[query]
     }
   }
 }
