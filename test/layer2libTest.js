@@ -3,10 +3,15 @@ const Web3 = require('web3')
 const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 
+let etherPaymentIntAddress = '0x'
+let etherPaymentExtAddress = '0x'
+let CTFregistryAddress = '0x'
+
 async function test() {
   let options = {
     provider: 'http://localhost:8545',
-    db: {}
+    db: {},
+    privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
   let l = new Layer2lib(options)
@@ -25,8 +30,13 @@ async function test() {
     ID: 'spankHub1337',
     partyA: web3.eth.accounts[0], // Viewer or performer public key
     partyB: web3.eth.accounts[1], // Spank Hub public key
+    balanceA: web3.toWei(0.1, 'ether'),
+    balanceB: web3.toWei(0.2, 'ether'),
     openPending: true,
     inDispute: false,
+    stateRaw: [],
+    stateSerialized: '0x',
+    signatures: [],
     subChannels: {}
   }
 
@@ -36,8 +46,13 @@ async function test() {
     ID: 'Bob4206969',
     partyA: web3.eth.accounts[0], // Viewer or performer public key
     partyB: web3.eth.accounts[1], // Spank Hub public key
+    balanceA: web3.toWei(0.1, 'ether'),
+    balanceB: web3.toWei(0.2, 'ether'),
     openPending: true,
     inDispute: false,
+    stateRaw: [],
+    stateSerialized: '0x',
+    signatures: [],
     subChannels: {}
   }
 

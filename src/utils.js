@@ -1,6 +1,7 @@
 const Buffer = require('buffer').Buffer
 const Web3 = require('web3')
 const web3 = new Web3()
+const ethutil = require('ethereumjs-util')
 
 module.exports = {
   latestTime: function latestTime() {
@@ -67,7 +68,13 @@ module.exports = {
     return web3.sha3(input, {encoding: 'hex'})
   },
 
-  marshallState: function marshallState(inputs) {
+  sign: function sign(message, key) {
+    // TODO, web3 1.0.0 has a method for this but 
+    // is not stable yet
+    return ethutil.ecsign(this.hexToBuffer(message), this.hexToBuffer(key))
+  },
+
+  serializeState: function serializeState(inputs) {
     var m = this.getBytes(inputs[0])
 
     for(var i=1; i<inputs.length;i++) {
@@ -82,10 +89,10 @@ module.exports = {
 
   getCTFstate: async function getCTFstate(_contract, _signers, _args) {
     _args.unshift(_contract)
-    var _m = this.marshallState(_args)
+    var _m = this.serializeState(_args)
     _signers.push(_contract.length)
     _signers.push(_m)
-    var _r = this.marshallState(_signers)
+    var _r = this.serializeState(_signers)
     return _r
   }, 
 

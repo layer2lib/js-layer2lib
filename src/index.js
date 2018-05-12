@@ -23,6 +23,10 @@ class Layer2lib {
 
     this.db = options.db
     this.gsc = GSC(this)
+
+
+    // TODO: store encrypted private key, require password to unlock and sign
+    this.privateKey = options.privateKey
   }
 
   async getMainnetBalance(address) {
