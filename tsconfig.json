@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "outFile": "lib/index.js",
+    "module": "amd",
+    "target": "es2017",
+    "lib": ["es6", "dom", "es2017"],
+    "declaration": true,
+    "sourceMap": true,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "rootDir": "src",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": true,
+    "experimentalDecorators": true
+  },
+  "include": [
+    "build/wrappers/*.ts",
+    "node_modules/**/*/index.d.ts",
+    "src/globals.d.ts",
+    "src/**/*.ts",
+    "migrations/**/*.ts",
+    "test/**/*.ts",
+    "types/**/*.d.ts",
+    "node_modules/@machinomy/types-web3/index.d.ts",
+    "node_modules/buffer/index.d.ts"
+  ],
+  "exclude": ["node_modules/abstract-leveldown/index.d.ts"]
+}
