@@ -14,13 +14,14 @@ const utils = require('./utils')
 exports = module.exports
 
 class Layer2lib {
-  constructor(provider) {
-    web3.setProvider(new web3.providers.HttpProvider(provider))
+  constructor(options) {
+    web3.setProvider(new web3.providers.HttpProvider(options.provider))
     this.web3 = web3
     
     this.merkleTree = Merkle
     this.utils = utils
 
+    this.db = options.db
     this.gsc = GSC(this)
   }
 
@@ -28,12 +29,17 @@ class Layer2lib {
     return web3.fromWei(web3.eth.getBalance(address), 'ether')
   }
 
+  async initGSC(options) {
+    this.gsc.init(options)
+  }
+
   async createGSCAgreement(options) {
     this.gsc.openAgreement(options)
   }
 
   async getGSCAgreement(ID) {
-    console.log(this.gsc.findAgreement(ID))
+    let res = await this.gsc.findAgreement(ID)
+    return res
   }
 
   async joinGSCAgreement(aggrement) {

@@ -4,7 +4,13 @@ const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 
 async function test() {
-  let l = new Layer2lib('http://localhost:8545')
+  let options = {
+    provider: 'http://localhost:8545',
+    db: {}
+  }
+
+  let l = new Layer2lib(options)
+
   web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
 
   try {
@@ -13,17 +19,22 @@ async function test() {
     console.log(t)
   } catch (e) { console.log(e) }
 
-  l.gsc.init()
+  l.initGSC()
 
   let agreement = {
-    ID: 'spankHub',
-    partyA: web3.eth.accounts[0],
-    partyB: web3.eth.accounts[1],
+    ID: 'spankHub1337',
+    partyA: web3.eth.accounts[0], // Viewer or performer public key
+    partyB: web3.eth.accounts[1], // Spank Hub public key
+    subChannels: {}
+  }
+
+  let subChan = {
     type: 'ether'
   }
 
-  //l.gsc.openAgreement(agreement)
-  let col = await l.gsc.findAllAgreements(agreement.ID)
+  await l.createGSCAgreement(agreement)
+
+  let col = await l.getGSCAgreement(agreement.ID)
 
   console.log(col)
 

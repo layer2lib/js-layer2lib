@@ -7,34 +7,50 @@ module.exports = function gsc (self) {
   return {
     init: async function(options) {
       //console.log(this._getMetaChannelBytecode())
-      self.storage = repo(this)
-
-      
-
+      self.storage = repo(self)
     },
+
     openAgreement: async function(options) {
-      let agreement = {}
-      agreement.ID = options.ID
-      agreement.partyA = options.partyA
-      agreement.partyB = options.partyB
-      agreement.type = options.type // the bond type, ie ether, token, object
+      let agreements = await self.storage.get('agreements') || {}
 
-      self.storage.set(agreement.ID, agreement)
+      if(!agreements.hasOwnProperty('agreements')) agreements.agreements = {}
+      agreements.agreements[options.ID] = options
 
+      // {
+      //   agreements: {
+      //     spankhub123: {
+
+      //     },
+      //     alice: {
+
+      //     },
+      //     bob: {
+
+      //     }
+      //   },
+      //   someotherstate: {
+
+      //   }
+      // }
+
+      await self.storage.set(agreements)
     },
-    findAllAgreements: async function(agreements) {
-      let _agreements = await self.storage.get(agreements)
+
+    findAgreement: async function(agreementID) {
+      let _agreements = await self.storage.get('agreements')
       // let data = agreement.find({})
       // let readable = await data.toArray()
       // console.log(data)
-      return _agreements
+      return _agreements[agreementID]
 
     },
-    getSubchannel: async function(channelID) {
-      let chan = self.storage.get(channelID)
+
+    getSubchannel: async function(agreementID, channelID) {
+      let agreement = self.storage.get(agreementID)
       //console.log(chan)
 
     },
+
     _getMetaChannelBytecode: function() {
       return metachannel.deployedBytecode
     }
