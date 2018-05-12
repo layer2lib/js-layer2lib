@@ -27,6 +27,18 @@ class Layer2lib {
   async getMainnetBalance(address) {
     return web3.fromWei(web3.eth.getBalance(address), 'ether')
   }
+
+  async createGSCAgreement(options) {
+    this.gsc.openAgreement(options)
+  }
+
+  async getGSCAgreement(ID) {
+    console.log(this.gsc.findAgreement(ID))
+  }
+
+  async joinGSCAgreement(aggrement) {
+
+  }
 }
 
 module.exports = Layer2lib
