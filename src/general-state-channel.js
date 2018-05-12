@@ -32,8 +32,9 @@ module.exports = function gsc (self) {
       // TODO: self.utils.sign()
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.signatures.push(self.utils.sign(stateHash, self.privateKey))
-      console.log('Signature: ' + self.utils.sign(stateHash, self.privateKey))
 
+      self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, agreement.signatures[0].v, agreement.signatures[0].r, agreement.signatures[0].s))
+      
       Object.assign(agreements[agreement.ID], agreement)
 
       //agreements.agreements[options.ID] = options

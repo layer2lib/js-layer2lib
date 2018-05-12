@@ -74,6 +74,30 @@ module.exports = {
     return ethutil.ecsign(this.hexToBuffer(message), this.hexToBuffer(key))
   },
 
+  importPublic: function importPublic(key) {
+    // TODO, web3 1.0.0 has a method for this but 
+    // is not stable yet
+    return ethutil.importPublic(this.hexToBuffer(key))
+  },
+
+  ecrecover: function ecrecover(message, v, r, s) {
+    // TODO, web3 1.0.0 has a method for this but 
+    // is not stable yet
+    return ethutil.ecrecover(this.hexToBuffer(message), v, r, s)
+  },
+
+  privateToPublic: function privateToPublic(key) {
+    // TODO, web3 1.0.0 has a method for this but 
+    // is not stable yet
+    return ethutil.privateToPublic(this.hexToBuffer(key))
+  },
+
+  pubToAddress: function pubToAddress(key) {
+    // TODO, web3 1.0.0 has a method for this but 
+    // is not stable yet
+    return ethutil.pubToAddress(this.hexToBuffer(key))
+  },
+
   serializeState: function serializeState(inputs) {
     var m = this.getBytes(inputs[0])
 

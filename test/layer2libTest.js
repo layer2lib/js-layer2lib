@@ -61,8 +61,8 @@ async function test() {
   let col = await l.getGSCAgreement('spankHub1337')
   console.log(col)
 
-  col = await l.getGSCAgreement('Bob4206969')
-  console.log(col)
+  // col = await l.getGSCAgreement('Bob4206969')
+  // console.log(col)
 
   let subChan = {
     type: 'ether'
