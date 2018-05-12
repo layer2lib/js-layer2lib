@@ -32,7 +32,7 @@ module.exports = function gsc (self) {
     },
     getSubchannel: async function(channelID) {
       let chan = self.storage.get(channelID)
-      console.log(chan)
+      //console.log(chan)
 
     },
     _getMetaChannelBytecode: function() {
