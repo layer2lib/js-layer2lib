@@ -46,8 +46,8 @@ class Layer2lib {
     return res
   }
 
-  async joinGSCAgreement(aggrement) {
-
+  async joinGSCAgreement(agreement) {
+    this.gsc.joinAgreement(agreement)
   }
 }
 
