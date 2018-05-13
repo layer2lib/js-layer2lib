@@ -16,6 +16,12 @@ module.exports = function gsc (self) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
 
+      agreement.openPending = true
+      agreement.inDispute = false
+      agreement.stateRaw = []
+      agreement.signatures = []
+      agreement.subChannels = {}
+
       let metaByteCode = metachannel.deployedBytecode
       let args = ['0x1337', agreement.partyA, agreement.partyB]
       let signers = [agreement.partyA, agreement.partyB]
@@ -37,14 +43,17 @@ module.exports = function gsc (self) {
 
       agreement.stateRaw = initialState;
       agreement.stateSerialized = self.utils.serializeState(initialState)
-      // TODO: self.utils.sign()
+
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
-      agreement.signatures.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures = []
+      let state0sigs = []
+      state0sigs.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures.push(state0sigs)
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
 
-      self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, agreement.signatures[0].v, agreement.signatures[0].r, agreement.signatures[0].s))
+      self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
       Object.assign(agreements[agreement.ID], agreement)
 
@@ -74,10 +83,10 @@ module.exports = function gsc (self) {
       if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
 
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
-      agreement.signatures.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures[0].push(self.utils.sign(stateHash, self.privateKey))
       agreement.openPending = false;
 
-      self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, agreement.signatures[1].v, agreement.signatures[1].r, agreement.signatures[1].s))
+      self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, agreement.stateSignatures[0][1].v, agreement.stateSignatures[0][1].r, agreement.stateSignatures[0][1].s))
 
       Object.assign(agreements[agreement.ID], agreement)
 

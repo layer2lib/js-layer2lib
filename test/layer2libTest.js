@@ -33,13 +33,7 @@ async function test() {
     partyA: web3.eth.accounts[0], // Viewer or performer public key
     partyB: web3.eth.accounts[1], // Spank Hub public key
     balanceA: web3.toWei(0.1, 'ether'),
-    balanceB: web3.toWei(0.2, 'ether'),
-    openPending: true,
-    inDispute: false,
-    stateRaw: [],
-    stateSerialized: '0x',
-    signatures: [],
-    subChannels: {}
+    balanceB: web3.toWei(0.2, 'ether')
   }
 
   await lAlice.createGSCAgreement(agreement)
@@ -106,6 +100,8 @@ async function test() {
 
   isOpen = await lAlice.gsc.isAgreementOpen('spankHub1337')
   console.log('Alice state is agreement open: ' + isOpen)
+
+  console.log(col.stateSignatures[0])
   // col = await lAlice.getGSCAgreement('spankHub1337')
   // console.log(col)
 
