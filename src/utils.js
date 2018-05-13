@@ -107,11 +107,11 @@ module.exports = {
     return m
   },
 
-  getCTFaddress: async function getCTFaddress(_r) {
+  getCTFaddress: function getCTFaddress(_r) {
     return web3.sha3(_r, {encoding: 'hex'})
   },
 
-  getCTFstate: async function getCTFstate(_contract, _signers, _args) {
+  getCTFstate: function getCTFstate(_contract, _signers, _args) {
     _args.unshift(_contract)
     var _m = this.serializeState(_args)
     _signers.push(_contract.length)

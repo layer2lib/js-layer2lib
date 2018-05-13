@@ -8,27 +8,35 @@ module.exports = function gsc (self) {
     init: async function(options) {
       //console.log(this._getMetaChannelBytecode())
       self.storage = repo(self)
+      self.etherExtension = '0x32c1d681fe917170573aed0671d21317f14219fd'
+      self.bidirectEtherInterpreter = '0x74926af30d35337e45225666bbf49e156fd08016'
     },
 
     openAgreement: async function(agreement) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
 
-      // TODO: Build get metachannel CTF bytecode and append contructor args
-      let metachannelCTFaddress = {}
+      let metaByteCode = metachannel.deployedBytecode
+      let args = ['0x1337', agreement.partyA, agreement.partyB]
+      let signers = [agreement.partyA, agreement.partyB]
+      let metaCTFbytes = self.utils.getCTFstate(metaByteCode, signers, args)
+      let metachannelCTFaddress = self.utils.getCTFaddress(metaCTFbytes)
 
-      let inputs = []
-      inputs.push(0) // is close
-      inputs.push(0) // sequence
-      inputs.push(agreement.partyA) // partyA address
-      inputs.push(agreement.partyB) // partyB address
-      inputs.push(metachannelCTFaddress) // counterfactual metachannel address
-      inputs.push('0x0') // sub-channel root hash
-      inputs.push(agreement.balanceA) // balance in ether partyA
-      inputs.push(agreement.balanceB) // balance in ether partyB
+      //agreement.metaCTFbytes = metaCTFbytes
+      agreement.metachannelCTFaddress = metachannelCTFaddress
 
-      agreement.stateRaw = inputs;
-      agreement.stateSerialized = self.utils.serializeState(inputs)
+      let initialState = []
+      initialState.push(0) // is close
+      initialState.push(0) // sequence
+      initialState.push(agreement.partyA) // partyA address
+      initialState.push(agreement.partyB) // partyB address
+      initialState.push(metachannelCTFaddress) // counterfactual metachannel address
+      initialState.push('0x0') // sub-channel root hash
+      initialState.push(agreement.balanceA) // balance in ether partyA
+      initialState.push(agreement.balanceB) // balance in ether partyB
+
+      agreement.stateRaw = initialState;
+      agreement.stateSerialized = self.utils.serializeState(initialState)
       // TODO: self.utils.sign()
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.signatures.push(self.utils.sign(stateHash, self.privateKey))
@@ -39,8 +47,6 @@ module.exports = function gsc (self) {
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, agreement.signatures[0].v, agreement.signatures[0].r, agreement.signatures[0].s))
       
       Object.assign(agreements[agreement.ID], agreement)
-
-      //agreements.agreements[options.ID] = options
 
       // {
       //   agreements: {
@@ -114,10 +120,6 @@ module.exports = function gsc (self) {
     getSubchannel: async function(agreementID, channelID) {
       let agreement = self.storage.get(agreementID)
       //console.log(chan)
-    },
-
-    _getMetaChannelBytecode: function() {
-      return metachannel.deployedBytecode
     }
   }
 }
