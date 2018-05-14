@@ -1,7 +1,7 @@
 'use strict'
 
 const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
-const repo = require('./repo/repo-mem')
+const repo = require('./repo/repo')
 
 module.exports = function gsc (self) {
   return {
