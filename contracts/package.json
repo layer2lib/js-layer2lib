@@ -1,0 +1,24 @@
+{
+    "name": "js-layer2lib-contract-builder",
+    "version": "0.0.1",
+    "description": "Builds the repo contracts needed for the js-layer2lib",
+    "scripts": {
+        "postinstall": "npm run build",
+        "build": "git clone --depth 1 https://github.com/SpankChain/general-state-channels.git repo && cd repo && npm i && truffle compile && cp -rf build ../general-state-channels && rm -rf ../repo",
+        "test": "node test/layer2libTest.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/finalitylabs/js-layer2lib.git"
+    },
+    "author": "nathan@finalitylabs.io",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/layer2lib/js-layer2lib/issues"
+    },
+    "homepage": "https://github.com/layer2lib/js-layer2lib#readme",
+    "dependencies": {
+        "solc": "^0.4.23",
+        "truffle": "^4.1.8"
+    }
+}
