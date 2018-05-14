@@ -10,6 +10,7 @@ module.exports = function gsc (self) {
       self.storage = repo(self)
       self.etherExtension = '0x32c1d681fe917170573aed0671d21317f14219fd'
       self.bidirectEtherInterpreter = '0x74926af30d35337e45225666bbf49e156fd08016'
+      self.registryAddress = '0x4200'
     },
 
     openAgreement: async function(agreement) {
@@ -116,7 +117,7 @@ module.exports = function gsc (self) {
       console.log('Agreement updated in db')
     },
 
-    findAgreement: async function(agreementID) {
+    getAgreement: async function(agreementID) {
       let _agreements = await self.storage.get('agreements')
       // let data = agreement.find({})
       // let readable = await data.toArray()
@@ -152,9 +153,12 @@ module.exports = function gsc (self) {
 
     },
 
+    // channel functions
+
     createChannel: async function(channel) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(channel.agreementID)) return
+      let agreement = agreements[channel.agreementID]
 
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(channel.ID)) channels[channel.ID] = {}
@@ -164,10 +168,63 @@ module.exports = function gsc (self) {
       channel.stateRaw = []
       channel.signatures = []
 
+      if(channel.type == 'ether') {
+        var subchannelInputs = []
+        subchannelInputs.push(0) // is close
+        subchannelInputs.push(0) // is force push channel
+        subchannelInputs.push(0) // subchannel sequence
+        subchannelInputs.push(0) // timeout length ms
+        subchannelInputs.push(self.bidirectEtherInterpreter) // ether payment interpreter library address
+        subchannelInputs.push(channel.ID) // ID of subchannel
+        subchannelInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
+        subchannelInputs.push(self.registryAddress) // CTF registry address
+        subchannelInputs.push('0x0') // subchannel tx roothash
+        subchannelInputs.push(agreement.partyA) // partyA in the subchannel
+        subchannelInputs.push(agreement.partyB) // partyB in the subchannel
+        subchannelInputs.push(channel.balanceA) // balance of party A in subchannel (ether)
+        subchannelInputs.push(channel.balanceB) // balance of party B in subchannel (ether)
+
+        channel.stateRaw = subchannelInputs
+        channel.stateSerialized = self.utils.serializeState(subchannelInputs)
+
+      }
+
+      let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
+
+      // calculate channel root hash
+
+      // put root hash in agreement state
+
+      // serialize and sign s1 of agreement state
+
+      let stateHash = self.web3.sha3('...', {encoding: 'hex'})
+
+      // push the new sig of new state into agreement object
+      let state1sigs = []
+      state1sigs.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures.push(state1sigs)
+
+      // store the channel
+      Object.assign(channels[channel.ID], channel)
+      await self.storage.set('channels', channels)
+
+      // store the new agreement
+      Object.assign(agreements[agreement.ID], agreement)
+      await self.storage.set('agreements', agreements)
+    },
+
+    joinChannel: async function(channelID) {
+
     },
 
     getChannel: async function(agreementID, channelID) {
-      let agreement = self.storage.get(agreementID)
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(agreementID)) return
+
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(channelID)) channels[channelID] = {}
+
+      return channels[channelID]
       //console.log(chan)
     }
   }

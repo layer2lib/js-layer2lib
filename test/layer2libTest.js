@@ -112,7 +112,7 @@ async function test() {
 
 
   let channel = {
-    ID: 'Respek',
+    ID: web3.sha3('respek'),
     agreementID: 'spankHub1337',
     type: 'ether',
     balanceA: web3.toWei(0.05, 'ether'),
@@ -120,6 +120,10 @@ async function test() {
   }
 
   await lAlice.createGSCChannel(channel)
+
+  let chan = await lAlice.gsc.getChannel(agreement.ID, channel.ID)
+
+  console.log(chan)
 
   // let elem = l.utils.sha3('wubalubadubdub')
   // let elems = []

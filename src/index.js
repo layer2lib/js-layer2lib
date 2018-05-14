@@ -42,7 +42,7 @@ class Layer2lib {
   }
 
   async getGSCAgreement(ID) {
-    let res = await this.gsc.findAgreement(ID)
+    let res = await this.gsc.getAgreement(ID)
     return res
   }
 
