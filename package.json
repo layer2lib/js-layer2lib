@@ -2,8 +2,11 @@
   "name": "js-layer2lib",
   "version": "0.0.1",
   "description": "An ethereum layer 2 scalability js library",
-  "main": "index.js",
+  "main": "src/index.js",
+  "types": "./src/index.d.ts",
   "scripts": {
+    "postinstall": "npm run contracts",
+    "contracts": "cd contracts && npm i",
     "test": "node test/layer2libTest.js"
   },
   "repository": {
