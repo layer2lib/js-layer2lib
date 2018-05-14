@@ -49,6 +49,23 @@ class Layer2lib {
   async joinGSCAgreement(agreement) {
     this.gsc.joinAgreement(agreement)
   }
+
+
+  async startGSCSettleAgreement(agreementID) {
+    this.gsc.startSettleAgreement(agreementID)
+  }
+
+  async challengeGSCAgreement(agreementID) {
+    this.gsc.challengeAgreement(agreementID)
+  }
+
+  async closeByzantineGSCAgreement(agreementID) {
+    this.gsc.closeByzantineAgreement(agreementID)
+  }
+
+  async createGSCChannel(options) {
+    this.gsc.createChannel(options)
+  }
 }
 
 module.exports = Layer2lib

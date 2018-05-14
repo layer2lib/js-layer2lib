@@ -19,7 +19,7 @@ module.exports = function gsc (self) {
       agreement.openPending = true
       agreement.inDispute = false
       agreement.stateRaw = []
-      agreement.signatures = []
+      agreement.metaSignatures = []
       agreement.subChannels = {}
 
       let metaByteCode = metachannel.deployedBytecode
@@ -30,6 +30,7 @@ module.exports = function gsc (self) {
 
       //agreement.metaCTFbytes = metaCTFbytes
       agreement.metachannelCTFaddress = metachannelCTFaddress
+      agreement.metaSignatures.push(self.utils.sign(agreement.metachannelCTFaddress, self.privateKey))
 
       let initialState = []
       initialState.push(0) // is close
@@ -52,6 +53,8 @@ module.exports = function gsc (self) {
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
+      let msigAddress = '0x0'
+      agreement.address = msigAddress
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
@@ -86,13 +89,20 @@ module.exports = function gsc (self) {
       agreement.stateSignatures[0].push(self.utils.sign(stateHash, self.privateKey))
       agreement.openPending = false;
 
-      self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, agreement.stateSignatures[0][1].v, agreement.stateSignatures[0][1].r, agreement.stateSignatures[0][1].s))
+      self.publicKey = self.utils.bufferToHex(
+        self.utils.ecrecover(
+          stateHash, 
+          agreement.stateSignatures[0][1].v, 
+          agreement.stateSignatures[0][1].r, 
+          agreement.stateSignatures[0][1].s
+          )
+        )
 
       Object.assign(agreements[agreement.ID], agreement)
 
       await self.storage.set('agreements', agreements)
 
-      console.log('Agreement stored in db, responding deployed contract')
+      console.log('Agreement stored in db, responding to deployed contract')
     },
 
     updateAgreement: async function(agreement) {
@@ -115,18 +125,48 @@ module.exports = function gsc (self) {
 
     },
 
+    startSettleAgreement: async function(agreementID) {
+      // Require that there are no open channels!
+
+      // TODO: instantiate metachannel, call startSettle 
+    },
+
+    challengeAgreement: async function(agreementID) {
+      // TODO: call challengeSettle on metachannel
+    },
+
+    closeByzantineAgreement: async function(agreementID) {
+      // TODO: call msig closeWithMetachannel
+
+    },
+
     isAgreementOpen: async function(agreementID) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreementID)) return false
       let agreement = agreements[agreementID]
       if(agreement.openPending == true) return false
-      if(agreement.signatures.length != 2) return false
+      if(agreement.stateSignatures.length != 2) return false
 
+      // TODO: Check blockchain for confirmed open status
       return true
 
     },
 
-    getSubchannel: async function(agreementID, channelID) {
+    createChannel: async function(channel) {
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(channel.agreementID)) return
+
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(channel.ID)) channels[channel.ID] = {}
+
+      channel.openPending = true
+      channel.inDispute = false
+      channel.stateRaw = []
+      channel.signatures = []
+
+    },
+
+    getChannel: async function(agreementID, channelID) {
       let agreement = self.storage.get(agreementID)
       //console.log(chan)
     }

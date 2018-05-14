@@ -28,8 +28,10 @@ async function test() {
 
   lAlice.initGSC()
 
+
   let agreement = {
     ID: 'spankHub1337',
+    types: ['Ether'],
     partyA: web3.eth.accounts[0], // Viewer or performer public key
     partyB: web3.eth.accounts[1], // Spank Hub public key
     balanceA: web3.toWei(0.1, 'ether'),
@@ -109,9 +111,15 @@ async function test() {
   // console.log(col)
 
 
-  // let subChan = {
-  //   type: 'ether'
-  // }
+  let channel = {
+    ID: 'Respek',
+    agreementID: 'spankHub1337',
+    type: 'ether',
+    balanceA: web3.toWei(0.05, 'ether'),
+    balanceB: web3.toWei(0.1, 'ether')
+  }
+
+  await lAlice.createGSCChannel(channel)
 
   // let elem = l.utils.sha3('wubalubadubdub')
   // let elems = []
