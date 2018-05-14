@@ -4,7 +4,7 @@
     "description": "Builds the repo contracts needed for the js-layer2lib",
     "scripts": {
         "postinstall": "npm run build",
-        "build": "git clone --depth 1 https://github.com/SpankChain/general-state-channels.git repo && cd repo && npm i && truffle compile && cp -rf build ../general-state-channels && rm -rf ../repo",
+        "build": "git clone --depth 1 https://github.com/SpankChain/general-state-channels.git repo && cd repo && npm i && truffle compile && mkdir -p general-state-channels/build && cp -rf build ../general-state-channels && rm -rf ../repo",
         "test": "node test/layer2libTest.js"
     },
     "repository": {

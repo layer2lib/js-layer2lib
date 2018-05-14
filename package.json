@@ -5,6 +5,8 @@
   "main": "src/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
+    "postinstall": "npm run contracts",
+    "contracts": "cd contracts && npm i",
     "test": "node test/layer2libTest.js"
   },
   "repository": {
