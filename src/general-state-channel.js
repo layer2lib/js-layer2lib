@@ -21,7 +21,8 @@ module.exports = function gsc (self) {
       agreement.inDispute = false
       agreement.stateRaw = []
       agreement.metaSignatures = []
-      agreement.subChannels = {}
+      agreement.channels = []
+      agreement.channelRootHash = '0x0'
 
       let metaByteCode = metachannel.deployedBytecode
       let args = ['0x1337', agreement.partyA, agreement.partyB]
@@ -43,7 +44,7 @@ module.exports = function gsc (self) {
       initialState.push(agreement.balanceA) // balance in ether partyA
       initialState.push(agreement.balanceB) // balance in ether partyB
 
-      agreement.stateRaw = initialState;
+      agreement.stateRaw[0] = initialState;
       agreement.stateSerialized = self.utils.serializeState(initialState)
 
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
@@ -192,17 +193,42 @@ module.exports = function gsc (self) {
       let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
 
       // calculate channel root hash
+      let elem = self.utils.sha3(channelHash)
+
+      let elems = []
+      for(var i=0; i<agreement.channels.length; i++) { elems.push(agreement.channels[i]) }
+
+      elems.push(self.utils.hexToBuffer(elem))
+
+      // add new element to the agreements lits of channels
+      agreement.channels.push(elem)
+
+      let merkle = new self.merkleTree(elems)
 
       // put root hash in agreement state
+      let channelRoot = self.utils.bufferToHex(merkle.getRoot())
+      agreement.channelRootHash = channelRoot
 
       // serialize and sign s1 of agreement state
+      let newState = JSON.parse(JSON.stringify(agreement.stateRaw[agreement.stateRaw.length-1]))
+      newState[5] = channelRoot
+      // set nonce 
+      newState[1]++
 
-      let stateHash = self.web3.sha3('...', {encoding: 'hex'})
+      //adjust balance
+      newState[6] = newState[6] - channel.balanceA
+      newState[7] = newState[7] - channel.balanceB
 
       // push the new sig of new state into agreement object
-      let state1sigs = []
-      state1sigs.push(self.utils.sign(stateHash, self.privateKey))
-      agreement.stateSignatures.push(state1sigs)
+      agreement.stateRaw.push(newState)
+      agreement.stateSerialized = self.utils.serializeState(newState)
+
+      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateSig = []
+      stateSig.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures.push(stateSig)
+
+
 
       // store the channel
       Object.assign(channels[channel.ID], channel)
@@ -213,14 +239,48 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', agreements)
     },
 
-    joinChannel: async function(channelID) {
+    joinChannel: async function(channel, agreement) {
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(agreement.ID)) return
+
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(channel.ID)) channels[channel.ID] = {}
+
+      // let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
+
+      // // calculate channel root hash
+      // let elem = self.utils.sha3(channelHash)
+
+      // let elems = []
+      // for(var i=0; i<agreement.channels.length; i++) { elems.push(agreement.channels[i]) }
+
+      // elems.push(self.utils.hexToBuffer(elem))
+
+      // let merkle = new self.merkleTree(elems)
+
+      // // check root hash in agreement state
+      // let channelRoot = self.utils.bufferToHex(merkle.getRoot())
+
+      // if(channelRoot != agreement.stateRaw[4]) return
+
+
+      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      agreement.stateSignatures[agreement.stateSignatures.length-1][1] = self.utils.sign(stateHash, self.privateKey)
+
+      // store the channel
+      Object.assign(channels[channel.ID], channel)
+      await self.storage.set('channels', channels)
+
+      // store the new agreement
+      Object.assign(agreements[agreement.ID], agreement)
+      await self.storage.set('agreements', agreements)
+    },
+
+    updateChannelState: async function(channelID, updateState) {
 
     },
 
-    getChannel: async function(agreementID, channelID) {
-      let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(agreementID)) return
-
+    getChannel: async function(channelID) {
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(channelID)) channels[channelID] = {}
 

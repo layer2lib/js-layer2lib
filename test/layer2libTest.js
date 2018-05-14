@@ -57,7 +57,7 @@ async function test() {
   // await l.createGSCAgreement(agreement)
 
   let col = await lAlice.getGSCAgreement('spankHub1337')
-  console.log(col)
+  //console.log(col)
 
   // col = await l.getGSCAgreement('Bob4206969')
   // console.log(col)
@@ -104,8 +104,6 @@ async function test() {
   console.log('Alice state is agreement open: ' + isOpen)
 
   console.log(col.stateSignatures[0])
-  // col = await lAlice.getGSCAgreement('spankHub1337')
-  // console.log(col)
 
   // col = await l.getGSCAgreement('Bob4206969')
   // console.log(col)
@@ -121,18 +119,22 @@ async function test() {
 
   await lAlice.createGSCChannel(channel)
 
-  let chan = await lAlice.gsc.getChannel(agreement.ID, channel.ID)
+  let chan = await lAlice.gsc.getChannel(channel.ID)
 
-  console.log(chan)
+  //console.log(chan)
 
-  // let elem = l.utils.sha3('wubalubadubdub')
-  // let elems = []
-  // elems.push(l.utils.hexToBuffer(elem))
+  col = await lAlice.getGSCAgreement('spankHub1337')
+  //console.log(col)
 
-  // try {
-  //   let merkle = new l.merkleTree(elems)
-  //   console.log(merkle.getRoot())
-  // } catch (e) { console.log (e) }
+  let chan2 = JSON.parse(JSON.stringify(chan))
+  let col2 = JSON.parse(JSON.stringify(col))
+  await lBob.gsc.joinChannel(chan2, col2)
+
+  console.log('ether channel now open')
+  col = await lBob.getGSCAgreement('spankHub1337')
+  //console.log(col)
+
+  console.log('Bob now sends ack to Alice of open etherchannel')
 }
 
 test()
