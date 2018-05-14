@@ -38,7 +38,7 @@ class Layer2lib {
   }
 
   async createGSCAgreement(options) {
-    this.gsc.openAgreement(options)
+    this.gsc.createAgreement(options)
   }
 
   async getGSCAgreement(ID) {
@@ -63,8 +63,8 @@ class Layer2lib {
     this.gsc.closeByzantineAgreement(agreementID)
   }
 
-  async createGSCChannel(options) {
-    this.gsc.createChannel(options)
+  async openGSCChannel(options) {
+    this.gsc.openChannel(options)
   }
 }
 

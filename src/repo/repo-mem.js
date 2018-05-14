@@ -30,9 +30,10 @@ module.exports = function repomem (self) {
       // let _r = await _data.toArray()
       // _db.close()
       // return _r
-      if(!self.db.hasOwnProperty(query)) return {}
+      //if(!self.db.hasOwnProperty(query)) return {}
 
       let newObj = JSON.parse(JSON.stringify(self.db))
+      if(newObj[query] === undefined) return {}
       return newObj[query]
     }
   }

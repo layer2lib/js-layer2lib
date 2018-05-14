@@ -57,7 +57,7 @@ async function test() {
   // await l.createGSCAgreement(agreement)
 
   let col = await lAlice.getGSCAgreement('spankHub1337')
-  //console.log(col)
+  console.log(col)
 
   // col = await l.getGSCAgreement('Bob4206969')
   // console.log(col)
@@ -98,15 +98,13 @@ async function test() {
   isOpen = await lBob.gsc.isAgreementOpen('spankHub1337')
   console.log('Bob state is agreement open: ' + isOpen)
 
+  console.log(col)
   await lAlice.gsc.updateAgreement(col)
 
   isOpen = await lAlice.gsc.isAgreementOpen('spankHub1337')
   console.log('Alice state is agreement open: ' + isOpen)
 
   console.log(col.stateSignatures[0])
-
-  // col = await l.getGSCAgreement('Bob4206969')
-  // console.log(col)
 
 
   let channel = {
@@ -117,11 +115,11 @@ async function test() {
     balanceB: web3.toWei(0.1, 'ether')
   }
 
-  await lAlice.createGSCChannel(channel)
+  await lAlice.openGSCChannel(channel)
 
   let chan = await lAlice.gsc.getChannel(channel.ID)
 
-  //console.log(chan)
+  console.log(chan)
 
   col = await lAlice.getGSCAgreement('spankHub1337')
   //console.log(col)
@@ -132,9 +130,22 @@ async function test() {
 
   console.log('ether channel now open')
   col = await lBob.getGSCAgreement('spankHub1337')
-  //console.log(col)
+  console.log(col)
+
+  let chan22 = await lBob.gsc.getChannel(channel.ID)
+
+  console.log(chan22)
 
   console.log('Bob now sends ack to Alice of open etherchannel')
+
+  console.log('Bob is initiating ether payment')
+
+  let updateState = {
+    balanceA: web3.toWei(0.06, 'ether'),
+    balanceB: web3.toWei(0.09, 'ether')
+  }
+
+  await lBob.gsc.updateChannelState(channel.ID, updateState)
 }
 
 test()

@@ -13,9 +13,12 @@ module.exports = function gsc (self) {
       self.registryAddress = '0x4200'
     },
 
-    openAgreement: async function(agreement) {
+    createAgreement: async function(agreement) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
+
+      // let txs = await self.storage.get('transactions') || {}
+      // if(!txs.hasOwnProperty(agreement.ID)) txs[agreement.ID] = {}
 
       agreement.openPending = true
       agreement.inDispute = false
@@ -156,7 +159,7 @@ module.exports = function gsc (self) {
 
     // channel functions
 
-    createChannel: async function(channel) {
+    openChannel: async function(channel) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(channel.agreementID)) return
       let agreement = agreements[channel.agreementID]
@@ -277,6 +280,33 @@ module.exports = function gsc (self) {
     },
 
     updateChannelState: async function(channelID, updateState) {
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(channelID)) return
+      let channel = channels[channelID]
+
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(channel.agreementID)) return
+      let agreement = agreements[channel.agreementID]
+
+      // TODO: create modules for each interpreter type
+      if(channel.type == 'ether') {
+        console.log('ETHERRRR')
+      }
+    },
+
+
+    startSettleChannel: async function(channelID) {
+      // Require that there are no open channels!
+
+      // TODO: instantiate metachannel, call startSettle 
+    },
+
+    challengeChannelt: async function(channelID) {
+      // TODO: call challengeSettle on metachannel
+    },
+
+    closeByzantineChannel: async function(channelID) {
+      // TODO: call msig closeWithMetachannel
 
     },
 
@@ -286,6 +316,10 @@ module.exports = function gsc (self) {
 
       return channels[channelID]
       //console.log(chan)
+    },
+
+    syncDatabase: async function(agreement) {
+
     }
   }
 }
