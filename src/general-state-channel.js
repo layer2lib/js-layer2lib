@@ -79,7 +79,7 @@ module.exports = function gsc (self) {
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
       Object.assign(agreements[agreement.ID], agreement)
-      Object.assign(txs[agreement.ID], txList)
+      //Object.assign(txs[agreement.ID], txList)
 
       // {
       //   agreements: {
@@ -99,7 +99,7 @@ module.exports = function gsc (self) {
       // }
 
       await self.storage.set('agreements', agreements)
-      await self.storage.set('transactions', txs)
+      //await self.storage.set('transactions', txs)
       console.log('Agreement stored in db, deploying contract')
     },
 
