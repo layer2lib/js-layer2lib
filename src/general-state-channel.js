@@ -14,13 +14,13 @@ module.exports = function gsc (self) {
     },
 
     createAgreement: async function(agreement) {
+      let entryID = agreement.ID+agreement.dbSalt
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
+      if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
-      // OVERWRITE OLD DATABASE TX ENTRIES 
-      let txs
-      // let txs = await self.storage.get('transactions') || {}
-      // if(!txs.hasOwnProperty(agreement.ID)) txs[agreement.ID] = {}
+      // OVERWRITE OLD DATABASE TX ENTRIES IF THEY EXIST FOR THIS AGREEMENT
+      let txs = {}
+      txs[entryID] = {}
 
       agreement.openPending = true
       agreement.inDispute = false
@@ -68,8 +68,6 @@ module.exports = function gsc (self) {
         txHash: '0x0'
       }
       txList.push(tx)
-      tx.nonce++
-      txList.push(tx)
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
@@ -78,37 +76,21 @@ module.exports = function gsc (self) {
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
-      Object.assign(agreements[agreement.ID], agreement)
-      Object.assign(txs[agreement.ID], txList)
-
-      // {
-      //   agreements: {
-      //     spankhub123: {
-
-      //     },
-      //     alice: {
-
-      //     },
-      //     bob: {
-
-      //     }
-      //   },
-      //   someotherstate: {
-
-      //   }
-      // }
+      Object.assign(agreements[entryID], agreement)
+      Object.assign(txs[entryID], txList)
 
       await self.storage.set('agreements', agreements)
       await self.storage.set('transactions', txs)
-      console.log('Agreement stored in db, deploying contract')
+      console.log('Agreement and tx stored in db, deploying contract')
     },
 
     joinAgreement: async function(agreement) {
+      let entryID = agreement.ID+agreement.dbSalt
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
+      if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
-      let txs = await self.storage.get('transactions') || {}
-      if(!txs.hasOwnProperty(agreement.ID)) txs[agreement.ID] = {}
+      let txs = {}
+      txs[entryID] = {}
 
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures[0].push(self.utils.sign(stateHash, self.privateKey))
@@ -134,8 +116,8 @@ module.exports = function gsc (self) {
           )
         )
 
-      Object.assign(agreements[agreement.ID], agreement)
-      Object.assign(txs[agreement.ID], txList)
+      Object.assign(agreements[entryID], agreement)
+      Object.assign(txs[entryID], txList)
 
       await self.storage.set('agreements', agreements)
       await self.storage.set('transactions', txs)
@@ -144,10 +126,11 @@ module.exports = function gsc (self) {
     },
 
     updateAgreement: async function(agreement) {
+      let entryID = agreement.ID+agreement.dbSalt
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
+      if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
-      Object.assign(agreements[agreement.ID], agreement)
+      Object.assign(agreements[entryID], agreement)
 
       await self.storage.set('agreements', agreements)
 
@@ -174,7 +157,7 @@ module.exports = function gsc (self) {
       if(!agreements.hasOwnProperty(agreementID)) return false
       let agreement = agreements[agreementID]
       if(agreement.openPending == true) return false
-      if(agreement.stateSignatures.length != 2) return false
+      if(agreement.stateSignatures[0].length != 2) return false
 
       // TODO: Check blockchain for confirmed open status
       return true
@@ -184,17 +167,18 @@ module.exports = function gsc (self) {
     // channel functions
 
     openChannel: async function(channel) {
+      let AgreeEntryID = channel.agreementID+channel.dbSalt
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(channel.agreementID)) return
-      let agreement = agreements[channel.agreementID]
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
+      let agreement = agreements[AgreeEntryID]
 
+      let ChanEntryID = channel.ID+channel.dbSalt
       let channels = await self.storage.get('channels') || {}
-      if(!channels.hasOwnProperty(channel.ID)) channels[channel.ID] = {}
+      if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
       channel.openPending = true
       channel.inDispute = false
       channel.stateRaw = []
-      channel.signatures = []
 
       if(channel.type == 'ether') {
         var subchannelInputs = []
@@ -258,20 +242,22 @@ module.exports = function gsc (self) {
 
 
       // store the channel
-      Object.assign(channels[channel.ID], channel)
+      Object.assign(channels[ChanEntryID], channel)
       await self.storage.set('channels', channels)
 
       // store the new agreement
-      Object.assign(agreements[agreement.ID], agreement)
+      Object.assign(agreements[AgreeEntryID], agreement)
       await self.storage.set('agreements', agreements)
     },
 
     joinChannel: async function(channel, agreement) {
+      let AgreeEntryID = agreement.ID+channel.dbSalt
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(agreement.ID)) return
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
 
+      let ChanEntryID = channel.ID+channel.dbSalt
       let channels = await self.storage.get('channels') || {}
-      if(!channels.hasOwnProperty(channel.ID)) channels[channel.ID] = {}
+      if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
       // let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
 
@@ -295,25 +281,25 @@ module.exports = function gsc (self) {
       agreement.stateSignatures[agreement.stateSignatures.length-1][1] = self.utils.sign(stateHash, self.privateKey)
 
       // store the channel
-      Object.assign(channels[channel.ID], channel)
+      Object.assign(channels[ChanEntryID], channel)
       await self.storage.set('channels', channels)
 
       // store the new agreement
-      Object.assign(agreements[agreement.ID], agreement)
+      Object.assign(agreements[AgreeEntryID], agreement)
       await self.storage.set('agreements', agreements)
     },
 
-    updateChannelState: async function(channelID, updateState) {
+    updateChannelState: async function(id, updateState) {
       let channels = await self.storage.get('channels') || {}
-      if(!channels.hasOwnProperty(channelID)) return
-      let channel = channels[channelID]
+      if(!channels.hasOwnProperty(id)) return
+      let channel = channels[id]
 
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(channel.agreementID)) return
-      let agreement = agreements[channel.agreementID]
+      if(!agreements.hasOwnProperty(channel.agreementID+channel.dbSalt)) return
+      let agreement = agreements[channel.ID+channel.dbSalt]
 
       // TODO: create modules for each interpreter type
-      if(channel.type === 'ether') {
+      if(channel.type == 'ether') {
         console.log('ETHERRRR')
       }
     },
