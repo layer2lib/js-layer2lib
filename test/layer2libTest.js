@@ -73,12 +73,11 @@ async function test() {
   // --------------------------------------------------
   // BOB
   let optionsBob = {
-    provider: 'http://localhost:8545',
     db: client,
     privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
   }
 
-  let lBob = new Layer2lib(optionsBob)
+  let lBob = new Layer2lib('http://localhost:8545', optionsBob)
 
   try {
     let account = '0x4C88305C5F9E4feB390e6bA73AAEF4c64284b7bC'
