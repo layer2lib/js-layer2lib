@@ -39,11 +39,11 @@ class Layer2lib {
   }
 
   async initGSC(options) {
-    this.gsc.init(options)
+    await this.gsc.init(options)
   }
 
   async createGSCAgreement(options) {
-    this.gsc.createAgreement(options)
+    await this.gsc.createAgreement(options)
   }
 
   async getGSCAgreement(ID) {
@@ -52,24 +52,24 @@ class Layer2lib {
   }
 
   async joinGSCAgreement(agreement) {
-    this.gsc.joinAgreement(agreement)
+    await this.gsc.joinAgreement(agreement)
   }
 
 
   async startGSCSettleAgreement(agreementID) {
-    this.gsc.startSettleAgreement(agreementID)
+    await this.gsc.startSettleAgreement(agreementID)
   }
 
   async challengeGSCAgreement(agreementID) {
-    this.gsc.challengeAgreement(agreementID)
+    await this.gsc.challengeAgreement(agreementID)
   }
 
   async closeByzantineGSCAgreement(agreementID) {
-    this.gsc.closeByzantineAgreement(agreementID)
+    await this.gsc.closeByzantineAgreement(agreementID)
   }
 
   async openGSCChannel(options) {
-    this.gsc.openChannel(options)
+    await this.gsc.openChannel(options)
   }
 }
 

@@ -126,7 +126,6 @@ async function test() {
   // let Alice_tx = await lAlice.gsc.getTransactions(agreement.ID)
 
   // console.log(Alice_tx)
-  console.log('test')
   client.quit()
 }
 

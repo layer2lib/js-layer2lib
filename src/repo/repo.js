@@ -12,7 +12,6 @@ module.exports = function repomem (self) {
       //self.db.close()
     },
     set: async function(k, v) {
-      console.log('repo')
       await self.db.setAsync(k, JSON.stringify(v))
     },
     get: async function(query) {
