@@ -4,7 +4,8 @@ const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 const Promise = require('bluebird');
 
-const redis = require("fakeredis"); //require('redis')
+const redis = require("fakeredis");
+//const redis = require("redis");
 const client = Promise.promisifyAll(redis.createClient())
 
 let etherPaymentIntAddress = '0x'
