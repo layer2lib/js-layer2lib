@@ -155,6 +155,10 @@ async function test() {
 
   await lBob.gsc.updateChannelState(channel.ID, updateState)
 
+  let Alice_tx = await lAlice.gsc.getTransactions(agreement.ID)
+
+  console.log(Alice_tx)
+
   client.quit()
 }
 
