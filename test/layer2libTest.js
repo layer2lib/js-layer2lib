@@ -4,7 +4,7 @@ const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 const Promise = require('bluebird');
 
-const redis = require('redis')
+const redis = require("fakeredis"); //require('redis')
 const client = Promise.promisifyAll(redis.createClient())
 
 let etherPaymentIntAddress = '0x'
@@ -15,12 +15,11 @@ async function test() {
 
   // ALICE
   let optionsAlice = {
-    provider: 'http://localhost:8545',
     db: client,
     privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
-  let lAlice = new Layer2lib(optionsAlice)
+  let lAlice = new Layer2lib("http://localhost:8545", optionsAlice)
 
   web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
 
@@ -28,7 +27,9 @@ async function test() {
     let account = '0xa84135fdbd790a6feeffd204b14a103bb2e41e92'
     let t = await lAlice.getMainnetBalance(account)
     console.log(t)
-  } catch (e) { console.log(e) }
+  } catch (e) {
+    console.log(e)
+  }
 
   lAlice.initGSC()
 
@@ -82,7 +83,9 @@ async function test() {
     let account = '0x4C88305C5F9E4feB390e6bA73AAEF4c64284b7bC'
     let t = await lBob.getMainnetBalance(account)
     console.log(t)
-  } catch (e) { console.log(e) }
+  } catch (e) {
+    console.log(e)
+  }
 
   lBob.initGSC()
 

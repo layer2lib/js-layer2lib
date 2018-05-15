@@ -4,6 +4,7 @@ declare module "js-layer2lib" {
     merkleTree: any;
     utils: any;
     gsc: any;
+    db: L2Database;
 
     /**
      * Initializes a web3 connection to the provider url
@@ -11,7 +12,7 @@ declare module "js-layer2lib" {
      * @param str String to store in buffer.
      * @param encoding encoding to use, optional.  Default is 'utf8'
      */
-    constructor(provider: string);
+    constructor(url: string, options: Options);
 
     /**
      * Returns the current balance as a string
@@ -24,17 +25,29 @@ declare module "js-layer2lib" {
     getGSCAgreement(ID: string): Promise<Agreement>; //agreement
     joinGSCAgreement(agreement: Agreement): Promise<void>;
   }
-  interface Agreement {
+
+  export interface Options {
+    db: L2Database;
+    privateKey?: string;
+  }
+  export interface Agreement {
     ID: string;
     partyA: string;
     partyB: string;
     balanceA: string;
     balanceB: string;
-    openPending: boolean;
-    inDispute: false;
-    stateRaw: any[];
-    stateSerialized: string;
-    signatures: any[];
-    subChannels: any;
+    openPending?: boolean;
+    inDispute?: false;
+    stateRaw?: any[];
+    stateSerialized?: string;
+    signatures?: any[];
+    subChannels?: any;
+  }
+
+  export interface L2Database {
+    // connect(address: string, options: any): void;
+    // terminate(): void;
+    set(k: string, v: any);
+    get(k: string): any;
   }
 }
