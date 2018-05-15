@@ -17,6 +17,8 @@ module.exports = function gsc (self) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
 
+      // OVERWRITE OLD DATABASE TX ENTRIES 
+      let txs
       // let txs = await self.storage.get('transactions') || {}
       // if(!txs.hasOwnProperty(agreement.ID)) txs[agreement.ID] = {}
 
@@ -56,6 +58,19 @@ module.exports = function gsc (self) {
       state0sigs.push(self.utils.sign(stateHash, self.privateKey))
       agreement.stateSignatures.push(state0sigs)
 
+      let txList = []
+      let tx = {
+        agreement: agreement.ID,
+        channel: 'master',
+        nonce: 0,
+        timestamp: Date.now(),
+        data: 'Open Agreement',
+        txHash: '0x0'
+      }
+      txList.push(tx)
+      tx.nonce++
+      txList.push(tx)
+
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
       let msigAddress = '0x0'
@@ -64,6 +79,7 @@ module.exports = function gsc (self) {
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
       Object.assign(agreements[agreement.ID], agreement)
+      Object.assign(txs[agreement.ID], txList)
 
       // {
       //   agreements: {
@@ -83,6 +99,7 @@ module.exports = function gsc (self) {
       // }
 
       await self.storage.set('agreements', agreements)
+      await self.storage.set('transactions', txs)
       console.log('Agreement stored in db, deploying contract')
     },
 
@@ -90,9 +107,23 @@ module.exports = function gsc (self) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreement.ID)) agreements[agreement.ID] = {}
 
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(agreement.ID)) txs[agreement.ID] = {}
+
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures[0].push(self.utils.sign(stateHash, self.privateKey))
       agreement.openPending = false;
+
+      let txList = []
+      let tx = {
+        agreement: agreement.ID,
+        channel: 'master',
+        nonce: 0,
+        timestamp: Date.now(),
+        data: 'Join Agreement',
+        txHash: '0x0'
+      }
+      txList.push(tx)
 
       self.publicKey = self.utils.bufferToHex(
         self.utils.ecrecover(
@@ -104,8 +135,10 @@ module.exports = function gsc (self) {
         )
 
       Object.assign(agreements[agreement.ID], agreement)
+      Object.assign(txs[agreement.ID], txList)
 
       await self.storage.set('agreements', agreements)
+      await self.storage.set('transactions', txs)
 
       console.log('Agreement stored in db, responding to deployed contract')
     },
@@ -119,15 +152,6 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', agreements)
 
       console.log('Agreement updated in db')
-    },
-
-    getAgreement: async function(agreementID) {
-      let _agreements = await self.storage.get('agreements')
-      // let data = agreement.find({})
-      // let readable = await data.toArray()
-      // console.log(data)
-      return _agreements[agreementID]
-
     },
 
     startSettleAgreement: async function(agreementID) {
@@ -289,7 +313,7 @@ module.exports = function gsc (self) {
       let agreement = agreements[channel.agreementID]
 
       // TODO: create modules for each interpreter type
-      if(channel.type == 'ether') {
+      if(channel.type === 'ether') {
         console.log('ETHERRRR')
       }
     },
@@ -310,12 +334,20 @@ module.exports = function gsc (self) {
 
     },
 
-    getChannel: async function(channelID) {
-      let channels = await self.storage.get('channels') || {}
-      if(!channels.hasOwnProperty(channelID)) channels[channelID] = {}
+    getAgreement: async function(agreementID) {
+      let _agreements = await self.storage.get('agreements')
+      return _agreements[agreementID]
 
+    },
+
+    getChannel: async function(channelID) {
+      let channels = await self.storage.get('channels')
       return channels[channelID]
-      //console.log(chan)
+    },
+
+    getTransactions: async function(agreementID) {
+      let _txs = await self.storage.get('transactions')
+      return _txs[agreementID]
     },
 
     syncDatabase: async function(agreement) {
