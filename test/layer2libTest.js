@@ -75,7 +75,10 @@ async function test() {
 
   let agreementBob = JSON.parse(JSON.stringify(col))
   agreementBob.dbSalt = 'Bob'
-  await lBob.joinGSCAgreement(agreementBob)
+
+  let initState = await lAlice.gsc.getStates('spankHub1337Alice')
+
+  await lBob.joinGSCAgreement(agreementBob, initState)
 
   let Bob_tx = await lBob.gsc.getTransactions('spankHub1337Bob')
   console.log(Bob_tx)
@@ -113,30 +116,33 @@ async function test() {
   col = await lAlice.getGSCAgreement('spankHub1337Alice')
   //console.log(col)
 
-  let chanBob = JSON.parse(JSON.stringify(chan))
-  chanBob.dbSalt = 'Bob'
-  let col2 = JSON.parse(JSON.stringify(col))
-  col2.dbSalt = 'Bob'
-  await lBob.gsc.joinChannel(chanBob, col2)
+  let chanState = await lAlice.gsc.getStates('respekAlice')
+  //console.log(chanState)
 
-  console.log('ether channel now open')
+  // let chanBob = JSON.parse(JSON.stringify(chan))
+  // chanBob.dbSalt = 'Bob'
+  // let col2 = JSON.parse(JSON.stringify(col))
+  // col2.dbSalt = 'Bob'
+  // await lBob.gsc.joinChannel(chanBob, col2)
 
-  chan = await lBob.gsc.getChannel('respekBob')
+  // console.log('ether channel now open')
+
+  // chan = await lBob.gsc.getChannel('respekBob')
 
   // console.log(chan)
   // col = await lBob.getGSCAgreement('spankHub1337Bob')
   // console.log(col)
 
-  console.log('Bob now sends ack to Alice of open etherchannel')
+  // console.log('Bob now sends ack to Alice of open etherchannel')
 
-  console.log('Bob is initiating ether payment')
+  // console.log('Bob is initiating ether payment')
 
-  let updateState = {
-    balanceA: web3.toWei(0.06, 'ether'),
-    balanceB: web3.toWei(0.09, 'ether')
-  }
+  // let updateState = {
+  //   balanceA: web3.toWei(0.06, 'ether'),
+  //   balanceB: web3.toWei(0.09, 'ether')
+  // }
 
-  await lBob.gsc.updateChannelState('respekBob', updateState)
+  // await lBob.gsc.updateChannelState('respekBob', updateState)
 
   client.quit()
 }
