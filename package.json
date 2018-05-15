@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "fakeredis": "^2.0.0",
-    "redis": "^2.8.0",
-    "redis-await": "^1.0.6"
+    "redis": "^2.8.0"
   }
 }
