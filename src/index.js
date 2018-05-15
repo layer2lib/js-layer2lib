@@ -14,12 +14,17 @@ const utils = require('./utils')
 exports = module.exports
 
 class Layer2lib {
-  constructor(options) {
-    web3.setProvider(new web3.providers.HttpProvider(options.provider))
+  constructor(providerUrl, options) {
+    if (!providerUrl) throw new Error('No provider URL provided')
+    web3.setProvider(new web3.providers.HttpProvider(providerUrl))
     this.web3 = web3
-    
+
     this.merkleTree = Merkle
     this.utils = utils
+
+    if (!options.db) throw new Error('Require DB object');
+    if (!options.db.set)
+      throw new Error('Not a valid DB object');
 
     this.db = options.db
     this.gsc = GSC(this)
