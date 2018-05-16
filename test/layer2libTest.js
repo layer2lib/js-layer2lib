@@ -34,6 +34,8 @@ async function test() {
 
   lAlice.initGSC()
 
+  // clear database
+  await lAlice.gsc.clearStorage()
 
   let agreement = {
     dbSalt: 'Alice',
@@ -50,13 +52,12 @@ async function test() {
   await lAlice.createGSCAgreement(agreement)
 
   let col = await lAlice.getGSCAgreement(entryID)
-  console.log(col)
+  //console.log(col)
 
   console.log('------------')
 
   let Alice_tx = await lAlice.gsc.getTransactions(entryID)
-
-  console.log(Alice_tx)
+  //console.log(Alice_tx)
 
   console.log('Alice agreement created and stored.. initiating Bob')
 
@@ -68,7 +69,6 @@ async function test() {
   }
 
   let lBob = new Layer2lib('http://localhost:8545', optionsBob)
-
   lBob.initGSC()
 
   console.log('Bob initialized, receive agreement from Alice and joins')
@@ -77,11 +77,15 @@ async function test() {
   agreementBob.dbSalt = 'Bob'
 
   let initState = await lAlice.gsc.getStates('spankHub1337Alice')
+  console.log(initState)
 
   await lBob.joinGSCAgreement(agreementBob, initState)
 
+
   let Bob_tx = await lBob.gsc.getTransactions('spankHub1337Bob')
   console.log(Bob_tx)
+  initState = await lBob.gsc.getStates('spankHub1337Bob')
+  console.log(initState)
 
   console.log('Bob now sends openchannel ack to Alice')
 
@@ -110,14 +114,15 @@ async function test() {
 
   await lAlice.openGSCChannel(channel)
 
+
   let chan = await lAlice.gsc.getChannel('respekAlice')
-  //console.log(chan)
+  console.log(chan)
 
   col = await lAlice.getGSCAgreement('spankHub1337Alice')
   //console.log(col)
 
-  let chanState = await lAlice.gsc.getStates('respekAlice')
-  //console.log(chanState)
+  let chanState = await lAlice.gsc.getStates('spankHub1337Alice')
+  console.log(chanState)
 
   // let chanBob = JSON.parse(JSON.stringify(chan))
   // chanBob.dbSalt = 'Bob'

@@ -51,8 +51,8 @@ class Layer2lib {
     return res
   }
 
-  async joinGSCAgreement(agreement) {
-    await this.gsc.joinAgreement(agreement)
+  async joinGSCAgreement(agreement, state) {
+    await this.gsc.joinAgreement(agreement, state)
   }
 
 

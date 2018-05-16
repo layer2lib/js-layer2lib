@@ -19,11 +19,11 @@ module.exports = function gsc (self) {
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
       // OVERWRITE OLD DATABASE TX ENTRIES IF THEY EXIST FOR THIS AGREEMENT
-      let txs = {}
-      txs[entryID] = {}
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(entryID)) txs[entryID] = []
 
-      let rawStates = {}
-      rawStates[entryID] = {}
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(entryID)) rawStates[entryID] = []
 
       agreement.openPending = true
       agreement.inDispute = false
@@ -52,8 +52,7 @@ module.exports = function gsc (self) {
       initialState.push(agreement.balanceA) // balance in ether partyA
       initialState.push(agreement.balanceB) // balance in ether partyB
 
-      let rawStatesList = []
-      rawStatesList.push(initialState)
+      rawStates[entryID].push(initialState)
 
       agreement.stateSerialized = self.utils.serializeState(initialState)
 
@@ -63,7 +62,6 @@ module.exports = function gsc (self) {
       state0sigs.push(self.utils.sign(stateHash, self.privateKey))
       agreement.stateSignatures.push(state0sigs)
 
-      let txList = []
       let tx = {
         agreement: agreement.ID,
         channel: 'master',
@@ -72,7 +70,7 @@ module.exports = function gsc (self) {
         data: 'Open Agreement',
         txHash: '0x0'
       }
-      txList.push(tx)
+      txs[entryID].push(tx)
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
@@ -82,8 +80,8 @@ module.exports = function gsc (self) {
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
       Object.assign(agreements[entryID], agreement)
-      Object.assign(txs[entryID], txList)
-      Object.assign(rawStates[entryID], rawStatesList)
+      // Object.assign(txs[entryID], txList)
+      // Object.assign(rawStates[entryID], rawStatesList)
 
       await self.storage.set('agreements', agreements)
       await self.storage.set('transactions', txs)
@@ -96,20 +94,18 @@ module.exports = function gsc (self) {
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
-      let txs = {}
-      txs[entryID] = {}
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(entryID)) txs[entryID] = []
 
-      let rawStates = {}
-      rawStates[entryID] = {}
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(entryID)) rawStates[entryID] = []
 
-      let rawStatesList = []
-      rawStatesList.push(state)
+      rawStates[entryID].push(state)
 
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures[0].push(self.utils.sign(stateHash, self.privateKey))
       agreement.openPending = false;
 
-      let txList = []
       let tx = {
         agreement: agreement.ID,
         channel: 'master',
@@ -118,7 +114,7 @@ module.exports = function gsc (self) {
         data: 'Join Agreement',
         txHash: '0x0'
       }
-      txList.push(tx)
+      txs[entryID].push(tx)
 
       self.publicKey = self.utils.bufferToHex(
         self.utils.ecrecover(
@@ -130,8 +126,8 @@ module.exports = function gsc (self) {
         )
 
       Object.assign(agreements[entryID], agreement)
-      Object.assign(txs[entryID], txList)
-      Object.assign(rawStates[entryID], rawStatesList)
+      // Object.assign(txs[entryID], txList)
+      // Object.assign(rawStates[entryID], rawStatesList)
 
       await self.storage.set('agreements', agreements)
       await self.storage.set('transactions', txs)
@@ -191,11 +187,11 @@ module.exports = function gsc (self) {
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
-      let rawStatesChannel = {}
-      rawStatesChannel[ChanEntryID] = {}
+      let rawStatesChannel = await self.storage.get('states') || {}
+      if(!rawStatesChannel.hasOwnProperty(ChanEntryID)) rawStatesChannel[ChanEntryID] = []
 
-      let rawStatesAgreement = {}
-      rawStatesAgreement[AgreeEntryID] = {}
+      let rawStatesAgreement = await self.storage.get('states') || {}
+      if(!rawStatesAgreement.hasOwnProperty(AgreeEntryID)) return
 
       channel.openPending = true
       channel.inDispute = false
@@ -220,8 +216,7 @@ module.exports = function gsc (self) {
       }
 
       //channel.stateRaw = subchannelInputs
-      let rawStatesListChan = []
-      rawStatesListChan.push(subchannelInputs)
+      rawStatesChannel[ChanEntryID].push(subchannelInputs)
       channel.stateSerialized = self.utils.serializeState(subchannelInputs)
 
       let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
@@ -245,22 +240,31 @@ module.exports = function gsc (self) {
 
       // serialize and sign s1 of agreement state
       //let newState = JSON.parse(JSON.stringify(agreement.stateRaw[agreement.stateRaw.length-1]))
+      console.log('-----------------------')
+      console.log('internal getstates call')
       let oldStates = await this.getStates(AgreeEntryID)
       console.log('-----------------------')
-      console.log(oldStates)
-      let newState = JSON.parse(JSON.stringify(sss))
+      //console.log(oldStates)
+
+      // grab latest state and modify it
+      let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
       newState[5] = channelRoot
       // set nonce 
       newState[1]++
 
-      //adjust balance
-      newState[6] = newState[6] - channel.balanceA
-      newState[7] = newState[7] - channel.balanceB
+      // TODO module this
+      if(agreement.types[0] === 'Ether') {
+        //adjust balance
+        newState[6] = newState[6] - channel.balanceA
+        newState[7] = newState[7] - channel.balanceB
+      }
 
       // push the new sig of new state into agreement object
       //agreement.stateRaw.push(newState)
-      let rawStatesListAgree = []
-      rawStatesListAgree.push(newState)
+      //console.log(rawStatesAgreement[AgreeEntryID])
+      rawStatesAgreement[AgreeEntryID].push(newState)
+      //console.log(rawStatesAgreement[AgreeEntryID])
+
       agreement.stateSerialized = self.utils.serializeState(newState)
 
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
@@ -279,11 +283,9 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', agreements)
 
       // store state
-      Object.assign(rawStatesChan[ChanEntryID], rawStatesListChan)
-      await self.storage.set('states', rawStatesChan)
+      await self.storage.set('states', rawStatesChannel)
 
       // store state
-      Object.assign(rawStatesAgreement[AgreeEntryID], rawStatesListChan)
       await self.storage.set('states', rawStatesAgreement)
     },
 
@@ -296,11 +298,11 @@ module.exports = function gsc (self) {
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
-      let rawStates = {}
-      rawStates[ChanEntryID] = {}
+      let rawStatesChannel = await self.storage.get('states') || {}
+      if(!rawStatesChannel.hasOwnProperty(ChanEntryID)) rawStatesChannel[ChanEntryID] = []
 
-      let rawStatesList = []
-      rawStatesList.push(channelState)
+      let rawStatesAgreement = await self.storage.get('states') || {}
+      if(!rawStatesAgreement.hasOwnProperty(AgreeEntryID)) return
 
       // let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
 
@@ -384,15 +386,19 @@ module.exports = function gsc (self) {
     },
 
     getStates: async function(ID) {
-      console.log(ID)
       let _states = await self.storage.get('states')
-      console.log(_states)
       return _states[ID]
     },
 
 
     syncDatabase: async function(agreement) {
 
+    },
+
+    clearStorage: async function() {
+      await self.storage.set('agreements', {})
+      await self.storage.set('transactions', {})
+      await self.storage.set('states', {})
     }
   }
 }
