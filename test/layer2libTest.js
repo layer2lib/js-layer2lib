@@ -37,7 +37,7 @@ async function test() {
   // clear database
   await lAlice.gsc.clearStorage()
 
-  let agreement = {
+  let agreementAlice = {
     dbSalt: 'Alice',
     ID: 'spankHub1337',
     types: ['Ether'],
@@ -47,17 +47,16 @@ async function test() {
     balanceB: web3.toWei(0.2, 'ether')
   }
 
-  let entryID = agreement.ID+agreement.dbSalt
+  let entryID = agreementAlice.ID+agreementAlice.dbSalt
 
-  await lAlice.createGSCAgreement(agreement)
+  await lAlice.createGSCAgreement(agreementAlice)
 
-  let col = await lAlice.getGSCAgreement(entryID)
+  let Alice_agreement = await lAlice.getGSCAgreement(entryID)
   //console.log(col)
-
-  console.log('------------')
-
   let Alice_tx = await lAlice.gsc.getTransactions(entryID)
   //console.log(Alice_tx)
+  let AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  //console.log(AliceAgreementState)
 
   console.log('Alice agreement created and stored.. initiating Bob')
 
@@ -73,37 +72,37 @@ async function test() {
 
   console.log('Bob initialized, receive agreement from Alice and joins')
 
-  let agreementBob = JSON.parse(JSON.stringify(col))
+  let agreementBob = JSON.parse(JSON.stringify(agreementAlice))
   agreementBob.dbSalt = 'Bob'
 
-  let initState = await lAlice.gsc.getStates('spankHub1337Alice')
-  console.log(initState)
+  await lBob.joinGSCAgreement(agreementBob, AliceAgreementState)
 
-  await lBob.joinGSCAgreement(agreementBob, initState)
-
-
+  let Bob_agreement = await lAlice.getGSCAgreement('spankHub1337Bob')
+  //console.log(Bob_agreement)
   let Bob_tx = await lBob.gsc.getTransactions('spankHub1337Bob')
-  console.log(Bob_tx)
-  initState = await lBob.gsc.getStates('spankHub1337Bob')
-  console.log(initState)
+  //console.log(Bob_tx)
+  let BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  //console.log(BobAgreementState)
 
   console.log('Bob now sends openchannel ack to Alice')
 
-  let isOpen = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
-  console.log('Alice state is agreement open: ' + isOpen)
-  isOpen = await lBob.gsc.isAgreementOpen('spankHub1337Bob')
-  console.log('Bob state is agreement open: ' + isOpen)
+  let isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  console.log('Alice state is agreement open: ' + isOpenAlice)
+  let isOpenBob = await lBob.gsc.isAgreementOpen('spankHub1337Bob')
+  console.log('Bob state is agreement open: ' + isOpenBob)
 
+  // Load Bob's ack into Alice db
   agreementBob.dbSalt = 'Alice'
   await lAlice.gsc.updateAgreement(agreementBob)
+  agreementBob.dbSalt = 'Bob'
 
-  isOpen = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
-  console.log('Alice state is agreement open: ' + isOpen)
+  isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  console.log('Alice state is agreement open: ' + isOpenAlice)
 
   //---------------------------
   // Open a channel
 
-  let channel = {
+  let channelAlice = {
     dbSalt: 'Alice',
     ID: 'respek',
     agreementID: 'spankHub1337',
@@ -112,17 +111,17 @@ async function test() {
     balanceB: web3.toWei(0.1, 'ether')
   }
 
-  await lAlice.openGSCChannel(channel)
+  await lAlice.openGSCChannel(channelAlice)
 
 
-  let chan = await lAlice.gsc.getChannel('respekAlice')
-  console.log(chan)
-
-  col = await lAlice.getGSCAgreement('spankHub1337Alice')
-  //console.log(col)
-
-  let chanState = await lAlice.gsc.getStates('spankHub1337Alice')
-  console.log(chanState)
+  let Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  //console.log(Alice_chan)
+  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  //console.log(Alice_agreement)
+  let AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  //console.log(AliceChanState)
+  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  //console.log(AliceAgreementState)
 
   // let chanBob = JSON.parse(JSON.stringify(chan))
   // chanBob.dbSalt = 'Bob'

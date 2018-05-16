@@ -390,6 +390,11 @@ module.exports = function gsc (self) {
       return _states[ID]
     },
 
+    getHTLCs: async function(ID) {
+      let _hashlockedTxs = await self.storage.get('htlcs')
+      return _hashlockedTxs[ID]
+    },
+
 
     syncDatabase: async function(agreement) {
 
