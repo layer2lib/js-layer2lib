@@ -38,7 +38,7 @@ async function test() {
   await lAlice.gsc.clearStorage()
 
   let agreementAlice = {
-    dbSalt: 'Alice',
+    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
     ID: 'spankHub1337',
     types: ['Ether'],
     partyA: web3.eth.accounts[0], // Viewer or performer public key
@@ -56,6 +56,8 @@ async function test() {
   let Alice_tx = await lAlice.gsc.getTransactions(entryID)
   //console.log(Alice_tx)
   let AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  //Grab the latest (currently only state in list)
+  AliceAgreementState = AliceAgreementState[0]
   //console.log(AliceAgreementState)
 
   console.log('Alice agreement created and stored.. initiating Bob')
@@ -103,7 +105,7 @@ async function test() {
   // Open a channel
 
   let channelAlice = {
-    dbSalt: 'Alice',
+    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
     ID: 'respek',
     agreementID: 'spankHub1337',
     type: 'ether',
@@ -123,11 +125,25 @@ async function test() {
   AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
   //console.log(AliceAgreementState)
 
-  // let chanBob = JSON.parse(JSON.stringify(chan))
-  // chanBob.dbSalt = 'Bob'
-  // let col2 = JSON.parse(JSON.stringify(col))
-  // col2.dbSalt = 'Bob'
-  // await lBob.gsc.joinChannel(chanBob, col2)
+  let chanBob = JSON.parse(JSON.stringify(Alice_chan))
+  chanBob.dbSalt = 'Bob'
+  Bob_agreement = JSON.parse(JSON.stringify(Alice_agreement))
+  Bob_agreement.dbSalt = 'Bob'
+  await lBob.gsc.joinChannel(chanBob, Bob_agreement, chanBob.stateRaw)
+
+  let Bob_chan = await lBob.gsc.getChannel('respekBob')
+  //console.log(Bob_chan)
+  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  //console.log(Bob_agreement)
+  let BobChanState = await lBob.gsc.getStates('respekBob')
+  //console.log(BobChanState)
+  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  //console.log(BobAgreementState)
+
+  let txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
+  let txs_channel = await lBob.gsc.getTransactions('respekBob')
+  //console.log(txs_agreement)
+  //console.log(txs_channel)
 
   // console.log('ether channel now open')
 

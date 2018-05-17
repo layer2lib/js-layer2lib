@@ -89,6 +89,7 @@ module.exports = function gsc (self) {
       console.log('Agreement and tx stored in db, deploying contract')
     },
 
+    // TODO: Replace agreement with just the state sig from counterparty
     joinAgreement: async function(agreement, state) {
       let entryID = agreement.ID+agreement.dbSalt
       let agreements = await self.storage.get('agreements') || {}
@@ -189,32 +190,36 @@ module.exports = function gsc (self) {
 
       let rawStates = await self.storage.get('states') || {}
       if(!rawStates.hasOwnProperty(ChanEntryID)) rawStates[ChanEntryID] = []
-      if(!rawStates.hasOwnProperty(AgreeEntryID)) rawStates[AgreeEntryID] = []
+      if(!rawStates.hasOwnProperty(AgreeEntryID)) return
+
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(ChanEntryID)) txs[ChanEntryID] = []
 
 
       channel.openPending = true
       channel.inDispute = false
 
-      var subchannelInputs = []
+      var channelInputs = []
 
       if(channel.type == 'ether') {
-        subchannelInputs.push(0) // is close
-        subchannelInputs.push(0) // is force push channel
-        subchannelInputs.push(0) // subchannel sequence
-        subchannelInputs.push(0) // timeout length ms
-        subchannelInputs.push(self.bidirectEtherInterpreter) // ether payment interpreter library address
-        subchannelInputs.push(channel.ID) // ID of subchannel
-        subchannelInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
-        subchannelInputs.push(self.registryAddress) // CTF registry address
-        subchannelInputs.push('0x0') // subchannel tx roothash
-        subchannelInputs.push(agreement.partyA) // partyA in the subchannel
-        subchannelInputs.push(agreement.partyB) // partyB in the subchannel
-        subchannelInputs.push(channel.balanceA) // balance of party A in subchannel (ether)
-        subchannelInputs.push(channel.balanceB) // balance of party B in subchannel (ether)
+        channelInputs.push(0) // is close
+        channelInputs.push(0) // is force push channel
+        channelInputs.push(0) // channel sequence
+        channelInputs.push(0) // timeout length ms
+        channelInputs.push(self.bidirectEtherInterpreter) // ether payment interpreter library address
+        channelInputs.push(channel.ID) // ID of channel
+        channelInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
+        channelInputs.push(self.registryAddress) // CTF registry address
+        channelInputs.push('0x0') // channel tx roothash
+        channelInputs.push(agreement.partyA) // partyA in the channel
+        channelInputs.push(agreement.partyB) // partyB in the channel
+        channelInputs.push(channel.balanceA) // balance of party A in channel (ether)
+        channelInputs.push(channel.balanceB) // balance of party B in channel (ether)
       }
 
-      rawStates[ChanEntryID].push(subchannelInputs)
-      channel.stateSerialized = self.utils.serializeState(subchannelInputs)
+      rawStates[ChanEntryID].push(channelInputs)
+      channel.stateSerialized = self.utils.serializeState(channelInputs)
+      channel.stateRaw = channelInputs
 
       let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
 
@@ -264,6 +269,22 @@ module.exports = function gsc (self) {
       stateSig.push(self.utils.sign(stateHash, self.privateKey))
       agreement.stateSignatures.push(stateSig)
 
+      let tx_nonce
+      if(txs[ChanEntryID].length === 0) {
+        tx_nonce = 0
+      } else {
+        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-2].nonce++
+      }
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: channel.ID,
+        nonce: tx_nonce,
+        timestamp: Date.now(),
+        data: 'Open Channel',
+        txHash: '0x0'
+      }
+      txs[ChanEntryID].push(tx)
 
       // store the channel
       Object.assign(channels[ChanEntryID], channel)
@@ -275,8 +296,10 @@ module.exports = function gsc (self) {
 
       // store state
       await self.storage.set('states', rawStates)
+      await self.storage.set('transactions', txs)
     },
 
+    // TODO: replace agreement param with signature
     joinChannel: async function(channel, agreement, channelState) {
       let AgreeEntryID = agreement.ID+channel.dbSalt
       let agreements = await self.storage.get('agreements') || {}
@@ -286,11 +309,49 @@ module.exports = function gsc (self) {
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
-      let rawStatesChannel = await self.storage.get('states') || {}
-      if(!rawStatesChannel.hasOwnProperty(ChanEntryID)) rawStatesChannel[ChanEntryID] = []
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(ChanEntryID)) rawStates[ChanEntryID] = []
+      if(!rawStates.hasOwnProperty(AgreeEntryID)) return
 
-      let rawStatesAgreement = await self.storage.get('states') || {}
-      if(!rawStatesAgreement.hasOwnProperty(AgreeEntryID)) return
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(ChanEntryID)) txs[ChanEntryID] = []
+
+      rawStates[ChanEntryID].push(channelState)
+
+      // serialize and sign s1 of agreement state
+      let oldStates = rawStates[AgreeEntryID]
+      //console.log(oldStates)
+
+      // grab latest state and modify it
+      let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
+      //console.log(newState)
+      newState[5] = agreement.channelRootHash
+      // set nonce 
+      newState[1]++
+
+      // TODO module this
+      if(agreement.types[0] === 'Ether') {
+        //adjust balance on agreement state
+        newState[6] = newState[6] - channel.balanceA
+        newState[7] = newState[7] - channel.balanceB
+        // HACKY
+        // // update ether agreement balance
+        // agreement.balanceA = agreement.balanceA - channel.balanceA
+        // agreement.balanceB = agreement.balanceB - channel.balanceB
+      }
+      //console.log(newState)
+
+      // push the new sig of new state into agreement object
+      rawStates[AgreeEntryID].push(newState)
+      //console.log(rawStates[AgreeEntryID])
+
+      // TODO: Check the incoming agreement (from Alice) on new channel creation
+      // has Alices signature. When signatures are in their own database, in append
+      // only log format keyed by the channel or agreement they belong to, we will 
+      // check that the ecrecover of the raw channel state passed matches the supplied
+      // sig. ecrecover(rawChannelStateHash, sig)
+
+      //TODO: check that the channel state provided is valid
 
       // let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
 
@@ -313,6 +374,25 @@ module.exports = function gsc (self) {
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures[agreement.stateSignatures.length-1][1] = self.utils.sign(stateHash, self.privateKey)
 
+      channel.openPending = false
+
+      let tx_nonce
+      if(txs[ChanEntryID].length === 0) {
+        tx_nonce = 0
+      } else {
+        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-2].nonce++
+      }
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: channel.ID,
+        nonce: tx_nonce,
+        timestamp: Date.now(),
+        data: 'Join Channel',
+        txHash: '0x0'
+      }
+      txs[ChanEntryID].push(tx)
+
       // store the channel
       Object.assign(channels[ChanEntryID], channel)
       await self.storage.set('channels', channels)
@@ -322,8 +402,8 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', agreements)
 
       // store state
-      Object.assign(rawStates[ChanEntryID], rawStatesList)
       await self.storage.set('states', rawStates)
+      await self.storage.set('transactions', txs)
     },
 
     updateChannelState: async function(id, updateState) {
