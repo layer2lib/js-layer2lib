@@ -27,7 +27,6 @@ module.exports = function gsc (self) {
 
       agreement.openPending = true
       agreement.inDispute = false
-      agreement.stateRaw = []
       agreement.metaSignatures = []
       agreement.channels = []
       agreement.channelRootHash = '0x0'
@@ -41,6 +40,7 @@ module.exports = function gsc (self) {
       //agreement.metaCTFbytes = metaCTFbytes
       agreement.metachannelCTFaddress = metachannelCTFaddress
       agreement.metaSignatures.push(self.utils.sign(agreement.metachannelCTFaddress, self.privateKey))
+
 
       let initialState = []
       initialState.push(0) // is close
@@ -187,15 +187,13 @@ module.exports = function gsc (self) {
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
-      let rawStatesChannel = await self.storage.get('states') || {}
-      if(!rawStatesChannel.hasOwnProperty(ChanEntryID)) rawStatesChannel[ChanEntryID] = []
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(ChanEntryID)) rawStates[ChanEntryID] = []
+      if(!rawStates.hasOwnProperty(AgreeEntryID)) rawStates[AgreeEntryID] = []
 
-      let rawStatesAgreement = await self.storage.get('states') || {}
-      if(!rawStatesAgreement.hasOwnProperty(AgreeEntryID)) return
 
       channel.openPending = true
       channel.inDispute = false
-      //channel.stateRaw = []
 
       var subchannelInputs = []
 
@@ -215,8 +213,7 @@ module.exports = function gsc (self) {
         subchannelInputs.push(channel.balanceB) // balance of party B in subchannel (ether)
       }
 
-      //channel.stateRaw = subchannelInputs
-      rawStatesChannel[ChanEntryID].push(subchannelInputs)
+      rawStates[ChanEntryID].push(subchannelInputs)
       channel.stateSerialized = self.utils.serializeState(subchannelInputs)
 
       let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
@@ -239,12 +236,7 @@ module.exports = function gsc (self) {
       agreement.channelRootHash = channelRoot
 
       // serialize and sign s1 of agreement state
-      //let newState = JSON.parse(JSON.stringify(agreement.stateRaw[agreement.stateRaw.length-1]))
-      console.log('-----------------------')
-      console.log('internal getstates call')
-      let oldStates = await this.getStates(AgreeEntryID)
-      console.log('-----------------------')
-      //console.log(oldStates)
+      let oldStates = rawStates[AgreeEntryID]
 
       // grab latest state and modify it
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
@@ -254,16 +246,16 @@ module.exports = function gsc (self) {
 
       // TODO module this
       if(agreement.types[0] === 'Ether') {
-        //adjust balance
+        //adjust balance on agreement state
         newState[6] = newState[6] - channel.balanceA
         newState[7] = newState[7] - channel.balanceB
+        // update ether agreement balance
+        agreement.balanceA = agreement.balanceA - channel.balanceA
+        agreement.balanceB = agreement.balanceB - channel.balanceB
       }
 
       // push the new sig of new state into agreement object
-      //agreement.stateRaw.push(newState)
-      //console.log(rawStatesAgreement[AgreeEntryID])
-      rawStatesAgreement[AgreeEntryID].push(newState)
-      //console.log(rawStatesAgreement[AgreeEntryID])
+      rawStates[AgreeEntryID].push(newState)
 
       agreement.stateSerialized = self.utils.serializeState(newState)
 
@@ -271,7 +263,6 @@ module.exports = function gsc (self) {
       let stateSig = []
       stateSig.push(self.utils.sign(stateHash, self.privateKey))
       agreement.stateSignatures.push(stateSig)
-
 
 
       // store the channel
@@ -283,10 +274,7 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', agreements)
 
       // store state
-      await self.storage.set('states', rawStatesChannel)
-
-      // store state
-      await self.storage.set('states', rawStatesAgreement)
+      await self.storage.set('states', rawStates)
     },
 
     joinChannel: async function(channel, agreement, channelState) {
