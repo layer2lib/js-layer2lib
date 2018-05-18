@@ -145,24 +145,54 @@ async function test() {
   //console.log(txs_agreement)
   //console.log(txs_channel)
 
-  // console.log('ether channel now open')
+  console.log('Bob sends join channel ack to Alice')
+  Bob_agreement.dbSalt = 'Alice'
+  await lAlice.gsc.updateAgreement(Bob_agreement)
+  Bob_agreement.dbSalt = 'Bob'
 
-  // chan = await lBob.gsc.getChannel('respekBob')
+  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  //console.log(Alice_agreement)
 
-  // console.log(chan)
-  // col = await lBob.getGSCAgreement('spankHub1337Bob')
-  // console.log(col)
+  console.log('ether channel now open')
+  console.log('Bob is initiating ether payment')
 
-  // console.log('Bob now sends ack to Alice of open etherchannel')
+  let updateState = {
+    balanceA: web3.toWei(0.06, 'ether'),
+    balanceB: web3.toWei(0.02, 'ether')
+  }
 
-  // console.log('Bob is initiating ether payment')
+  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState)
 
-  // let updateState = {
-  //   balanceA: web3.toWei(0.06, 'ether'),
-  //   balanceB: web3.toWei(0.09, 'ether')
-  // }
+  Bob_chan = await lBob.gsc.getChannel('respekBob')
+  //console.log(Bob_chan)
+  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  //console.log(Bob_agreement)
+  BobChanState = await lBob.gsc.getStates('respekBob')
+  //console.log(BobChanState)
+  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  //console.log(BobAgreementState)
 
-  // await lBob.gsc.updateChannelState('respekBob', updateState)
+  console.log('Bob sends channel state update to Alice')
+
+  let chanAlice = JSON.parse(JSON.stringify(Bob_chan))
+  let agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
+  chanAlice.dbSalt = 'Alice'
+  agreeAlice.dbSalt = 'Alice'
+
+  await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
+
+  Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  //console.log(Alice_chan)
+  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  //console.log(Alice_agreement)
+  AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  //console.log(AliceChanState)
+  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  //console.log(AliceAgreementState)
+
+  console.log('Alice confirmed channel state update, sends ack to Bob')
+
+  await lBob.gsc.updateAgreement(Alice_agreement)
 
   client.quit()
 }

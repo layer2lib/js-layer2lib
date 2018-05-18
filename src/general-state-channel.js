@@ -6,7 +6,8 @@ const repo = require('./repo/repo')
 module.exports = function gsc (self) {
   return {
     init: async function(options) {
-      //console.log(this._getMetaChannelBytecode())
+      // TODO: Check against counterfactual registry and see if any
+      // of the channels are being challenged when online
       self.storage = repo(self)
       self.etherExtension = '0x32c1d681fe917170573aed0671d21317f14219fd'
       self.bidirectEtherInterpreter = '0x74926af30d35337e45225666bbf49e156fd08016'
@@ -221,13 +222,11 @@ module.exports = function gsc (self) {
       channel.stateSerialized = self.utils.serializeState(channelInputs)
       channel.stateRaw = channelInputs
 
-      let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
-
       // calculate channel root hash
-      let elem = self.utils.sha3(channelHash)
+      let elem = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
       let elems = []
-      for(var i=0; i<agreement.channels.length; i++) { elems.push(agreement.channels[i]) }
+      for(var i=0; i<agreement.channels.length; i++) { elems.push(self.utils.hexToBuffer(agreement.channels[i])) }
 
       elems.push(self.utils.hexToBuffer(elem))
 
@@ -273,7 +272,7 @@ module.exports = function gsc (self) {
       if(txs[ChanEntryID].length === 0) {
         tx_nonce = 0
       } else {
-        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-2].nonce++
+        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-1].nonce++
       }
 
       let tx = {
@@ -380,7 +379,7 @@ module.exports = function gsc (self) {
       if(txs[ChanEntryID].length === 0) {
         tx_nonce = 0
       } else {
-        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-2].nonce++
+        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-1].nonce++
       }
 
       let tx = {
@@ -406,21 +405,222 @@ module.exports = function gsc (self) {
       await self.storage.set('transactions', txs)
     },
 
-    updateChannelState: async function(id, updateState) {
+    initiateUpdateChannelState: async function(id, updateState) {
+      let ChanEntryID = id
       let channels = await self.storage.get('channels') || {}
-      if(!channels.hasOwnProperty(id)) return
-      let channel = channels[id]
+      if(!channels.hasOwnProperty(ChanEntryID)) return
+      let channel = await this.getChannel(ChanEntryID)
 
+      let AgreeEntryID = channel.agreementID+channel.dbSalt
       let agreements = await self.storage.get('agreements') || {}
-      if(!agreements.hasOwnProperty(channel.agreementID+channel.dbSalt)) return
-      let agreement = agreements[channel.ID+channel.dbSalt]
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
+      let agreement = await this.getAgreement(AgreeEntryID)
+
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(ChanEntryID)) return
+      if(!rawStates.hasOwnProperty(AgreeEntryID)) return
+
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(ChanEntryID)) return
+
+      let l = rawStates[ChanEntryID].length
+      let chanState = rawStates[ChanEntryID][l-1].slice(0)
+
+      // get old channel hash
+      let oldStateHash = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
+
+      let l2 = rawStates[AgreeEntryID].length
+      let agreementState = rawStates[AgreeEntryID][l2-1].slice(0)
 
       // TODO: create modules for each interpreter type
       if(channel.type == 'ether') {
-        console.log('ETHERRRR')
+        chanState[2]++
+        chanState[11] = updateState.balanceA
+        chanState[12] = updateState.balanceB
       }
+
+      channel.balanceA = updateState.balanceA
+      channel.balanceB = updateState.balanceB
+
+      rawStates[ChanEntryID].push(chanState)
+
+      channel.stateSerialized = self.utils.serializeState(chanState)
+      channel.stateRaw = chanState
+
+      // calculate channel root hash
+      let elem = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
+
+      let elems = agreement.channels.slice(0)
+ 
+      for(var i=0; i<agreement.channels.length; i++) { 
+        if(oldStateHash === elems[i]) {
+          agreement.channels[i] = elem
+          elems[i] = elem
+        }
+        elems[i] = self.utils.hexToBuffer(elems[i])
+      }
+
+      let merkle = new self.merkleTree(elems)
+
+      // put root hash in agreement state
+      let channelRoot = self.utils.bufferToHex(merkle.getRoot())
+      agreement.channelRootHash = channelRoot
+
+      // serialize and sign s1 of agreement state
+      let oldStates = rawStates[AgreeEntryID]
+
+      // grab latest state and modify it
+      let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
+      newState[5] = channelRoot
+      newState[1]++
+
+      // push the new sig of new state into agreement object
+      rawStates[AgreeEntryID].push(newState)
+
+      agreement.stateSerialized = self.utils.serializeState(newState)
+
+      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateSig = []
+      stateSig.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures.push(stateSig)
+
+      let tx_nonce
+      if(txs[ChanEntryID].length === 0) {
+        tx_nonce = 0
+      } else {
+        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-1].nonce
+        tx_nonce++
+      }
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: channel.ID,
+        nonce: tx_nonce,
+        timestamp: Date.now(),
+        data: updateState,
+        txHash: self.web3.sha3(updateState.toString(), {encoding: 'hex'})
+      }
+      txs[ChanEntryID].push(tx)
+
+      // store the channel
+      Object.assign(channels[ChanEntryID], channel)
+      await self.storage.set('channels', channels)
+
+      // store the new agreement
+      Object.assign(agreements[AgreeEntryID], agreement)
+      await self.storage.set('agreements', agreements)
+
+      // store state
+      await self.storage.set('states', rawStates)
+      await self.storage.set('transactions', txs)
     },
 
+    confirmUpdateChannelState: async function(updateChannel, updateAgreement, updateState) {
+      let ChanEntryID = updateChannel.ID+updateChannel.dbSalt
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(ChanEntryID)) return
+      let channel = await this.getChannel(ChanEntryID)
+
+      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
+      let agreement = await this.getAgreement(AgreeEntryID)
+
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(ChanEntryID)) return
+      if(!rawStates.hasOwnProperty(AgreeEntryID)) return
+
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(ChanEntryID)) return
+
+
+      // require this
+      let isValidUpdate = this._verifyUpdate(updateAgreement, agreement, channel, updateState)
+
+      rawStates[ChanEntryID].push(channel.stateRaw)
+
+      // serialize and sign s1 of agreement state
+      let oldStates = rawStates[AgreeEntryID]
+
+      // grab latest state and modify it
+      let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
+      newState[5] = updateAgreement.channelRootHash
+      newState[1]++
+
+      // add latest state
+      rawStates[AgreeEntryID].push(newState)
+
+      let stateHash = self.web3.sha3(updateAgreement.stateSerialized, {encoding: 'hex'})
+      updateAgreement.stateSignatures[updateAgreement.stateSignatures.length-1][1] = self.utils.sign(stateHash, self.privateKey)
+
+      let tx_nonce
+      if(txs[ChanEntryID].length === 0) {
+        tx_nonce = 0
+      } else {
+        tx_nonce = txs[ChanEntryID][txs[ChanEntryID].length-1].nonce++
+      }
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: channel.ID,
+        nonce: tx_nonce,
+        timestamp: Date.now(),
+        data: updateState,
+        txHash: self.web3.sha3(updateState.toString(), {encoding: 'hex'})
+      }
+      txs[ChanEntryID].push(tx)
+
+      // store the channel
+      Object.assign(channels[ChanEntryID], updateChannel)
+      await self.storage.set('channels', channels)
+
+      // store the new agreement
+      Object.assign(agreements[AgreeEntryID], updateAgreement)
+      await self.storage.set('agreements', agreements)
+
+      // store state
+      await self.storage.set('states', rawStates)
+      await self.storage.set('transactions', txs)
+
+    },
+
+    _verifyUpdate: function(updateAgreement, currentAgreement, currentChannel, updateState) {
+      // get old channel hash
+      let oldStateHash = self.utils.sha3(currentChannel.stateSerialized, {encoding: 'hex'})
+
+      // TODO: create modules for each interpreter type
+      if(currentChannel.type == 'ether') {
+        currentChannel.stateRaw[2]++
+        currentChannel.stateRaw[11] = updateState.balanceA
+        currentChannel.stateRaw[12] = updateState.balanceB
+      }
+
+      let newStateSerialized = self.utils.serializeState(currentChannel.stateRaw)
+
+      // calculate channel root hash
+      let elem = self.utils.sha3(newStateSerialized, {encoding: 'hex'})
+
+      let elems = currentAgreement.channels.slice(0)
+ 
+      for(var i=0; i<currentAgreement.channels.length; i++) { 
+        if(oldStateHash === elems[i]) {
+          elems[i] = elem
+        }
+        elems[i] = self.utils.hexToBuffer(elems[i])
+      }
+
+      let merkle = new self.merkleTree(elems)
+
+      // put root hash in agreement state
+      let channelRoot = self.utils.bufferToHex(merkle.getRoot())
+
+      if(updateAgreement.channelRootHash === channelRoot) {
+        return true
+      } else {
+        return false
+      }
+
+    },
 
     startSettleChannel: async function(channelID) {
       // Require that there are no open channels!
@@ -472,6 +672,7 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', {})
       await self.storage.set('transactions', {})
       await self.storage.set('states', {})
+      await self.storage.set('channels', {})
     }
   }
 }
