@@ -33,7 +33,8 @@ module.exports = function gsc (self) {
       agreement.channels = []
       agreement.channelRootHash = '0x0'
 
-      let metaByteCode = metachannel.deployedBytecode
+      const metaByteCode = metachannel.deployedBytecode
+
       let args = ['0x1337', agreement.partyA, agreement.partyB]
       let signers = [agreement.partyA, agreement.partyB]
       let metaCTFbytes = self.utils.getCTFstate(metaByteCode, signers, args)
@@ -74,12 +75,17 @@ module.exports = function gsc (self) {
       }
       txs[entryID].push(tx)
 
+
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
-
+      const msigBytecode = msig.deployedBytecode
+      let msigArgs = [msigBytecode, metachannelCTFaddress, self.registryAddress]
+      let msigDeployBytes = self.utils.serializeState(msigArgs)
+      console.log(msigDeployBytes)
       await self.utils.deployContract('0x0')
       let msigAddress = '0x0'
       agreement.address = msigAddress
+
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
       
@@ -645,6 +651,12 @@ module.exports = function gsc (self) {
       return _agreements[agreementID]
 
     },
+
+    getAllAgreements: async function() {
+      let _agreements = await self.storage.get('agreements')
+      return _agreements
+    },
+
 
     getChannel: async function(channelID) {
       let channels = await self.storage.get('channels')

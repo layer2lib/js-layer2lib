@@ -59,8 +59,21 @@ module.exports = function(self) {
     },
 
     deployContract: async function deployContract(bytes) {
-      let g = await self.web3.eth.gasPrice
-      console.log('gas price: '+g)
+      const gas = await self.web3.eth.gasPrice
+
+      // TODO: get use public key of private key to generate account
+      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.coinbase)
+
+      const rawTx = {
+        nonce: await self.web3.toHex(nonce),
+        gasPrice: await self.web3.toHex(gas),
+        gasLimit: await self.web3.toHex(6000000),
+        data: bytes,
+        from: self.web3.eth.coinbase // TODO: get account address from pubkey
+      }
+      console.log('account nonce: '+nonce)
+      console.log('gas price: '+gas)
+      console.log(rawTx)
     },
 
     getBytes: function getBytes(input) {
