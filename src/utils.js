@@ -71,9 +71,9 @@ module.exports = function(self) {
         data: bytes,
         from: self.web3.eth.coinbase // TODO: get account address from pubkey
       }
-      console.log('account nonce: '+nonce)
-      console.log('gas price: '+gas)
-      console.log(rawTx)
+      //console.log('account nonce: '+nonce)
+      //console.log('gas price: '+gas)
+      //console.log(rawTx)
     },
 
     getBytes: function getBytes(input) {
@@ -165,10 +165,6 @@ module.exports = function(self) {
 
     bufferToHex: function bufferToHex(buffer) {
       return '0x'+ buffer.toString('hex')
-    },
-
-    isHash: function isHash(buffer) {
-      return buffer.length === 32 && Buffer.isBuffer(buffer)
     }
   }
 }

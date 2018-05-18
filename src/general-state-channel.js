@@ -81,7 +81,7 @@ module.exports = function gsc (self) {
       const msigBytecode = msig.deployedBytecode
       let msigArgs = [msigBytecode, metachannelCTFaddress, self.registryAddress]
       let msigDeployBytes = self.utils.serializeState(msigArgs)
-      console.log(msigDeployBytes)
+      //console.log(msigDeployBytes)
       await self.utils.deployContract('0x0')
       let msigAddress = '0x0'
       agreement.address = msigAddress

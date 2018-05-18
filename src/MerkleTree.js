@@ -50,14 +50,19 @@ function getNextLayer (elements) {
   }, [])
 }
 
+ function isHash(buffer) {
+  return buffer.length === 32 && Buffer.isBuffer(buffer)
+}
+
 module.exports = class MerkleTree {
 
   constructor(_elements) {
-    if(!_elements.every(localUtils.isHash)){
+    if(!_elements.every(isHash)){
       throw new Error('elements must be 32 byte buffers')
     }
     const e = { elements: deduplicate(_elements) }
     Object.assign(this, e)
+
     this.elements.sort(Buffer.compare)
 
     const l = { layers: getLayers(this.elements) }
