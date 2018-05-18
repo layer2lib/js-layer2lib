@@ -1,6 +1,7 @@
 'use strict'
 
 const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
+const msig = require('../contracts/general-state-channels/build/contracts/MultiSig.json')
 const repo = require('./repo/repo')
 
 module.exports = function gsc (self) {
@@ -75,6 +76,8 @@ module.exports = function gsc (self) {
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
+
+      await self.utils.deployContract('0x0')
       let msigAddress = '0x0'
       agreement.address = msigAddress
 

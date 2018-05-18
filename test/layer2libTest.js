@@ -62,137 +62,143 @@ async function test() {
 
   console.log('Alice agreement created and stored.. initiating Bob')
 
-  // --------------------------------------------------
-  // BOB
-  let optionsBob = {
-    db: client,
-    privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
-  }
-
-  let lBob = new Layer2lib('http://localhost:8545', optionsBob)
-  lBob.initGSC()
-
-  console.log('Bob initialized, receive agreement from Alice and joins')
-
-  let agreementBob = JSON.parse(JSON.stringify(agreementAlice))
-  agreementBob.dbSalt = 'Bob'
-
-  await lBob.joinGSCAgreement(agreementBob, AliceAgreementState)
-
-  let Bob_agreement = await lAlice.getGSCAgreement('spankHub1337Bob')
-  //console.log(Bob_agreement)
-  let Bob_tx = await lBob.gsc.getTransactions('spankHub1337Bob')
-  //console.log(Bob_tx)
-  let BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
-  //console.log(BobAgreementState)
-
-  console.log('Bob now sends openchannel ack to Alice')
-
-  let isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
-  console.log('Alice state is agreement open: ' + isOpenAlice)
-  let isOpenBob = await lBob.gsc.isAgreementOpen('spankHub1337Bob')
-  console.log('Bob state is agreement open: ' + isOpenBob)
-
-  // Load Bob's ack into Alice db
-  agreementBob.dbSalt = 'Alice'
-  await lAlice.gsc.updateAgreement(agreementBob)
-  agreementBob.dbSalt = 'Bob'
-
-  isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
-  console.log('Alice state is agreement open: ' + isOpenAlice)
-
-  //---------------------------
-  // Open a channel
-
-  let channelAlice = {
-    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
-    ID: 'respek',
-    agreementID: 'spankHub1337',
-    type: 'ether',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether')
-  }
-
-  await lAlice.openGSCChannel(channelAlice)
 
 
-  let Alice_chan = await lAlice.gsc.getChannel('respekAlice')
-  //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  //console.log(Alice_agreement)
-  let AliceChanState = await lAlice.gsc.getStates('respekAlice')
-  //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
-  //console.log(AliceAgreementState)
+  
 
-  let chanBob = JSON.parse(JSON.stringify(Alice_chan))
-  chanBob.dbSalt = 'Bob'
-  Bob_agreement = JSON.parse(JSON.stringify(Alice_agreement))
-  Bob_agreement.dbSalt = 'Bob'
-  await lBob.gsc.joinChannel(chanBob, Bob_agreement, chanBob.stateRaw)
+  // // --------------------------------------------------
+  // // BOB
+  // let optionsBob = {
+  //   db: client,
+  //   privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
+  // }
 
-  let Bob_chan = await lBob.gsc.getChannel('respekBob')
-  //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  //console.log(Bob_agreement)
-  let BobChanState = await lBob.gsc.getStates('respekBob')
-  //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
-  //console.log(BobAgreementState)
+  // let lBob = new Layer2lib('http://localhost:8545', optionsBob)
+  // lBob.initGSC()
 
-  let txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
-  let txs_channel = await lBob.gsc.getTransactions('respekBob')
-  //console.log(txs_agreement)
-  //console.log(txs_channel)
+  // console.log('Bob initialized, receive agreement from Alice and joins')
 
-  console.log('Bob sends join channel ack to Alice')
-  Bob_agreement.dbSalt = 'Alice'
-  await lAlice.gsc.updateAgreement(Bob_agreement)
-  Bob_agreement.dbSalt = 'Bob'
+  // let agreementBob = JSON.parse(JSON.stringify(agreementAlice))
+  // agreementBob.dbSalt = 'Bob'
 
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  //console.log(Alice_agreement)
+  // await lBob.joinGSCAgreement(agreementBob, AliceAgreementState)
 
-  console.log('ether channel now open')
-  console.log('Bob is initiating ether payment')
+  // let Bob_agreement = await lAlice.getGSCAgreement('spankHub1337Bob')
+  // //console.log(Bob_agreement)
+  // let Bob_tx = await lBob.gsc.getTransactions('spankHub1337Bob')
+  // //console.log(Bob_tx)
+  // let BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  // //console.log(BobAgreementState)
 
-  let updateState = {
-    balanceA: web3.toWei(0.06, 'ether'),
-    balanceB: web3.toWei(0.02, 'ether')
-  }
+  // console.log('Bob now sends openchannel ack to Alice')
 
-  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState)
+  // let isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  // console.log('Alice state is agreement open: ' + isOpenAlice)
+  // let isOpenBob = await lBob.gsc.isAgreementOpen('spankHub1337Bob')
+  // console.log('Bob state is agreement open: ' + isOpenBob)
 
-  Bob_chan = await lBob.gsc.getChannel('respekBob')
-  //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  //console.log(Bob_agreement)
-  BobChanState = await lBob.gsc.getStates('respekBob')
-  //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
-  //console.log(BobAgreementState)
+  // // Load Bob's ack into Alice db
+  // agreementBob.dbSalt = 'Alice'
+  // await lAlice.gsc.updateAgreement(agreementBob)
+  // agreementBob.dbSalt = 'Bob'
 
-  console.log('Bob sends channel state update to Alice')
+  // isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  // console.log('Alice state is agreement open: ' + isOpenAlice)
 
-  let chanAlice = JSON.parse(JSON.stringify(Bob_chan))
-  let agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
-  chanAlice.dbSalt = 'Alice'
-  agreeAlice.dbSalt = 'Alice'
+  // //---------------------------
+  // // Open a channel
 
-  await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
+  // let channelAlice = {
+  //   dbSalt: 'Alice', // for testing multiple layer2 instances on same db
+  //   ID: 'respek',
+  //   agreementID: 'spankHub1337',
+  //   type: 'ether',
+  //   balanceA: web3.toWei(0.03, 'ether'),
+  //   balanceB: web3.toWei(0.05, 'ether')
+  // }
 
-  Alice_chan = await lAlice.gsc.getChannel('respekAlice')
-  //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  //console.log(Alice_agreement)
-  AliceChanState = await lAlice.gsc.getStates('respekAlice')
-  //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
-  //console.log(AliceAgreementState)
+  // await lAlice.openGSCChannel(channelAlice)
 
-  console.log('Alice confirmed channel state update, sends ack to Bob')
 
-  await lBob.gsc.updateAgreement(Alice_agreement)
+  // let Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  // //console.log(Alice_chan)
+  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  // //console.log(Alice_agreement)
+  // let AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  // //console.log(AliceChanState)
+  // AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  // //console.log(AliceAgreementState)
+
+  // let chanBob = JSON.parse(JSON.stringify(Alice_chan))
+  // chanBob.dbSalt = 'Bob'
+  // Bob_agreement = JSON.parse(JSON.stringify(Alice_agreement))
+  // Bob_agreement.dbSalt = 'Bob'
+  // await lBob.gsc.joinChannel(chanBob, Bob_agreement, chanBob.stateRaw)
+
+  // let Bob_chan = await lBob.gsc.getChannel('respekBob')
+  // //console.log(Bob_chan)
+  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  // //console.log(Bob_agreement)
+  // let BobChanState = await lBob.gsc.getStates('respekBob')
+  // //console.log(BobChanState)
+  // BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  // //console.log(BobAgreementState)
+
+  // let txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
+  // let txs_channel = await lBob.gsc.getTransactions('respekBob')
+  // //console.log(txs_agreement)
+  // //console.log(txs_channel)
+
+  // console.log('Bob sends join channel ack to Alice')
+  // Bob_agreement.dbSalt = 'Alice'
+  // await lAlice.gsc.updateAgreement(Bob_agreement)
+  // Bob_agreement.dbSalt = 'Bob'
+
+  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  // //console.log(Alice_agreement)
+
+  // console.log('ether channel now open')
+  // console.log('Bob is initiating ether payment')
+
+  // let updateState = {
+  //   balanceA: web3.toWei(0.06, 'ether'),
+  //   balanceB: web3.toWei(0.02, 'ether')
+  // }
+
+  // await lBob.gsc.initiateUpdateChannelState('respekBob', updateState)
+
+  // Bob_chan = await lBob.gsc.getChannel('respekBob')
+  // //console.log(Bob_chan)
+  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  // //console.log(Bob_agreement)
+  // BobChanState = await lBob.gsc.getStates('respekBob')
+  // //console.log(BobChanState)
+  // BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  // //console.log(BobAgreementState)
+
+  // console.log('Bob sends channel state update to Alice')
+
+  // let chanAlice = JSON.parse(JSON.stringify(Bob_chan))
+  // let agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
+  // chanAlice.dbSalt = 'Alice'
+  // agreeAlice.dbSalt = 'Alice'
+
+  // await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
+
+  // Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  // //console.log(Alice_chan)
+  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  // //console.log(Alice_agreement)
+  // AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  // //console.log(AliceChanState)
+  // AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  // //console.log(AliceAgreementState)
+
+  // console.log('Alice confirmed channel state update, sends ack to Bob')
+
+  // await lBob.gsc.updateAgreement(Alice_agreement)
+  // txs_channel = await lBob.gsc.getTransactions('respekBob')
+  // //console.log(txs_channel)
 
   client.quit()
 }

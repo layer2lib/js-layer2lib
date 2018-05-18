@@ -20,7 +20,7 @@ class Layer2lib {
     this.web3 = web3
 
     this.merkleTree = Merkle
-    this.utils = utils
+    this.utils = utils(this)
 
     if (!options.db) throw new Error('Require DB object');
     if (!options.db.set)
