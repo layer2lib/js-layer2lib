@@ -72,17 +72,17 @@ module.exports = function(self) {
         data: bytes,
         from: self.web3.eth.coinbase // TODO: get account address from pubkey
       }
-      // console.log('account nonce: '+nonce)
-      // console.log('gas price: '+gas)
-      // console.log(rawTx)
+
       const tx = new TX(rawTx, 3)
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
-      //console.log(this.bufferToHex(serialized))
 
       //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
       let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
-      let contract_address = await this.waitForConfirm(txHash)
+      await this.waitForConfirm(txHash)
+      let receipt = await self.web3.eth.getTransactionReceipt(txHash)
+      let contract_address = receipt.contractAddress
+      
       return contract_address
     },
 
@@ -121,22 +121,20 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
-      //let txHash = await c.openAgreement(state, extension, v, r, s, {from: self.web3.eth.accounts[0], value: web3.toWei(0.1, 'ether')})
-      console.log(txHash)
+      //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
       return true
     },
 
     waitForConfirm: async function(txHash) {
-      console.log('waiting for '+txHash+' to be confirmed...')
-      const receipt = await self.web3.eth.getTransactionReceipt(txHash)
+      //console.log('waiting for '+txHash+' to be confirmed...')
+      let receipt = await self.web3.eth.getTransactionReceipt(txHash)
       
       if(receipt == null) {
         await this.timeout(1000)
         await this.waitForConfirm(txHash)
       } else {
-        console.log('Contract Address: '+ receipt.contractAddress)
-        return receipt.contractAddress
+        //console.log('Contract Address: '+ receipt.contractAddress)
+        return
       }
     },
 
