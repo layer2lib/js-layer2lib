@@ -65,16 +65,6 @@ module.exports = function gsc (self) {
       state0sigs.push(self.utils.sign(stateHash, self.privateKey))
       agreement.stateSignatures.push(state0sigs)
 
-      let tx = {
-        agreement: agreement.ID,
-        channel: 'master',
-        nonce: 0,
-        timestamp: Date.now(),
-        data: 'Open Agreement',
-        txHash: '0x0'
-      }
-      txs[entryID].push(tx)
-
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
@@ -87,7 +77,7 @@ module.exports = function gsc (self) {
 
       //console.log(msig.openAgreement.getData(intialState, self.etherExtension, 28, '0x0', '0x0'))
       // TODO: call deployed msig
-      let isOpen = await self.utils.executeOpenAgreement(
+      let openTxHash = await self.utils.executeOpenAgreement(
         msig.abi, 
         msigAddress, 
         agreement.stateSerialized, 
@@ -95,6 +85,17 @@ module.exports = function gsc (self) {
         state0sigs[0], 
         agreement.balanceA
       )
+
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: 'master',
+        nonce: 0,
+        timestamp: Date.now(),
+        data: 'Open Agreement',
+        txHash: openTxHash
+      }
+      txs[entryID].push(tx)
 
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
@@ -127,16 +128,6 @@ module.exports = function gsc (self) {
       agreement.stateSignatures[0].push(self.utils.sign(stateHash, self.privateKey))
       agreement.openPending = false;
 
-      let tx = {
-        agreement: agreement.ID,
-        channel: 'master',
-        nonce: 0,
-        timestamp: Date.now(),
-        data: 'Join Agreement',
-        txHash: '0x0'
-      }
-      txs[entryID].push(tx)
-
       self.publicKey = self.utils.bufferToHex(
         self.utils.ecrecover(
           stateHash, 
@@ -145,6 +136,25 @@ module.exports = function gsc (self) {
           agreement.stateSignatures[0][1].s
           )
         )
+
+      let joinTxHash = await self.utils.executeJoinAgreement(
+        msig.abi, 
+        agreement.address, 
+        agreement.stateSerialized, 
+        self.etherExtension, 
+        agreement.stateSignatures[0][1], 
+        agreement.balanceB
+      )
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: 'master',
+        nonce: 0,
+        timestamp: Date.now(),
+        data: 'Join Agreement',
+        txHash: joinTxHash
+      }
+      txs[entryID].push(tx)
 
       Object.assign(agreements[entryID], agreement)
       // Object.assign(txs[entryID], txList)
@@ -167,6 +177,14 @@ module.exports = function gsc (self) {
       await self.storage.set('agreements', agreements)
 
       console.log('Agreement updated in db')
+    },
+
+    closeAgreement: async function(agreementID) {
+
+    },
+
+    confirmCloseAgreement: async function(agreementID) {
+
     },
 
     startSettleAgreement: async function(agreementID) {
@@ -638,6 +656,14 @@ module.exports = function gsc (self) {
       } else {
         return false
       }
+
+    },
+
+    closeChannel: async function(channelID) {
+
+    },
+
+    confirmCloseChannel: async function(channelID) {
 
     },
 

@@ -202,7 +202,7 @@ async function test() {
   txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
   Alice_tx = await lAlice.gsc.getTransactions('spankHub1337Alice')
   let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
-  //console.log(txs_channel)
+  console.log(txs_agreement)
 
   let allAgreements = await lAlice.gsc.getAllAgreements()
   //console.log(allAgreements)
