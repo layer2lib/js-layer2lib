@@ -1,6 +1,7 @@
 const Buffer = require('buffer').Buffer
 const ethutil = require('ethereumjs-util')
 const TX = require('ethereumjs-tx')
+const Promise = require('bluebird')
 
 module.exports = function(self) {
   return {
@@ -78,8 +79,69 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
       //console.log(this.bufferToHex(serialized))
+
+      //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
+      let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
+      let contract_address = await this.waitForConfirm(txHash)
+      return contract_address
+    },
+
+    executeOpenAgreement: async function executeOpenAgreement(
+      contractABI, 
+      address, 
+      state, 
+      extension, 
+      sig, 
+      balA
+    ) {
+
+      // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
+      let c = await self.web3.eth.contract(contractABI).at(address)
+      let r = this.bufferToHex(sig.r)
+      let s = this.bufferToHex(sig.s)
+      let v = sig.v
+      let callData = c.openAgreement.getData(state, extension, v, r, s)
+
+      const gas = await self.web3.eth.gasPrice
+
+      // TODO: get use public key of private key to generate account
+      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.coinbase)
+
+      const rawTx = {
+        nonce: await self.web3.toHex(nonce),
+        gasPrice: await self.web3.toHex(gas),
+        gasLimit: await self.web3.toHex(250000),
+        to: address,
+        value: await self.web3.toHex(balA),
+        data: callData,
+        from: self.web3.eth.coinbase // TODO: get account address from pubkey
+      }
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
       let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
-      console.log('Contract Creation Hash: ' + txHash)
+      //let txHash = await c.openAgreement(state, extension, v, r, s, {from: self.web3.eth.accounts[0], value: web3.toWei(0.1, 'ether')})
+      console.log(txHash)
+      return true
+    },
+
+    waitForConfirm: async function(txHash) {
+      console.log('waiting for '+txHash+' to be confirmed...')
+      const receipt = await self.web3.eth.getTransactionReceipt(txHash)
+      
+      if(receipt == null) {
+        await this.timeout(1000)
+        await this.waitForConfirm(txHash)
+      } else {
+        console.log('Contract Address: '+ receipt.contractAddress)
+        return receipt.contractAddress
+      }
+    },
+
+    timeout: function timeout(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
     },
 
     getBytes: function getBytes(input) {

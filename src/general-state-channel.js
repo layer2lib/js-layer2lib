@@ -81,9 +81,20 @@ module.exports = function gsc (self) {
       const msigBytecode = msig.bytecode
       let msigArgs = [msigBytecode, metachannelCTFaddress, self.registryAddress]
       let msigDeployBytes = self.utils.serializeState(msigArgs)
-      await self.utils.deployContract(msigDeployBytes)
-      let msigAddress = '0x0'
+      let msigAddress = await self.utils.deployContract(msigDeployBytes)
+      //let msigAddress = msig_tx_hash
       agreement.address = msigAddress
+
+      //console.log(msig.openAgreement.getData(intialState, self.etherExtension, 28, '0x0', '0x0'))
+      // TODO: call deployed msig
+      let isOpen = await self.utils.executeOpenAgreement(
+        msig.abi, 
+        msigAddress, 
+        agreement.stateSerialized, 
+        self.etherExtension, 
+        state0sigs[0], 
+        agreement.balanceA
+      )
 
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sigs[0].v, state0sigs[0].r, state0sigs[0].s))
@@ -656,6 +667,20 @@ module.exports = function gsc (self) {
       return _agreements
     },
 
+    getAllChannels: async function() {
+      let _channels = await self.storage.get('channels')
+      return _channels
+    },
+
+    getAllTransactions: async function() {
+      let _txs = await self.storage.get('transactions')
+      return _txs
+    },
+
+    getAllRawStates: async function() {
+      let _raw = await self.storage.get('states')
+      return _raw
+    },
 
     getChannel: async function(channelID) {
       let channels = await self.storage.get('channels')

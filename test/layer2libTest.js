@@ -204,6 +204,18 @@ async function test() {
   let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
   //console.log(txs_channel)
 
+  let allAgreements = await lAlice.gsc.getAllAgreements()
+  //console.log(allAgreements)
+
+  let allChannels = await lAlice.gsc.getAllChannels()
+  //console.log(allChannels)
+
+  let alltxs = await lAlice.gsc.getAllTransactions()
+  //console.log(alltxs)
+
+  let allRawStates = await lAlice.gsc.getAllRawStates()
+  //console.log(allRawStates)
+
   client.quit()
 }
 
