@@ -12,7 +12,7 @@ module.exports = function gsc (self) {
       self.storage = repo(self)
       self.etherExtension = '0x32c1d681fe917170573aed0671d21317f14219fd'
       self.bidirectEtherInterpreter = '0x74926af30d35337e45225666bbf49e156fd08016'
-      self.registryAddress = '0x4200'
+      self.registryAddress = '0x72be812074e5618786f1953662b8af1ec344231c'
     },
 
     createAgreement: async function(agreement) {
@@ -33,7 +33,7 @@ module.exports = function gsc (self) {
       agreement.channels = []
       agreement.channelRootHash = '0x0'
 
-      const metaByteCode = metachannel.deployedBytecode
+      const metaByteCode = metachannel.bytecode
 
       let args = ['0x1337', agreement.partyA, agreement.partyB]
       let signers = [agreement.partyA, agreement.partyB]
@@ -78,11 +78,10 @@ module.exports = function gsc (self) {
 
       // TODO deploy and call openAgreement on msig wallet
       // save msig deploy address to agreement object
-      const msigBytecode = msig.deployedBytecode
+      const msigBytecode = msig.bytecode
       let msigArgs = [msigBytecode, metachannelCTFaddress, self.registryAddress]
       let msigDeployBytes = self.utils.serializeState(msigArgs)
-      //console.log(msigDeployBytes)
-      await self.utils.deployContract('0x0')
+      await self.utils.deployContract(msigDeployBytes)
       let msigAddress = '0x0'
       agreement.address = msigAddress
 

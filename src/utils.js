@@ -67,13 +67,19 @@ module.exports = function(self) {
       const rawTx = {
         nonce: await self.web3.toHex(nonce),
         gasPrice: await self.web3.toHex(gas),
-        gasLimit: await self.web3.toHex(6000000),
+        gasLimit: await self.web3.toHex(4612388),
         data: bytes,
         from: self.web3.eth.coinbase // TODO: get account address from pubkey
       }
-      //console.log('account nonce: '+nonce)
-      //console.log('gas price: '+gas)
-      //console.log(rawTx)
+      // console.log('account nonce: '+nonce)
+      // console.log('gas price: '+gas)
+      // console.log(rawTx)
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+      //console.log(this.bufferToHex(serialized))
+      let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
+      console.log('Contract Creation Hash: ' + txHash)
     },
 
     getBytes: function getBytes(input) {
