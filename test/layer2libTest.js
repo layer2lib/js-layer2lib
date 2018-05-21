@@ -4,19 +4,30 @@ const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 const Promise = require('bluebird');
 
-//const redis = require("fakeredis");
+const redisFake = require("fakeredis");
 const redis = require("redis");
-const client = Promise.promisifyAll(redis.createClient())
+
+// connect to Redis locally otherwise use fakeredis
+var redisClient = redis.createClient();
+redisClient.on('error', err => {
+  if (err.code !== 'ECONNREFUSED') return;
+  redisClient.quit();
+  console.warn('!!! Redis connection failed, defaulting to fakeredis');
+  test(redisFake.createClient());
+});
+redisClient.on('connect', () => test(redisClient));
 
 let etherPaymentIntAddress = '0x'
 let etherPaymentExtAddress = '0x'
 let CTFregistryAddress = '0x'
 
-async function test() {
+async function test(redisClient) {
+  const redis = Promise.promisifyAll(redisClient);
+  const redisProxy = new Layer2lib.RedisStorageProxy(redis);
 
   // ALICE
   let optionsAlice = {
-    db: client,
+    db: redisProxy,
     privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
@@ -47,7 +58,7 @@ async function test() {
     balanceB: web3.toWei(0.2, 'ether')
   }
 
-  let entryID = agreementAlice.ID+agreementAlice.dbSalt
+  let entryID = agreementAlice.ID + agreementAlice.dbSalt
 
   await lAlice.createGSCAgreement(agreementAlice)
 
@@ -69,7 +80,7 @@ async function test() {
   // --------------------------------------------------
   // BOB
   let optionsBob = {
-    db: client,
+    db: redisProxy,
     privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
   }
 
@@ -261,7 +272,5 @@ async function test() {
 
   // Note: Either party may call this now to move final state
   await lBob.gcs.finalizeAgreement('spankHub1337Bob')
-  client.quit()
+  redisClient.quit()
 }
-
-test()
