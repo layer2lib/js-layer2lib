@@ -5,7 +5,7 @@ const web3 = new Web3()
 const GSC = require('./general-state-channel')
 const Merkle = require('./MerkleTree')
 
-const BrowserStorageProxy = require('./storage/BrowerStorageProxy') ///require('./storage/BrowserStorageProxy')
+const BrowserStorageProxy = require('./storage/BrowerStorageProxy')
 const RedisStorageProxy = require('./storage/RedisStorageProxy')
 const MemStorageProxy = require('./storage/MemStorageProxy')
 
