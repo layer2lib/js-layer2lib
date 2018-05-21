@@ -29,6 +29,7 @@ module.exports = function gsc (self) {
       if(!rawStates.hasOwnProperty(entryID)) rawStates[entryID] = []
 
       agreement.openPending = true
+      agreement.closed = false
       agreement.inDispute = false
       agreement.metaSignatures = []
       agreement.channels = []
@@ -180,12 +181,89 @@ module.exports = function gsc (self) {
       console.log('Agreement updated in db')
     },
 
-    closeAgreement: async function(agreementID) {
+    initiateCloseAgreement: async function(agreementID) {
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(agreementID)) return
 
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(agreementID)) return
+
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(agreementID)) return
+
+      let agreement = agreements[agreementID]
+      agreement.closed = true
+      const stateLength = rawStates[agreementID].length-1
+
+      let oldState = JSON.parse(JSON.stringify(rawStates[agreementID][stateLength]))
+
+      oldState[0] = 1
+      oldState[1] = oldState[1] + 1
+      
+      rawStates[agreementID].push(oldState)
+      agreement.stateSerialized = self.utils.serializeState(oldState)
+
+      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let finalSigs = [self.utils.sign(stateHash, self.privateKey)]
+      agreement.stateSignatures.push(finalSigs)
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: 'master',
+        nonce: oldState[1],
+        timestamp: Date.now(),
+        data: 'close Agreement',
+        txHash: '0x0'
+      }
+      txs[agreementID].push(tx)
+
+      Object.assign(agreements[agreementID], agreement)
+      // Object.assign(txs[entryID], txList)
+      // Object.assign(rawStates[entryID], rawStatesList)
+
+      await self.storage.set('agreements', agreements)
+      await self.storage.set('transactions', txs)
+      await self.storage.set('states', rawStates)
     },
 
-    confirmCloseAgreement: async function(agreementID) {
+    confirmCloseAgreement: async function(agreement, state) {
+      let agreementID = agreement.ID+agreement.dbSalt   
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(agreementID)) return
 
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(agreementID)) return
+
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(agreementID)) return
+      
+      rawStates[agreementID].push(state[state.length-1])
+
+      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let sigs = agreement.stateSignatures[agreement.stateSignatures.length-1]
+      sigs.push(self.utils.sign(stateHash, self.privateKey))
+      agreement.stateSignatures[agreement.stateSignatures.length-1] = sigs
+
+      let tx = {
+        agreement: agreement.ID,
+        channel: 'master',
+        nonce: '99',
+        timestamp: Date.now(),
+        data: 'close Agreement',
+        txHash: '0x0'
+      }
+      txs[agreementID].push(tx)
+
+      Object.assign(agreements[agreementID], agreement)
+      // Object.assign(txs[entryID], txList)
+      // Object.assign(rawStates[entryID], rawStatesList)
+
+      await self.storage.set('agreements', agreements)
+      await self.storage.set('transactions', txs)
+      await self.storage.set('states', rawStates)
+    },
+
+    finalizeAgreement: async function(agreementID) {
     },
 
     startSettleAgreement: async function(agreementID) {
@@ -603,6 +681,12 @@ module.exports = function gsc (self) {
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
       newState[5] = updateAgreement.channelRootHash
       newState[1]++
+
+      if(updateState.isClose === 1) {
+        newState[5] = '0x0'
+        newState[6] = updateAgreement.balanceA
+        newState[7] = updateAgreement.balanceB
+      }
 
       // add latest state
       rawStates[AgreeEntryID].push(newState)

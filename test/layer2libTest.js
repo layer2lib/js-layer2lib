@@ -189,7 +189,8 @@ async function test() {
   Alice_chan = await lAlice.gsc.getChannel('respekAlice')
   //console.log(Alice_chan)
   Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  //console.log(Alice_agreement)
+  // console.log(Alice_agreement)
+  // console.log(Alice_agreement.stateSignatures)
   AliceChanState = await lAlice.gsc.getStates('respekAlice')
   //console.log(AliceChanState)
   AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
@@ -223,19 +224,43 @@ async function test() {
   await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
 
   let allAgreements = await lAlice.gsc.getAllAgreements()
-  console.log(allAgreements)
+  //console.log(allAgreements)
 
   let allChannels = await lAlice.gsc.getAllChannels()
-  console.log(allChannels)
+  //console.log(allChannels)
 
   let alltxs = await lAlice.gsc.getAllTransactions()
   //console.log(alltxs)
 
   let allRawStates = await lAlice.gsc.getAllRawStates()
-  console.log(allRawStates)
+  //console.log(allRawStates)
 
   // Close agreement
+  await lAlice.gsc.initiateCloseAgreement('spankHub1337Alice')
 
+  Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  //console.log(Alice_chan)
+  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  console.log(Alice_agreement)
+  //console.log(Alice_agreement.stateSignatures)
+  AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  //console.log(AliceChanState)
+  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  //console.log(AliceAgreementState)
+
+  Alice_agreement.dbSalt = 'Bob'
+  await lBob.gsc.confirmCloseAgreement(Alice_agreement, AliceAgreementState)
+  Bob_chan = await lBob.gsc.getChannel('respekBob')
+  //console.log(Bob_chan)
+  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  console.log(Bob_agreement)
+  BobChanState = await lBob.gsc.getStates('respekBob')
+  //console.log(BobChanState)
+  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  //console.log(BobAgreementState)
+
+  // Note: Either party may call this now to move final state
+  await lBob.gcs.finalizeAgreement('spankHub1337Bob')
   client.quit()
 }
 
