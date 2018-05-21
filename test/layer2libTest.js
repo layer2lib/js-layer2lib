@@ -80,7 +80,7 @@ async function test(redisClient) {
   // --------------------------------------------------
   // BOB
   let optionsBob = {
-    db: client,
+    db: redisProxy,
     privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
   }
 
@@ -272,5 +272,5 @@ async function test(redisClient) {
 
   // Note: Either party may call this now to move final state
   await lBob.gcs.finalizeAgreement('spankHub1337Bob')
-  client.quit()
+  redisClient.quit()
 }
