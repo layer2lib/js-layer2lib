@@ -59,18 +59,18 @@ module.exports = function(self) {
       years:   function(val) { return val * this.days(365)}
     },
 
-    deployContract: async function deployContract(bytes) {
+    deployContract: async function deployContract(bytes, signer) {
       const gas = await self.web3.eth.gasPrice
 
       // TODO: get use public key of private key to generate account
-      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.coinbase)
+      const nonce = self.web3.eth.getTransactionCount(signer)
 
       const rawTx = {
         nonce: await self.web3.toHex(nonce),
         gasPrice: await self.web3.toHex(gas),
         gasLimit: await self.web3.toHex(4612388),
         data: bytes,
-        from: self.web3.eth.coinbase // TODO: get account address from pubkey
+        from: signer
       }
 
       const tx = new TX(rawTx, 3)
@@ -95,21 +95,22 @@ module.exports = function(self) {
       state, 
       extension, 
       sig, 
-      balA
+      balA,
+      signer
     ) {
 
       // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
       let c = await self.web3.eth.contract(contractABI).at(address)
-      let r = this.bufferToHex(sig.r)
-      let s = this.bufferToHex(sig.s)
-      let v = sig.v
+      let r = sig[0]
+      let s = sig[1]
+      let v = sig[2]
       let callData = c.openAgreement.getData(state, extension, v, r, s)
 
       let gas = await self.web3.eth.gasPrice
       //gas+=2000000000
 
       // TODO: get use public key of private key to generate account
-      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.accounts[0])
+      const nonce = self.web3.eth.getTransactionCount(signer)
 
       const rawTx = {
         nonce: await self.web3.toHex(nonce),
@@ -118,7 +119,7 @@ module.exports = function(self) {
         to: address,
         value: await self.web3.toHex(balA),
         data: callData,
-        from: self.web3.eth.accounts[0] // TODO: get account address from pubkey
+        from: signer
       }
 
       const tx = new TX(rawTx, 3)
@@ -127,6 +128,7 @@ module.exports = function(self) {
 
       //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
       let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
+      await this.waitForConfirm(txHash)
       return txHash
     },
 
@@ -136,20 +138,19 @@ module.exports = function(self) {
       state, 
       extension, 
       sig, 
-      balB
+      balB,
+      signer
     ) {
-
       // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
       let c = await self.web3.eth.contract(contractABI).at(address)
-      let r = this.bufferToHex(sig.r)
-      let s = this.bufferToHex(sig.s)
-      let v = sig.v
+      let r = sig[0]
+      let s = sig[1]
+      let v = sig[2]
       let callData = c.joinAgreement.getData(state, extension, v, r, s)
 
       let gas = await self.web3.eth.gasPrice
 
-      // TODO: get use public key of private key to generate account
-      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.accounts[1])
+      const nonce = self.web3.eth.getTransactionCount(signer)
       
       //gas+=2000000000
 
@@ -160,7 +161,7 @@ module.exports = function(self) {
         to: address,
         value: await self.web3.toHex(balB),
         data: callData,
-        from: self.web3.eth.accounts[1] // TODO: get account address from pubkey
+        from: signer
       }
 
       const tx = new TX(rawTx, 3)
@@ -169,29 +170,47 @@ module.exports = function(self) {
 
       //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
       let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
-      console.log(self.web3.eth.accounts[1])
+      await this.waitForConfirm(txHash)
       return txHash
     },
 
     executeCloseAgreement: async function executeCloseAgreement(
-      contractABI, 
-      address, 
-      state, 
-      extension, 
-      sigs
+      contractABI,
+      address,
+      state,
+      sigs,
+      signer
     ) {
-
       // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
       let c = await self.web3.eth.contract(contractABI).at(address)
-      let r = this.bufferToHex(sig.r)
-      let s = this.bufferToHex(sig.s)
-      let v = sig.v
-      let callData = c.closeAgreement.getData(state, extension, v, r, s)
+
+      let r = sig[0][0]
+      let s = sig[0][1]
+      let v = sig[0][2]
+      let r2 = sig[1][0]
+      let s2 = sig[1][1]
+      let v2 = sig[1][2]
+
+      let sigV = []
+      let sigR = []
+      let sigS = []
+
+      sigV.push(v)
+      sigV.push(v2)
+      sigR.push(r)
+      sigR.push(r2)
+      sigS.push(s)
+      sigS.push(s2)
+
+      //console.log(sigs[0].r.toString('hex')[1])
+
+      let callData = c.closeAgreement.getData(state, sigV, sigR, sigS)
+
+      //console.log(callData)
 
       let gas = await self.web3.eth.gasPrice
 
-      // TODO: get use public key of private key to generate account
-      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.accounts[1])
+      const nonce = self.web3.eth.getTransactionCount(signer)
       
       //gas+=2000000000
 
@@ -200,9 +219,8 @@ module.exports = function(self) {
         gasPrice: await self.web3.toHex(gas),
         gasLimit: await self.web3.toHex(250000),
         to: address,
-        value: await self.web3.toHex(balB),
         data: callData,
-        from: self.web3.eth.accounts[1] // TODO: get account address from pubkey
+        from: signer
       }
 
       const tx = new TX(rawTx, 3)
@@ -211,7 +229,7 @@ module.exports = function(self) {
 
       //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
       let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
-      console.log(self.web3.eth.accounts[1])
+      await this.waitForConfirm(txHash)
       return txHash
     },
 

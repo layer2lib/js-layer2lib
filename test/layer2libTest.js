@@ -74,10 +74,10 @@ async function test(redisClient) {
   console.log('Alice agreement created and stored.. initiating Bob')
 
 
-
-
-
   // --------------------------------------------------
+
+
+
   // BOB
   let optionsBob = {
     db: redisProxy,
@@ -116,7 +116,11 @@ async function test(redisClient) {
   isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
   console.log('Alice state is agreement open: ' + isOpenAlice)
 
-  //---------------------------
+
+
+  // --------------------------------------------------
+
+
   // Open a channel
 
   let channelAlice = {
@@ -163,6 +167,12 @@ async function test(redisClient) {
   console.log('Bob sends join channel ack to Alice')
   Bob_agreement.dbSalt = 'Alice'
   await lAlice.gsc.updateAgreement(Bob_agreement)
+
+
+  // --------------------------------------------------
+
+  // Send ether in channel
+
   Bob_agreement.dbSalt = 'Bob'
 
   Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
@@ -192,6 +202,7 @@ async function test(redisClient) {
 
   let chanAlice = JSON.parse(JSON.stringify(Bob_chan))
   let agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
+  //console.log(agreeAlice)
   chanAlice.dbSalt = 'Alice'
   agreeAlice.dbSalt = 'Alice'
 
@@ -200,7 +211,7 @@ async function test(redisClient) {
   Alice_chan = await lAlice.gsc.getChannel('respekAlice')
   //console.log(Alice_chan)
   Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  // console.log(Alice_agreement)
+  //console.log(Alice_agreement)
   // console.log(Alice_agreement.stateSignatures)
   AliceChanState = await lAlice.gsc.getStates('respekAlice')
   //console.log(AliceChanState)
@@ -209,13 +220,20 @@ async function test(redisClient) {
 
   console.log('Alice confirmed channel state update, sends ack to Bob')
 
+  Alice_agreement.dbSalt = 'Bob'
   await lBob.gsc.updateAgreement(Alice_agreement)
+  Alice_agreement.dbSalt = 'Alice'
 
   txs_channel = await lBob.gsc.getTransactions('respekBob')
   txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
   Alice_tx = await lAlice.gsc.getTransactions('spankHub1337Alice')
   let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
-  console.log(txs_agreement)
+  //console.log(txs_agreement)
+
+  
+  // --------------------------------------------------
+
+  // Send ether in channel and close channel
 
   // Close Channel
   updateState = {
@@ -223,10 +241,12 @@ async function test(redisClient) {
     balanceA: web3.toWei(0.07, 'ether'),
     balanceB: web3.toWei(0.01, 'ether')
   }
-
+  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  //console.log(Bob_agreement)
   await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
   Bob_chan = await lBob.gsc.getChannel('respekBob')
   Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  //console.log(Bob_agreement)
   agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
   chanAlice = JSON.parse(JSON.stringify(Bob_chan))
   chanAlice.dbSalt = 'Alice'
@@ -246,13 +266,19 @@ async function test(redisClient) {
   let allRawStates = await lAlice.gsc.getAllRawStates()
   //console.log(allRawStates)
 
+  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+
+  Alice_agreement.dbSalt = 'Bob'
+  await lBob.gsc.updateAgreement(Alice_agreement)
+  Alice_agreement.dbSalt = 'Alice'
+
   // Close agreement
   await lAlice.gsc.initiateCloseAgreement('spankHub1337Alice')
 
   Alice_chan = await lAlice.gsc.getChannel('respekAlice')
   //console.log(Alice_chan)
   Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  console.log(Alice_agreement)
+  //console.log(Alice_agreement)
   //console.log(Alice_agreement.stateSignatures)
   AliceChanState = await lAlice.gsc.getStates('respekAlice')
   //console.log(AliceChanState)
@@ -270,7 +296,14 @@ async function test(redisClient) {
   BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
   //console.log(BobAgreementState)
 
+  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+
+  Bob_agreement.dbSalt = 'Alice'
+  await lAlice.gsc.updateAgreement(Bob_agreement)
+  Bob_agreement.dbSalt = 'Bob'
+
   // Note: Either party may call this now to move final state
-  await lBob.gcs.finalizeAgreement('spankHub1337Bob')
+  await lBob.gsc.finalizeAgreement('spankHub1337Bob')
+  console.log('Agreement finalized, quiting...')
   redisClient.quit()
 }
