@@ -3,6 +3,7 @@
 const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
 const msig = require('../contracts/general-state-channels/build/contracts/MultiSig.json')
 const repo = require('./repo/repo')
+const BigNumber = require('bignumber.js')
 
 module.exports = function gsc (self) {
   return {
@@ -473,14 +474,25 @@ module.exports = function gsc (self) {
 
       // TODO: create modules for each interpreter type
       if(channel.type == 'ether') {
+        channel.balanceA = updateState.balanceA
+        channel.balanceB = updateState.balanceB
+
         chanState[0] = updateState.isClose
         chanState[2]++
         chanState[11] = updateState.balanceA
         chanState[12] = updateState.balanceB
-      }
 
-      channel.balanceA = updateState.balanceA
-      channel.balanceB = updateState.balanceB
+        //addjust agreement balance if close
+        if(updateState.isClose === 1) {
+          agreement.balanceA = parseInt(agreement.balanceA) + parseInt(chanState[11])
+          agreement.balanceB = parseInt(agreement.balanceB) + parseInt(chanState[12])
+          agreement.channelRootHash = '0x0'
+          chanState[11] = 0
+          chanState[12] = 0
+          channel.balanceA = 0
+          channel.balanceB = 0
+        }
+      }
 
       rawStates[ChanEntryID].push(chanState)
 
@@ -514,6 +526,11 @@ module.exports = function gsc (self) {
       newState[5] = channelRoot
       newState[1]++
 
+      if(updateState.isClose === 1) {
+        newState[5] = '0x0'
+        newState[6] = agreement.balanceA
+        newState[7] = agreement.balanceB
+      }
       // push the new sig of new state into agreement object
       rawStates[AgreeEntryID].push(newState)
 
@@ -577,7 +594,7 @@ module.exports = function gsc (self) {
       // require this
       let isValidUpdate = this._verifyUpdate(updateAgreement, agreement, channel, updateState)
 
-      rawStates[ChanEntryID].push(channel.stateRaw)
+      rawStates[ChanEntryID].push(updateChannel.stateRaw)
 
       // serialize and sign s1 of agreement state
       let oldStates = rawStates[AgreeEntryID]

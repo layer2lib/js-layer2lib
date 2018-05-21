@@ -232,10 +232,10 @@ async function test() {
   //console.log(alltxs)
 
   let allRawStates = await lAlice.gsc.getAllRawStates()
-  //console.log(allRawStates)
+  console.log(allRawStates)
 
   // Close agreement
-  
+
   client.quit()
 }
 
