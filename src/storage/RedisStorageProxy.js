@@ -2,7 +2,7 @@
 const BaseStorageProxy = require('./BaseStorageProxy');
 // Using in memory data storage for now to define structures
 //const MongoClient = require('mongodb').MongoClient
-const prefix = 'layer2_';
+const prefix = ''; // TODO: in the future use prefix 'layer2_'
 module.exports = class RedisStorageProxy extends BaseStorageProxy {
     constructor(redis) {
         super();
