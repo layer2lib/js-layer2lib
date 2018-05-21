@@ -2,7 +2,6 @@
 
 const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
 const msig = require('../contracts/general-state-channels/build/contracts/MultiSig.json')
-const repo = require('./repo/repo')
 const BigNumber = require('bignumber.js')
 
 module.exports = function gsc (self) {
@@ -10,7 +9,6 @@ module.exports = function gsc (self) {
     init: async function(options) {
       // TODO: Check against counterfactual registry and see if any
       // of the channels are being challenged when online
-      self.storage = repo(self)
       self.etherExtension = '0x32c1d681fe917170573aed0671d21317f14219fd'
       self.bidirectEtherInterpreter = '0x74926af30d35337e45225666bbf49e156fd08016'
       self.registryAddress = '0x72be812074e5618786f1953662b8af1ec344231c'

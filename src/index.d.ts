@@ -12,7 +12,7 @@ declare module "js-layer2lib" {
      * @param str String to store in buffer.
      * @param encoding encoding to use, optional.  Default is 'utf8'
      */
-    constructor(url: string, options: Options);
+    constructor(url: string, options: L2Options);
 
     /**
      * Returns the current balance as a string
@@ -26,7 +26,7 @@ declare module "js-layer2lib" {
     joinGSCAgreement(agreement: Agreement): Promise<void>;
   }
 
-  export interface Options {
+  export interface L2Options {
     db: L2Database;
     privateKey?: string;
   }
@@ -47,7 +47,11 @@ declare module "js-layer2lib" {
   export interface L2Database {
     // connect(address: string, options: any): void;
     // terminate(): void;
-    set(k: string, v: any);
+    keys(): [string];
+    logdriver(): void;
+    serialize(): string;
+    deserialize(obj: string): void;
+    set(k: string, v: any): void;
     get(k: string): any;
   }
 }

@@ -5,6 +5,10 @@ const web3 = new Web3()
 const GSC = require('./general-state-channel')
 const Merkle = require('./MerkleTree')
 
+const BrowserStorageProxy = require('./storage/BrowerStorageProxy') ///require('./storage/BrowserStorageProxy')
+const RedisStorageProxy = require('./storage/RedisStorageProxy')
+const MemStorageProxy = require('./storage/MemStorageProxy')
+
 const utils = require('./utils')
 
 // const config = require('./config')
@@ -26,7 +30,7 @@ class Layer2lib {
     if (!options.db.set)
       throw new Error('Not a valid DB object');
 
-    this.db = options.db
+    this.storage = options.db
     this.gsc = GSC(this)
 
 
@@ -72,5 +76,9 @@ class Layer2lib {
     await this.gsc.openChannel(options)
   }
 }
+
+Layer2lib.BrowserStorageProxy = BrowserStorageProxy;
+Layer2lib.RedisStorageProxy = RedisStorageProxy;
+Layer2lib.MemStorageProxy = MemStorageProxy;
 
 module.exports = Layer2lib
