@@ -161,11 +161,12 @@ async function test() {
   console.log('Bob is initiating ether payment')
 
   let updateState = {
+    isClose: 0,
     balanceA: web3.toWei(0.06, 'ether'),
     balanceB: web3.toWei(0.02, 'ether')
   }
 
-  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState)
+  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
 
   Bob_chan = await lBob.gsc.getChannel('respekBob')
   //console.log(Bob_chan)
@@ -204,11 +205,28 @@ async function test() {
   let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
   console.log(txs_agreement)
 
+  // Close Channel
+  updateState = {
+    isClose: 1,
+    balanceA: web3.toWei(0.07, 'ether'),
+    balanceB: web3.toWei(0.01, 'ether')
+  }
+
+  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
+  Bob_chan = await lBob.gsc.getChannel('respekBob')
+  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
+  chanAlice = JSON.parse(JSON.stringify(Bob_chan))
+  chanAlice.dbSalt = 'Alice'
+  agreeAlice.dbSalt = 'Alice'
+
+  await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
+
   let allAgreements = await lAlice.gsc.getAllAgreements()
-  //console.log(allAgreements)
+  console.log(allAgreements)
 
   let allChannels = await lAlice.gsc.getAllChannels()
-  //console.log(allChannels)
+  console.log(allChannels)
 
   let alltxs = await lAlice.gsc.getAllTransactions()
   //console.log(alltxs)
@@ -216,6 +234,8 @@ async function test() {
   let allRawStates = await lAlice.gsc.getAllRawStates()
   //console.log(allRawStates)
 
+  // Close agreement
+  
   client.quit()
 }
 

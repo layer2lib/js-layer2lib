@@ -442,6 +442,8 @@ module.exports = function gsc (self) {
       await self.storage.set('transactions', txs)
     },
 
+    // TODO: before updating any channel state we should check that the channel
+    // is not closed. Check previous channel state for close flag
     initiateUpdateChannelState: async function(id, updateState) {
       let ChanEntryID = id
       let channels = await self.storage.get('channels') || {}
@@ -471,6 +473,7 @@ module.exports = function gsc (self) {
 
       // TODO: create modules for each interpreter type
       if(channel.type == 'ether') {
+        chanState[0] = updateState.isClose
         chanState[2]++
         chanState[11] = updateState.balanceA
         chanState[12] = updateState.balanceB
@@ -621,6 +624,21 @@ module.exports = function gsc (self) {
 
     },
 
+    startSettleChannel: async function(channelID) {
+      // Require that there are no open channels!
+
+      // TODO: instantiate metachannel, call startSettle 
+    },
+
+    challengeSettleChannel: async function(channelID) {
+      // TODO: call challengeSettle on metachannel
+    },
+
+    closeByzantineChannel: async function(channelID) {
+      // TODO: call msig closeWithMetachannel
+
+    },
+
     _verifyUpdate: function(updateAgreement, currentAgreement, currentChannel, updateState) {
       // get old channel hash
       let oldStateHash = self.utils.sha3(currentChannel.stateSerialized, {encoding: 'hex'})
@@ -656,29 +674,6 @@ module.exports = function gsc (self) {
       } else {
         return false
       }
-
-    },
-
-    closeChannel: async function(channelID) {
-
-    },
-
-    confirmCloseChannel: async function(channelID) {
-
-    },
-
-    startSettleChannel: async function(channelID) {
-      // Require that there are no open channels!
-
-      // TODO: instantiate metachannel, call startSettle 
-    },
-
-    challengeChannelt: async function(channelID) {
-      // TODO: call challengeSettle on metachannel
-    },
-
-    closeByzantineChannel: async function(channelID) {
-      // TODO: call msig closeWithMetachannel
 
     },
 

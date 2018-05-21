@@ -173,6 +173,48 @@ module.exports = function(self) {
       return txHash
     },
 
+    executeCloseAgreement: async function executeCloseAgreement(
+      contractABI, 
+      address, 
+      state, 
+      extension, 
+      sigs
+    ) {
+
+      // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
+      let c = await self.web3.eth.contract(contractABI).at(address)
+      let r = this.bufferToHex(sig.r)
+      let s = this.bufferToHex(sig.s)
+      let v = sig.v
+      let callData = c.closeAgreement.getData(state, extension, v, r, s)
+
+      let gas = await self.web3.eth.gasPrice
+
+      // TODO: get use public key of private key to generate account
+      const nonce = self.web3.eth.getTransactionCount(self.web3.eth.accounts[1])
+      
+      //gas+=2000000000
+
+      const rawTx = {
+        nonce: await self.web3.toHex(nonce),
+        gasPrice: await self.web3.toHex(gas),
+        gasLimit: await self.web3.toHex(250000),
+        to: address,
+        value: await self.web3.toHex(balB),
+        data: callData,
+        from: self.web3.eth.accounts[1] // TODO: get account address from pubkey
+      }
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
+      //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
+      let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
+      console.log(self.web3.eth.accounts[1])
+      return txHash
+    },
+
     waitForConfirm: async function(txHash) {
       //console.log('waiting for '+txHash+' to be confirmed...')
       let receipt = await self.web3.eth.getTransactionReceipt(txHash)
