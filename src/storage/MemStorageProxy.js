@@ -13,7 +13,7 @@ module.exports = class BrowserStorageProxy extends BaseStorageProxy {
     // TODO: remove later once API is stable
 
     logdriver() {
-        console.log('js-layer2lib using driver ', localforage.driver());
+        console.log('js-layer2lib using in-memory driver');
     }
     async set(k, v) {
         // we still stringify to do deep copies

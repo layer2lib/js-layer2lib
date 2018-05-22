@@ -26,6 +26,28 @@ declare module "js-layer2lib" {
     joinGSCAgreement(agreement: Agreement): Promise<void>;
   }
 
+  export class BrowserStorageProxy extends BaseStorageProxy {
+    constructor(localforage:any, name?:string);
+  }
+
+  export class MemStorageProxy extends BaseStorageProxy {
+    constructor(url: string, options: L2Options);
+  }
+
+  export class RedisStorageProxy extends BaseStorageProxy {
+    constructor(redis:any);
+  }
+
+  export class BaseStorageProxy implements L2Database {
+    constructor(redis:any);
+    keys(): [string];
+    logdriver(): void;
+    serialize(): string;
+    deserialize(obj: string): void;
+    set(k: string, v: any): void;
+    get(k: string): any;
+  }
+
   export interface L2Options {
     db: L2Database;
     privateKey?: string;

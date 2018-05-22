@@ -7,13 +7,13 @@ module.exports = class RedisStorageProxy extends BaseStorageProxy {
     constructor(redis) {
         super();
         if (!redis) throw new Error('Redis instance missing from constructor');
-        if (!redis.getAsync) throw new Error('Redis instance async wrapped');
+        if (!redis.getAsync) throw new Error('Redis instance async not wrapped');
         this.redis = redis;
         // TODO: remove later once API is stable
     }
     logdriver() {
         // Log out current engine
-        console.log('js-layer2lib using driver Redis');
+        console.log('js-layer2lib using Redis driver');
     }
     async set(k, v) {
         await this.redis.setAsync(prefix + k, JSON.stringify(v))
