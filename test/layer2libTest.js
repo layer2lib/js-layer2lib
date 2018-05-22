@@ -290,7 +290,7 @@ async function test(redisClient) {
   Bob_chan = await lBob.gsc.getChannel('respekBob')
   //console.log(Bob_chan)
   Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  console.log(Bob_agreement)
+  //console.log(Bob_agreement)
   BobChanState = await lBob.gsc.getStates('respekBob')
   //console.log(BobChanState)
   BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')

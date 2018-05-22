@@ -183,16 +183,6 @@ module.exports = function(self) {
     ) {
       // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
       let c = await self.web3.eth.contract(contractABI).at(address)
-      console.log(sigs)
-
-      // let stateHash = self.web3.sha3(state, {encoding: 'hex'})
-      // let sig = self.utils.sign(stateHash, '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875')
-      // console.log(sig)
-
-      // stateHash = self.web3.sha3(state, {encoding: 'hex'})
-      // sig = self.utils.sign(stateHash, '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579')
-      // console.log(sig)
-
 
       let r = sigs[0][0]
       let s = sigs[0][1]
@@ -212,13 +202,8 @@ module.exports = function(self) {
       sigS.push(s)
       sigS.push(s2)
 
-      // console.log(sigV)
-      // console.log(sigR)
-      // console.log(sigS)
-
       let callData = c.closeAgreement.getData(state, sigV, sigR, sigS)
 
-      console.log(callData)
 
       let gas = await self.web3.eth.gasPrice
 
@@ -276,7 +261,9 @@ module.exports = function(self) {
     sign: function sign(message, key) {
       // TODO, web3 1.0.0 has a method for this but 
       // is not stable yet
-      return ethutil.ecsign(this.hexToBuffer(message), this.hexToBuffer(key))
+      let msg = this.hexToBuffer(message)
+      let msgHash = ethutil.hashPersonalMessage(msg)
+      return ethutil.ecsign(msgHash, this.hexToBuffer(key))
     },
 
     importPublic: function importPublic(key) {

@@ -62,6 +62,7 @@ module.exports = function gsc (self) {
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures = []
       let state0sig = self.utils.sign(stateHash, self.privateKey)
+
       let r = self.utils.bufferToHex(state0sig.r)
       let s = self.utils.bufferToHex(state0sig.s)
       let v = state0sig.v
