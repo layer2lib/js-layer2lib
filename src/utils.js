@@ -183,13 +183,23 @@ module.exports = function(self) {
     ) {
       // TODO: Replace .getData with our serialization of the call inputs, just get the 4 byte method sig and serialize()
       let c = await self.web3.eth.contract(contractABI).at(address)
+      console.log(sigs)
 
-      let r = sig[0][0]
-      let s = sig[0][1]
-      let v = sig[0][2]
-      let r2 = sig[1][0]
-      let s2 = sig[1][1]
-      let v2 = sig[1][2]
+      // let stateHash = self.web3.sha3(state, {encoding: 'hex'})
+      // let sig = self.utils.sign(stateHash, '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875')
+      // console.log(sig)
+
+      // stateHash = self.web3.sha3(state, {encoding: 'hex'})
+      // sig = self.utils.sign(stateHash, '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579')
+      // console.log(sig)
+
+
+      let r = sigs[0][0]
+      let s = sigs[0][1]
+      let v = sigs[0][2]
+      let r2 = sigs[1][0]
+      let s2 = sigs[1][1]
+      let v2 = sigs[1][2]
 
       let sigV = []
       let sigR = []
@@ -202,11 +212,13 @@ module.exports = function(self) {
       sigS.push(s)
       sigS.push(s2)
 
-      //console.log(sigs[0].r.toString('hex')[1])
+      // console.log(sigV)
+      // console.log(sigR)
+      // console.log(sigS)
 
       let callData = c.closeAgreement.getData(state, sigV, sigR, sigS)
 
-      //console.log(callData)
+      console.log(callData)
 
       let gas = await self.web3.eth.gasPrice
 
@@ -222,6 +234,7 @@ module.exports = function(self) {
         data: callData,
         from: signer
       }
+
 
       const tx = new TX(rawTx, 3)
       tx.sign(this.hexToBuffer(self.privateKey))

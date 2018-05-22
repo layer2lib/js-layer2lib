@@ -288,11 +288,12 @@ module.exports = function gsc (self) {
       if(!agreements.hasOwnProperty(agreementID)) return
 
       let agreement = agreements[agreementID]
+
       let joinTxHash = await self.utils.executeCloseAgreement(
         msig.abi, 
         agreement.address, 
         agreement.stateSerialized, 
-        agreement.stateSignatures[1],
+        agreement.stateSignatures[agreement.stateSignatures.length-1],
         agreement.partyB // TODO: dont assume which party is calling this, it may be neither
       )
 
