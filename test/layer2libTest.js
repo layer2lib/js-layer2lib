@@ -310,6 +310,11 @@ async function test(redisClient) {
   // Close Channel Byzantine
 
   await lBob.gsc.startSettleChannel('respekBob')
+
+  console.log('Settlement period started on channel, calling close after')
+
+  await lBob.gsc.closeByzantineChannel('respekBob')
+
   console.log('Agreement finalized, quiting...')
   redisClient.quit()
 }

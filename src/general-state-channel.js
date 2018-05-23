@@ -36,10 +36,11 @@ module.exports = function gsc (self) {
 
       const metaByteCode = metachannel.bytecode
 
-      let args = ['0x1337', agreement.partyA, agreement.partyB]
+      let args = ['test42042', agreement.partyA, agreement.partyB]
       let signers = [agreement.partyA, agreement.partyB]
       let metaCTFbytes = self.utils.getCTFstate(metaByteCode, signers, args)
       let metachannelCTFaddress = self.utils.getCTFaddress(metaCTFbytes)
+      //let metachannelCTFaddress = '1337'
 
       rawStates[metachannelCTFaddress] = metaCTFbytes
 
@@ -601,6 +602,7 @@ module.exports = function gsc (self) {
 
       let l = rawStates[ChanEntryID].length
       let chanState = rawStates[ChanEntryID][l-1].slice(0)
+      let oldChanStateCpy = rawStates[ChanEntryID][l-1].slice(0)
 
       // get old channel hash
       let oldStateHash = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
@@ -826,7 +828,21 @@ module.exports = function gsc (self) {
 
       agreement.metachannelDeployedAddress = TxHash
       agreement.inDispute = true
-      console.log(agreement)
+
+      let chanState = rawStates[channelID]
+      let agreeState = rawStates[AgreeEntryID]
+
+      
+      let TxHash2 = await self.utils.executeSettleChannel(
+        metachannel.abi,
+        agreement.metachannelDeployedAddress,
+        self.utils.serializeState(chanState[chanState.length-1]),
+        self.utils.serializeState(agreeState[agreeState.length-1]),
+        agreement.stateSignatures[agreement.stateSignatures.length-1],
+        agreement.partyB,
+        agreement.channels
+      )
+
       // store the new agreement
       Object.assign(agreements[AgreeEntryID], agreement)
       await self.storage.set('agreements', agreements)
@@ -838,8 +854,19 @@ module.exports = function gsc (self) {
     },
 
     closeByzantineChannel: async function(channelID) {
-      // TODO: call msig closeWithMetachannel
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(channelID)) return
+      let channel = await this.getChannel(channelID)
 
+      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
+      let agreement = await this.getAgreement(AgreeEntryID)
+
+      let abi = msig.abi
+      let address = agreement.address
+      let tx = await self.utils.executeCloseChannel(abi, address, 'respek', agreement.partyB)
+      let tx2 = await self.utils.executeCloseChannel(metachannel.abi, agreement.metachannelDeployedAddress, channelID, agreement.partyB)
     },
 
     _verifyUpdate: function(updateAgreement, currentAgreement, currentChannel, updateState) {
