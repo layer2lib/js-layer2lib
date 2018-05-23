@@ -231,6 +231,65 @@ module.exports = function(self) {
       return txHash
     },
 
+    executeDeployCTF: async function executeDeployCTF(
+      contractABI, // registry abi
+      address, // registry address
+      state,
+      sigs,
+      signer,
+      metaCTF
+    ) {
+      let c = await self.web3.eth.contract(contractABI).at(address)
+
+      let r = sigs[0][0]
+      let s = sigs[0][1]
+      let v = sigs[0][2]
+      let r2 = sigs[1][0]
+      let s2 = sigs[1][1]
+      let v2 = sigs[1][2]
+
+      let sigV = []
+      let sigR = []
+      let sigS = []
+
+      sigV.push(v)
+      sigV.push(v2)
+      sigR.push(r)
+      sigR.push(r2)
+      sigS.push(s)
+      sigS.push(s2)
+
+      let callData = c.deployCTF.getData(state, sigV, sigR, sigS)
+
+
+      let gas = await self.web3.eth.gasPrice
+
+      const nonce = self.web3.eth.getTransactionCount(signer)
+      
+      //gas+=2000000000
+
+      const rawTx = {
+        nonce: await self.web3.toHex(nonce),
+        gasPrice: await self.web3.toHex(gas),
+        gasLimit: await self.web3.toHex(7500000),
+        to: address,
+        data: callData,
+        from: signer
+      }
+
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
+      //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
+      //let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
+      await this.waitForConfirm(txHash)
+      //let metaDeployed = await c.resolveAddress(metaCTF)
+      let metaDeployed = '0xed7881f81283ec355f247af95f1208b310a18392'
+      return metaDeployed
+    },
+
     waitForConfirm: async function(txHash) {
       //console.log('waiting for '+txHash+' to be confirmed...')
       let receipt = await self.web3.eth.getTransactionReceipt(txHash)

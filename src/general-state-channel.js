@@ -2,6 +2,7 @@
 
 const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
 const msig = require('../contracts/general-state-channels/build/contracts/MultiSig.json')
+const reg = require('../contracts/general-state-channels/build/contracts/CTFRegistry.json')
 const BigNumber = require('bignumber.js')
 
 module.exports = function gsc (self) {
@@ -40,9 +41,16 @@ module.exports = function gsc (self) {
       let metaCTFbytes = self.utils.getCTFstate(metaByteCode, signers, args)
       let metachannelCTFaddress = self.utils.getCTFaddress(metaCTFbytes)
 
-      //agreement.metaCTFbytes = metaCTFbytes
+      rawStates[metachannelCTFaddress] = metaCTFbytes
+
       agreement.metachannelCTFaddress = metachannelCTFaddress
-      agreement.metaSignatures.push(self.utils.sign(agreement.metachannelCTFaddress, self.privateKey))
+      let metaSig = self.utils.sign(agreement.metachannelCTFaddress, self.privateKey)
+      let mr = self.utils.bufferToHex(metaSig.r)
+      let ms = self.utils.bufferToHex(metaSig.s)
+      let mv = metaSig.v
+      let msigs = [[mr,ms,mv]]
+
+      agreement.metaSignatures = msigs
 
 
       let initialState = []
@@ -137,6 +145,13 @@ module.exports = function gsc (self) {
       let v = sig.v
       let sigs = [r,s,v]
 
+      let metaSig = self.utils.sign(agreement.metachannelCTFaddress, self.privateKey)
+      let mr = self.utils.bufferToHex(metaSig.r)
+      let ms = self.utils.bufferToHex(metaSig.s)
+      let mv = metaSig.v
+      let msigs = [mr,ms,mv]
+
+      agreement.metaSignatures.push(msigs)
       agreement.stateSignatures[0].push(sigs)
       agreement.openPending = false;
 
@@ -290,7 +305,7 @@ module.exports = function gsc (self) {
 
       let agreement = agreements[agreementID]
 
-      let joinTxHash = await self.utils.executeCloseAgreement(
+      let finalTxHash = await self.utils.executeCloseAgreement(
         msig.abi, 
         agreement.address, 
         agreement.stateSerialized, 
@@ -779,8 +794,42 @@ module.exports = function gsc (self) {
     },
 
     startSettleChannel: async function(channelID) {
-      // Require that there are no open channels!
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(channelID)) return
+      let channel = await this.getChannel(channelID)
 
+      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
+      let agreement = await this.getAgreement(AgreeEntryID)
+
+      let rawStates = await self.storage.get('states') || {}
+      if(!rawStates.hasOwnProperty(channelID)) return
+      if(!rawStates.hasOwnProperty(AgreeEntryID)) return
+
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(channelID)) return
+
+      let metaCTFaddress = agreement.metachannelCTFaddress
+      let metaCTF = rawStates[metaCTFaddress]
+
+      let sigs = agreement.metaSignatures
+
+      let TxHash = await self.utils.executeDeployCTF(
+        reg.abi, 
+        self.registryAddress, 
+        metaCTF, 
+        sigs,
+        agreement.partyB, // TODO: dont assume which party is calling this, it may be neither
+        metaCTFaddress
+      )
+
+      agreement.metachannelDeployedAddress = TxHash
+      agreement.inDispute = true
+      console.log(agreement)
+      // store the new agreement
+      Object.assign(agreements[AgreeEntryID], agreement)
+      await self.storage.set('agreements', agreements)
       // TODO: instantiate metachannel, call startSettle 
     },
 

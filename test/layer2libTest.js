@@ -235,75 +235,81 @@ async function test(redisClient) {
 
   // Send ether in channel and close channel
 
-  // Close Channel
-  updateState = {
-    isClose: 1,
-    balanceA: web3.toWei(0.07, 'ether'),
-    balanceB: web3.toWei(0.01, 'ether')
-  }
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  //console.log(Bob_agreement)
-  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
-  Bob_chan = await lBob.gsc.getChannel('respekBob')
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  //console.log(Bob_agreement)
-  agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
-  chanAlice = JSON.parse(JSON.stringify(Bob_chan))
-  chanAlice.dbSalt = 'Alice'
-  agreeAlice.dbSalt = 'Alice'
+  // Close Channel Consensus
 
-  await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
+  // updateState = {
+  //   isClose: 1,
+  //   balanceA: web3.toWei(0.07, 'ether'),
+  //   balanceB: web3.toWei(0.01, 'ether')
+  // }
+  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  // //console.log(Bob_agreement)
+  // await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
+  // Bob_chan = await lBob.gsc.getChannel('respekBob')
+  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  // //console.log(Bob_agreement)
+  // agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
+  // chanAlice = JSON.parse(JSON.stringify(Bob_chan))
+  // chanAlice.dbSalt = 'Alice'
+  // agreeAlice.dbSalt = 'Alice'
 
-  let allAgreements = await lAlice.gsc.getAllAgreements()
-  //console.log(allAgreements)
+  // await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
 
-  let allChannels = await lAlice.gsc.getAllChannels()
-  //console.log(allChannels)
+  // let allAgreements = await lAlice.gsc.getAllAgreements()
+  // //console.log(allAgreements)
 
-  let alltxs = await lAlice.gsc.getAllTransactions()
-  //console.log(alltxs)
+  // let allChannels = await lAlice.gsc.getAllChannels()
+  // //console.log(allChannels)
 
-  let allRawStates = await lAlice.gsc.getAllRawStates()
-  //console.log(allRawStates)
+  // let alltxs = await lAlice.gsc.getAllTransactions()
+  // //console.log(alltxs)
 
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  // let allRawStates = await lAlice.gsc.getAllRawStates()
+  // //console.log(allRawStates)
 
-  Alice_agreement.dbSalt = 'Bob'
-  await lBob.gsc.updateAgreement(Alice_agreement)
-  Alice_agreement.dbSalt = 'Alice'
+  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
 
-  // Close agreement
-  await lAlice.gsc.initiateCloseAgreement('spankHub1337Alice')
+  // Alice_agreement.dbSalt = 'Bob'
+  // await lBob.gsc.updateAgreement(Alice_agreement)
+  // Alice_agreement.dbSalt = 'Alice'
 
-  Alice_chan = await lAlice.gsc.getChannel('respekAlice')
-  //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  //console.log(Alice_agreement)
-  //console.log(Alice_agreement.stateSignatures)
-  AliceChanState = await lAlice.gsc.getStates('respekAlice')
-  //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
-  //console.log(AliceAgreementState)
+  // // Close agreement
+  // await lAlice.gsc.initiateCloseAgreement('spankHub1337Alice')
 
-  Alice_agreement.dbSalt = 'Bob'
-  await lBob.gsc.confirmCloseAgreement(Alice_agreement, AliceAgreementState)
-  Bob_chan = await lBob.gsc.getChannel('respekBob')
-  //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  //console.log(Bob_agreement)
-  BobChanState = await lBob.gsc.getStates('respekBob')
-  //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
-  //console.log(BobAgreementState)
+  // Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  // //console.log(Alice_chan)
+  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  // //console.log(Alice_agreement)
+  // //console.log(Alice_agreement.stateSignatures)
+  // AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  // //console.log(AliceChanState)
+  // AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  // //console.log(AliceAgreementState)
 
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  // Alice_agreement.dbSalt = 'Bob'
+  // await lBob.gsc.confirmCloseAgreement(Alice_agreement, AliceAgreementState)
+  // Bob_chan = await lBob.gsc.getChannel('respekBob')
+  // //console.log(Bob_chan)
+  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  // //console.log(Bob_agreement)
+  // BobChanState = await lBob.gsc.getStates('respekBob')
+  // //console.log(BobChanState)
+  // BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  // //console.log(BobAgreementState)
 
-  Bob_agreement.dbSalt = 'Alice'
-  await lAlice.gsc.updateAgreement(Bob_agreement)
-  Bob_agreement.dbSalt = 'Bob'
+  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
 
-  // Note: Either party may call this now to move final state
-  await lBob.gsc.finalizeAgreement('spankHub1337Bob')
+  // Bob_agreement.dbSalt = 'Alice'
+  // await lAlice.gsc.updateAgreement(Bob_agreement)
+  // Bob_agreement.dbSalt = 'Bob'
+
+  // // Note: Either party may call this now to move final state
+  // await lBob.gsc.finalizeAgreement('spankHub1337Bob')
+
+
+  // Close Channel Byzantine
+
+  await lBob.gsc.startSettleChannel('respekBob')
   console.log('Agreement finalized, quiting...')
   redisClient.quit()
 }
