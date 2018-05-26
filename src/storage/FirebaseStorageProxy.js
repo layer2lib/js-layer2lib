@@ -3,7 +3,7 @@ const BaseStorageProxy = require('./BaseStorageProxy');
 // Using in memory data storage for now to define structures
 //const MongoClient = require('mongodb').MongoClient
 const prefix = ''; // TODO: in the future use prefix 'layer2_'
-module.exports = class RedisStorageProxy extends BaseStorageProxy {
+module.exports = class FirebaseStorageProxy extends BaseStorageProxy {
     constructor(firebase) {
         super();
         if (!firebase) throw new Error('Firebase instance missing from constructor');
