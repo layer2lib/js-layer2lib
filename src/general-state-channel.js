@@ -406,7 +406,7 @@ module.exports = function gsc (self) {
         channelInputs.push(channel.balanceB) // balance of party B in channel (ether)
       }
 
-      if(channel.type == 'battle_ether') {
+      if(channel.type == 'battleEther') {
         channelInputs.push(0) // is close
         channelInputs.push(1) // is force push channel
         channelInputs.push(0) // channel sequence
@@ -417,11 +417,12 @@ module.exports = function gsc (self) {
         channelInputs.push(self.registryAddress) // CTF registry address
         channelInputs.push('0x0') // channel tx roothash
         channelInputs.push(agreement.partyA) // partyA in the channel
-        channelInputs.push(channel.partyB) // partyB in the channel
+        channelInputs.push(channel.counterparty) // partyB in the channel
         channelInputs.push(agreement.partyB) // partyI in the channel
 
         channelInputs.push(channel.balanceA) // balance of party A in channel (ether)
         channelInputs.push(channel.balanceB) // balance of party B in channel (ether)
+        channelInputs.push(channel.bond) // how much of a bond does ingrid put in
       }
 
       rawStates[ChanEntryID].push(channelInputs)

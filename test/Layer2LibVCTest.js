@@ -31,9 +31,9 @@ async function test(redisClient) {
     privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
-  let lAlice = new Layer2lib("http://localhost:8545", optionsAlice)
+  let lAlice = new Layer2lib("https://rinkeby.infura.io", optionsAlice)
 
-  web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
+  web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io'))
 
   lAlice.initGSC()
 
@@ -76,7 +76,7 @@ async function test(redisClient) {
     privateKey: '0x9eb0e84b7cadfcbbec8d49ae7112b25e0c1cb158ecd2160c301afa1f4a1029c8'
   }
 
-  let lIngrid = new Layer2lib('http://localhost:8545', optionsIngrid)
+  let lIngrid = new Layer2lib('https://rinkeby.infura.io', optionsIngrid)
   lIngrid.initGSC()
 
   console.log('Ingrid initialized, receive agreement from Alice and joins')
@@ -86,7 +86,7 @@ async function test(redisClient) {
 
   await lIngrid.joinGSCAgreement(agreementIngrid, AliceAgreementState)
 
-  let Ingrid_agreement = await lIngird.getGSCAgreement('battleHub1337Ingrid')
+  let Ingrid_agreement = await lIngrid.getGSCAgreement('battleHub1337Ingrid')
   //console.log(Ingrid_agreement)
   let Ingrid_tx = await lIngrid.gsc.getTransactions('battleHub1337Ingrid')
   //console.log(Ingrid_tx)
@@ -95,9 +95,9 @@ async function test(redisClient) {
 
   console.log('Ingrid now sends openchannel ack to Alice')
 
-  let isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  let isOpenAlice = await lAlice.gsc.isAgreementOpen('battleHub1337Alice')
   console.log('Alice state is agreement open: ' + isOpenAlice)
-  let isOpenIngrid = await lIngrid.gsc.isAgreementOpen('spankHub1337Ingrid')
+  let isOpenIngrid = await lIngrid.gsc.isAgreementOpen('battleHub1337Ingrid')
   console.log('Ingrid state is agreement open: ' + isOpenIngrid)
 
   // Load Bob's ack into Alice db
@@ -105,7 +105,7 @@ async function test(redisClient) {
   await lAlice.gsc.updateAgreement(agreementIngrid)
   agreementIngrid.dbSalt = 'Ingrid'
 
-  isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  isOpenAlice = await lAlice.gsc.isAgreementOpen('battleHub1337Alice')
   console.log('Alice state is agreement open: ' + isOpenAlice)
 
 
@@ -117,7 +117,7 @@ async function test(redisClient) {
     privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
   }
 
-  let lBob = new Layer2lib("http://localhost:8545", optionsBob)
+  let lBob = new Layer2lib("https://rinkeby.infura.io", optionsBob)
 
   web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
 
@@ -141,7 +141,7 @@ async function test(redisClient) {
   //console.log(col)
   let Bob_tx = await lBob.gsc.getTransactions(entryID_b)
   //console.log(Alice_tx)
-  let BobAgreementState = await lB.gsc.getStates('battleHub420Bob')
+  let BobAgreementState = await lBob.gsc.getStates('battleHub420Bob')
   //Grab the latest (currently only state in list)
   BobAgreementState = BobAgreementState[0]
   //console.log(AliceAgreementState)
@@ -155,7 +155,7 @@ async function test(redisClient) {
 
   await lIngrid.joinGSCAgreement(agreementIngrid_b, BobAgreementState)
 
-  Ingrid_agreement = await lIngird.getGSCAgreement('battleHub420Ingrid')
+  Ingrid_agreement = await lIngrid.getGSCAgreement('battleHub420Ingrid')
   //console.log(Ingrid_agreement)
   Ingrid_tx = await lIngrid.gsc.getTransactions('battleHub420Ingrid')
   //console.log(Ingrid_tx)
@@ -170,9 +170,9 @@ async function test(redisClient) {
   console.log('Ingrid state is agreement open: ' + isOpenIngrid)
 
   // Load Ingrids's ack into Bobs db
-  agreementIngrid.dbSalt = 'Bob'
-  await lBob.gsc.updateAgreement(agreementIngrid)
-  agreementIngrid.dbSalt = 'Ingrid'
+  Ingrid_agreement.dbSalt = 'Bob'
+  await lBob.gsc.updateAgreement(Ingrid_agreement)
+  Ingrid_agreement.dbSalt = 'Ingrid'
 
   isOpenBob = await lBob.gsc.isAgreementOpen('battleHub420Bob')
   console.log('Bob state is agreement open: ' + isOpenBob)
@@ -180,53 +180,116 @@ async function test(redisClient) {
   // --------------------------------------------------
 
 
-  // // Open a channel
+  // Open a virtual channel
 
-  // let channelAlice = {
-  //   dbSalt: 'Alice', // for testing multiple layer2 instances on same db
-  //   ID: 'respek',
-  //   agreementID: 'spankHub1337',
-  //   type: 'ether',
-  //   balanceA: web3.toWei(0.03, 'ether'),
-  //   balanceB: web3.toWei(0.05, 'ether')
-  // }
+  let channelAlice = {
+    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
+    ID: 'respek',
+    agreementID: 'battleHub1337',
+    type: 'battleEther',
+    counterparty: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
+    balanceA: web3.toWei(0.03, 'ether'),
+    balanceB: web3.toWei(0.05, 'ether'),
+    bond: web3.toWei(0.03, 'ether')
+  }
 
-  // await lAlice.openGSCChannel(channelAlice)
+  await lAlice.openGSCChannel(channelAlice)
 
 
-  // let Alice_chan = await lAlice.gsc.getChannel('respekAlice')
-  // //console.log(Alice_chan)
-  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  // //console.log(Alice_agreement)
-  // let AliceChanState = await lAlice.gsc.getStates('respekAlice')
-  // //console.log(AliceChanState)
-  // AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
-  // //console.log(AliceAgreementState)
+  let Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  //console.log(Alice_chan)
+  Alice_agreement = await lAlice.getGSCAgreement('battleHub1337Alice')
+  //console.log(Alice_agreement)
+  let AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  //console.log(AliceChanState)
+  AliceAgreementState = await lAlice.gsc.getStates('battleHub1337Alice')
+  //console.log(AliceAgreementState)
 
-  // let chanBob = JSON.parse(JSON.stringify(Alice_chan))
-  // chanBob.dbSalt = 'Bob'
-  // Bob_agreement = JSON.parse(JSON.stringify(Alice_agreement))
-  // Bob_agreement.dbSalt = 'Bob'
-  // await lBob.gsc.joinChannel(chanBob, Bob_agreement, chanBob.stateRaw)
+  console.log('Alice sends her agreement with ingrid to ingrid and bob')
 
-  // let Bob_chan = await lBob.gsc.getChannel('respekBob')
-  // //console.log(Bob_chan)
-  // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
-  // //console.log(Bob_agreement)
-  // let BobChanState = await lBob.gsc.getStates('respekBob')
-  // //console.log(BobChanState)
-  // BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
-  // //console.log(BobAgreementState)
+  console.log('Bob generating same agreement with ingrid')
 
-  // let txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
-  // let txs_channel = await lBob.gsc.getTransactions('respekBob')
-  // //console.log(txs_agreement)
-  // //console.log(txs_channel)
+  let channelBob = {
+    dbSalt: 'Bob', // for testing multiple layer2 instances on same db
+    ID: 'respek',
+    agreementID: 'battleHub420',
+    type: 'battleEther',
+    counterparty: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    balanceA: web3.toWei(0.03, 'ether'),
+    balanceB: web3.toWei(0.05, 'ether'),
+    bond: web3.toWei(0.05, 'ether')
+  }
 
-  // console.log('Bob sends join channel ack to Alice')
-  // Bob_agreement.dbSalt = 'Alice'
-  // await lAlice.gsc.updateAgreement(Bob_agreement)
 
+  await lBob.openGSCChannel(channelBob)
+
+
+  let Bob_chan = await lBob.gsc.getChannel('respekBob')
+  //console.log(Bob_chan)
+  Bob_agreement = await lBob.getGSCAgreement('battleHub420Bob')
+  //console.log(Bob_agreement)
+  let BobChanState = await lBob.gsc.getStates('respekBob')
+  //console.log(BobChanState)
+  BobAgreementState = await lBob.gsc.getStates('battleHub420Bob')
+  //console.log(BobAgreementState)
+
+  console.log('Ingrid receives update agreement states from both alice and bob')
+
+
+  // Ingrid calls join channel on Alice-------------
+
+  let chanIngrid = JSON.parse(JSON.stringify(Alice_chan))
+  chanIngrid.dbSalt = 'Ingrid-a'
+  Ingrid_agreement = JSON.parse(JSON.stringify(Alice_agreement))
+  Ingrid_agreement.dbSalt = 'Ingrid-a'
+  await lIngrid.gsc.joinChannel(chanIngrid, Ingrid_agreement, chanIngrid.stateRaw)
+
+  let Ingrid_chan_1 = await lIngrid.gsc.getChannel('respekIngrid-a')
+  //console.log(Ingrid_chan)
+  let Ingrid_agreement_1 = await lIngrid.getGSCAgreement('battleHub1337Ingrid')
+  //console.log(Bob_agreement)
+  let IngridChanState_1 = await lIngrid.gsc.getStates('respekIngrid-a')
+  //console.log(BobChanState)
+  let IngridAgreementState_1 = await lIngrid.gsc.getStates('battleHub1337Ingrid')
+  //console.log(BobAgreementState)
+
+  let txs_agreement = await lAlice.gsc.getTransactions('battleHub1337Alice')
+  let txs_channel = await lAlice.gsc.getTransactions('respekIngrid-a')
+  //console.log(txs_agreement)
+  //console.log(txs_channel)
+
+  console.log('Ingrid sends join channel ack to Alice')
+
+  await lAlice.gsc.updateAgreement(Ingrid_agreement_1)
+
+
+  // Ingrid calls join channel on Alice-------------
+
+  let chanIngrid_2 = JSON.parse(JSON.stringify(Bob_chan))
+  chanIngrid_2.dbSalt = 'Ingrid-b'
+  let Ingrid_agreement_2 = JSON.parse(JSON.stringify(Bob_agreement))
+  Ingrid_agreement_2.dbSalt = 'Ingrid-b'
+  await lIngrid.gsc.joinChannel(chanIngrid_2, Ingrid_agreement_2, chanIngrid_2.stateRaw)
+
+  let Ingrid_chan_2 = await lIngrid.gsc.getChannel('respekIngrid-b')
+  //console.log(Ingrid_chan)
+  Ingrid_agreement_2 = await lIngrid.getGSCAgreement('battleHub420Ingrid')
+  //console.log(Bob_agreement)
+  let IngridChanState_2 = await lIngrid.gsc.getStates('respekIngrid-b')
+  //console.log(BobChanState)
+  let IngridAgreementState_2 = await lIngrid.gsc.getStates('battleHub420Ingrid')
+  //console.log(BobAgreementState)
+
+  let txs_agreement_2 = await lIngrid.gsc.getTransactions('battleHub420Ingrid')
+  let txs_channel_2 = await lIngrid.gsc.getTransactions('respekIngrid-b')
+  //console.log(txs_agreement)
+  //console.log(txs_channel)
+
+  console.log('Ingrid sends join channel ack to Bob')
+
+  await lBob.gsc.updateAgreement(Ingrid_agreement_2)
+
+  console.log('Virtual Channel ready for updates')
 
   // // --------------------------------------------------
 
