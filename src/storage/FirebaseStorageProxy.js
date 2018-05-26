@@ -18,7 +18,7 @@ module.exports = class FirebaseStorageProxy extends BaseStorageProxy {
         await this.firebase.database().ref(prefix + k).set(v)
     }
     async get(key) {
-        let res = await firebase.database().ref(key).once('value').then(snapshot => {
+        let res = await this.firebase.database().ref(key).once('value').then(snapshot => {
             return snapshot.val()
         })
         return res
@@ -27,7 +27,7 @@ module.exports = class FirebaseStorageProxy extends BaseStorageProxy {
         // this isn't very efficient because firebase doesn't provid method to return
         // only the keys
         // get the root object
-        let res = await firebase.database().ref().once('value').then(snapshot => {
+        let res = await this.firebase.database().ref().once('value').then(snapshot => {
             return snapshot.val()
         })
         return Object.keys(res)
