@@ -12,6 +12,7 @@ module.exports = function gsc (self) {
       // of the channels are being challenged when online
       self.etherExtension = '0x32c1d681fe917170573aed0671d21317f14219fd'
       self.bidirectEtherInterpreter = '0x74926af30d35337e45225666bbf49e156fd08016'
+      self.battleEtherInterpreter = '0x0'
       self.registryAddress = '0x72be812074e5618786f1953662b8af1ec344231c'
     },
 
@@ -205,7 +206,19 @@ module.exports = function gsc (self) {
 
       await self.storage.set('agreements', agreements)
 
-      console.log('Agreement updated in db')
+      console.log('Agreement Sigs updated in db')
+    },
+
+    updateChannelSigs: async function(channel) {
+      let entryID = channel.ID+channel.dbSalt
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(entryID)) return
+
+      Object.assign(channels[entryID], channel)
+
+      await self.storage.set('channels', channel)
+
+      console.log('Channel Sigs updated in db')
     },
 
     initiateCloseAgreement: async function(agreementID) {
@@ -346,6 +359,14 @@ module.exports = function gsc (self) {
 
     // channel functions
 
+    // When Ingrid receives both agreements 
+    hubConfirmVC: async function(channelA, channelB, agreementA, agreementB, channelState) {
+
+    },
+
+    // IF battle eth channel
+    // Alice creates channel agreement for Bob with Ingrid
+    // Bob confirms and creates agreement for Alice with Ingrid
     openChannel: async function(channel) {
       let AgreeEntryID = channel.agreementID+channel.dbSalt
       let agreements = await self.storage.get('agreements') || {}
@@ -381,6 +402,24 @@ module.exports = function gsc (self) {
         channelInputs.push('0x0') // channel tx roothash
         channelInputs.push(agreement.partyA) // partyA in the channel
         channelInputs.push(agreement.partyB) // partyB in the channel
+        channelInputs.push(channel.balanceA) // balance of party A in channel (ether)
+        channelInputs.push(channel.balanceB) // balance of party B in channel (ether)
+      }
+
+      if(channel.type == 'battle_ether') {
+        channelInputs.push(0) // is close
+        channelInputs.push(1) // is force push channel
+        channelInputs.push(0) // channel sequence
+        channelInputs.push(0) // timeout length ms
+        channelInputs.push(self.battleEtherInterpreter) // ether payment interpreter library address
+        channelInputs.push(channel.ID) // ID of channel
+        channelInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
+        channelInputs.push(self.registryAddress) // CTF registry address
+        channelInputs.push('0x0') // channel tx roothash
+        channelInputs.push(agreement.partyA) // partyA in the channel
+        channelInputs.push(channel.partyB) // partyB in the channel
+        channelInputs.push(agreement.partyB) // partyI in the channel
+
         channelInputs.push(channel.balanceA) // balance of party A in channel (ether)
         channelInputs.push(channel.balanceB) // balance of party B in channel (ether)
       }

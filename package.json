@@ -7,7 +7,8 @@
   "scripts": {
     "postinstall": "npm run contracts",
     "contracts": "cd contracts && npm i",
-    "test": "node test/layer2libTest.js"
+    "test": "node test/layer2libTest.js",
+    "testvc": "node test/layer2libVCTest.js"
   },
   "repository": {
     "type": "git",
