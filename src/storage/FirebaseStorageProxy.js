@@ -7,7 +7,6 @@ module.exports = class FirebaseStorageProxy extends BaseStorageProxy {
     constructor(firebase) {
         super();
         if (!firebase) throw new Error('Firebase instance missing from constructor');
-        if (!firebase.getAsync) throw new Error('Firebase instance async not wrapped');
         this.firebase = firebase;
         // TODO: remove later once API is stable
     }
