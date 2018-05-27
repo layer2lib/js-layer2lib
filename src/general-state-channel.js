@@ -93,11 +93,11 @@ module.exports = function gsc (self) {
 
       // TODO: call deployed msig
       let openTxHash = await self.utils.executeOpenAgreement(
-        msig.abi, 
-        msigAddress, 
-        agreement.stateSerialized, 
-        self.etherExtension, 
-        sigs[0], 
+        msig.abi,
+        msigAddress,
+        agreement.stateSerialized,
+        self.etherExtension,
+        sigs[0],
         agreement.balanceA,
         agreement.partyA
       )
@@ -115,7 +115,7 @@ module.exports = function gsc (self) {
 
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sig.v, state0sig.r, state0sig.s))
-      
+
       Object.assign(agreements[entryID], agreement)
       // Object.assign(txs[entryID], txList)
       // Object.assign(rawStates[entryID], rawStatesList)
@@ -159,19 +159,19 @@ module.exports = function gsc (self) {
 
       self.publicKey = self.utils.bufferToHex(
         self.utils.ecrecover(
-          stateHash, 
-          sig.v, 
-          sig.r, 
+          stateHash,
+          sig.v,
+          sig.r,
           sig.s
           )
         )
 
       let joinTxHash = await self.utils.executeJoinAgreement(
-        msig.abi, 
-        agreement.address, 
-        agreement.stateSerialized, 
-        self.etherExtension, 
-        agreement.stateSignatures[0][1], 
+        msig.abi,
+        agreement.address,
+        agreement.stateSerialized,
+        self.etherExtension,
+        agreement.stateSignatures[0][1],
         agreement.balanceB,
         agreement.partyB
       )
@@ -239,7 +239,7 @@ module.exports = function gsc (self) {
 
       oldState[0] = 1
       oldState[1] = oldState[1] + 1
-      
+
       rawStates[agreementID].push(oldState)
       agreement.stateSerialized = self.utils.serializeState(oldState)
 
@@ -273,7 +273,7 @@ module.exports = function gsc (self) {
     },
 
     confirmCloseAgreement: async function(agreement, state) {
-      let agreementID = agreement.ID+agreement.dbSalt   
+      let agreementID = agreement.ID+agreement.dbSalt
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreementID)) return
 
@@ -282,7 +282,7 @@ module.exports = function gsc (self) {
 
       let rawStates = await self.storage.get('states') || {}
       if(!rawStates.hasOwnProperty(agreementID)) return
-      
+
       rawStates[agreementID].push(state[state.length-1])
 
       let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
@@ -292,7 +292,7 @@ module.exports = function gsc (self) {
       let v = sig.v
       let sigs = [r,s,v]
 
-      agreement.stateSignatures[agreement.stateSignatures.length-1].push(sigs) 
+      agreement.stateSignatures[agreement.stateSignatures.length-1].push(sigs)
 
       let tx = {
         agreement: agreement.ID,
@@ -320,9 +320,9 @@ module.exports = function gsc (self) {
       let agreement = agreements[agreementID]
 
       let finalTxHash = await self.utils.executeCloseAgreement(
-        msig.abi, 
-        agreement.address, 
-        agreement.stateSerialized, 
+        msig.abi,
+        agreement.address,
+        agreement.stateSerialized,
         agreement.stateSignatures[agreement.stateSignatures.length-1],
         agreement.partyB // TODO: dont assume which party is calling this, it may be neither
       )
@@ -333,7 +333,7 @@ module.exports = function gsc (self) {
     startSettleAgreement: async function(agreementID) {
       // Require that there are no open channels!
 
-      // TODO: instantiate metachannel, call startSettle 
+      // TODO: instantiate metachannel, call startSettle
     },
 
     challengeAgreement: async function(agreementID) {
@@ -359,7 +359,7 @@ module.exports = function gsc (self) {
 
     // channel functions
 
-    // When Ingrid receives both agreements 
+    // When Ingrid receives both agreements
     hubConfirmVC: async function(channelA, channelB, agreementA, agreementB, channelState) {
 
     },
@@ -433,6 +433,7 @@ module.exports = function gsc (self) {
       let elem = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
       let elems = []
+      agreement.channels = agreement.channels || [];
       for(var i=0; i<agreement.channels.length; i++) { elems.push(self.utils.hexToBuffer(agreement.channels[i])) }
 
       elems.push(self.utils.hexToBuffer(elem))
@@ -452,7 +453,7 @@ module.exports = function gsc (self) {
       // grab latest state and modify it
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
       newState[5] = channelRoot
-      // set nonce 
+      // set nonce
       newState[1]++
       agreement.nonce = newState[1]
 
@@ -538,10 +539,10 @@ module.exports = function gsc (self) {
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
 
       newState[5] = agreement.channelRootHash
-      // set nonce 
+      // set nonce
       newState[1]++
       agreement.nonce = newState[1]
-      
+
       // TODO module this
       if(agreement.types[0] === 'Ether') {
         //adjust balance on agreement state
@@ -558,7 +559,7 @@ module.exports = function gsc (self) {
 
       // TODO: Check the incoming agreement (from Alice) on new channel creation
       // has Alices signature. When signatures are in their own database, in append
-      // only log format keyed by the channel or agreement they belong to, we will 
+      // only log format keyed by the channel or agreement they belong to, we will
       // check that the ecrecover of the raw channel state passed matches the supplied
       // sig. ecrecover(rawChannelStateHash, sig)
 
@@ -688,9 +689,10 @@ module.exports = function gsc (self) {
       // calculate channel root hash
       let elem = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
+      agreement.channels = agreement.channels || [];
       let elems = agreement.channels.slice(0)
- 
-      for(var i=0; i<agreement.channels.length; i++) { 
+
+      for(var i=0; i<agreement.channels.length; i++) {
         if(oldStateHash === elems[i]) {
           agreement.channels[i] = elem
           elems[i] = elem
@@ -992,9 +994,9 @@ module.exports = function gsc (self) {
       let sigs = agreement.metaSignatures
 
       let TxHash = await self.utils.executeDeployCTF(
-        reg.abi, 
-        self.registryAddress, 
-        metaCTF, 
+        reg.abi,
+        self.registryAddress,
+        metaCTF,
         sigs,
         agreement.partyB, // TODO: dont assume which party is calling this, it may be neither
         metaCTFaddress
@@ -1006,7 +1008,7 @@ module.exports = function gsc (self) {
       let chanState = rawStates[channelID]
       let agreeState = rawStates[AgreeEntryID]
 
-      
+
       let TxHash2 = await self.utils.executeSettleChannel(
         metachannel.abi,
         agreement.metachannelDeployedAddress,
@@ -1014,13 +1016,13 @@ module.exports = function gsc (self) {
         self.utils.serializeState(agreeState[agreeState.length-1]),
         agreement.stateSignatures[agreement.stateSignatures.length-1],
         agreement.partyB,
-        agreement.channels
+        agreement.channels || []
       )
 
       // store the new agreement
       Object.assign(agreements[AgreeEntryID], agreement)
       await self.storage.set('agreements', agreements)
-      // TODO: instantiate metachannel, call startSettle 
+      // TODO: instantiate metachannel, call startSettle
     },
 
     challengeSettleChannel: async function(channelID) {
@@ -1058,10 +1060,10 @@ module.exports = function gsc (self) {
 
       // calculate channel root hash
       let elem = self.utils.sha3(newStateSerialized, {encoding: 'hex'})
-
+      currentAgreement.channels = currentAgreement.channels || []
       let elems = currentAgreement.channels.slice(0)
- 
-      for(var i=0; i<currentAgreement.channels.length; i++) { 
+
+      for(var i=0; i<currentAgreement.channels.length; i++) {
         if(oldStateHash === elems[i]) {
           elems[i] = elem
         }
