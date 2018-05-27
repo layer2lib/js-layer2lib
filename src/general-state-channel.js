@@ -209,6 +209,18 @@ module.exports = function gsc (self) {
       console.log('Agreement Sigs updated in db')
     },
 
+    updateChannel: async function(channel) {
+      let entryID = channel.ID+channel.dbSalt
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(entryID)) channels[entryID] = {}
+
+      Object.assign(channels[entryID], channel)
+
+      await self.storage.set('channels', channels)
+
+      console.log('Channel Sigs updated in db')
+    },
+
     updateChannelSigs: async function(channel) {
       let entryID = channel.ID+channel.dbSalt
       let channels = await self.storage.get('channels') || {}
