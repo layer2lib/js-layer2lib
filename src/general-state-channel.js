@@ -754,6 +754,108 @@ module.exports = function gsc (self) {
       await self.storage.set('transactions', txs)
     },
 
+    initiateUpdateVCstate: async function(id, updateState){
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(id)) return
+
+      let ChanEntryID = updateState.channelID + updateState.dbSalt
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(ChanEntryID)) return
+      let channel = await this.getChannel(ChanEntryID)
+
+      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let agreements = await self.storage.get('agreements') || {}
+      if(!agreements.hasOwnProperty(AgreeEntryID)) return
+      let agreement = agreements[AgreeEntryID]
+
+      let rawStates = await self.storage.get('states') || {}
+
+      let virtuals = await self.storage.get('virtual') || {}
+      if(!virtuals.hasOwnProperty(id)) virtuals[id] = {}
+
+      // TODO: ensure party A is calling this to start battle
+      let virtual = channel
+      let attackTable = ['12', '4', '9', '14', '6']
+
+      // require updateState.attack is in index
+      // attatch Alice random seed half for the attack
+      virtual.AliceSeed = '0x1337'
+      virtual.BobSeed = '0x0'
+
+      let vInputs = []
+      vInputs.push(0) // is close
+      vInputs.push(1) // is force push channel
+      vInputs.push(1) // channel sequence
+      vInputs.push(0) // timeout length ms
+      vInputs.push(self.battleEtherInterpreter) // ether payment interpreter library address
+      vInputs.push(channel.ID) // ID of channel
+      vInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
+      vInputs.push(self.registryAddress) // CTF registry address
+      vInputs.push('0x0') // channel tx roothash
+      vInputs.push(agreement.partyA) // partyA in the channel
+      vInputs.push(channel.counterparty) // partyB in the channel
+      vInputs.push(agreement.partyB) // partyI in the channel
+      vInputs.push(channel.balanceA) // balance of party A in channel (ether)
+      vInputs.push(channel.balanceB) // balance of party B in channel (ether)
+      vInputs.push(channel.bond) // how much of a bond does ingrid put in
+      vInputs.push(updateState.hpA)
+      vInputs.push(updateState.hpB)
+      vInputs.push(updateState.attack)
+      vInputs.push(virtual.AliceSeed)
+      vInputs.push(virtual.BobSeed)
+      vInputs.push(updateState.ultimateNonce)
+      vInputs.push(updateState.turn) // Mark whos turn it is, must be other person for next state update
+
+      // TODO If attack is ulimate (last attack in index) then update the ultimateNonce == sequence
+
+      virtual.stateSerialized =  self.utils.serializeState(vInputs)
+
+      let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
+      let sig = self.utils.sign(stateHash, self.privateKey)
+      let r = self.utils.bufferToHex(sig.r)
+      let s = self.utils.bufferToHex(sig.s)
+      let v = sig.v
+      let sigs = [r,s,v]
+
+      virtual.stateSignatures = []
+
+      rawStates[ChanEntryID+'V'] = []
+      rawStates[ChanEntryID+'V'].push(vInputs)
+
+      virtual.stateSignatures[virtual.stateSignatures.length] = sigs
+
+      // store the channel
+      Object.assign(virtuals[ChanEntryID], virtual)
+      await self.storage.set('virtuals', virtuals)
+
+      // store state
+      await self.storage.set('states', rawStates)
+      await self.storage.set('transactions', txs)
+    },
+
+    confirmVCUpdate: async function(updateVC, updateState) {
+      let id = updateVC.ID + updateVC.dbSalt
+      let txs = await self.storage.get('transactions') || {}
+      if(!txs.hasOwnProperty(id)) return
+
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(id)) return
+      let channel = await this.getChannel(id)
+
+      let rawStates = await self.storage.get('states') || {}
+
+      let virtuals = await self.storage.get('virtual') || {}
+      if(!virtuals.hasOwnProperty(id)) virtuals[id] = {}
+
+      // TODO: ensure party A is calling this to start battle
+      let virtual = updateVC
+
+      virtual.BobSeed = '0x4200'
+
+      let vInputs = virtual.stateRaw
+
+    },
+
     confirmUpdateChannelState: async function(updateChannel, updateAgreement, updateState) {
       let ChanEntryID = updateChannel.ID+updateChannel.dbSalt
       let channels = await self.storage.get('channels') || {}
@@ -978,6 +1080,11 @@ module.exports = function gsc (self) {
       return channels[channelID]
     },
 
+    getVirtuals: async function(channelID) {
+      let virtuals = await self.storage.get('virtuals')
+      return virtuals[channelID]
+    },
+
     getTransactions: async function(agreementID) {
       let _txs = await self.storage.get('transactions')
       return _txs[agreementID]
@@ -1003,6 +1110,7 @@ module.exports = function gsc (self) {
       await self.storage.set('transactions', {})
       await self.storage.set('states', {})
       await self.storage.set('channels', {})
+      await self.storage.set('virtuals', {})
     }
   }
 }

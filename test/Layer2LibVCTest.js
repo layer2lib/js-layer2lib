@@ -63,7 +63,7 @@ async function test(redisClient) {
   AliceAgreementState = AliceAgreementState[0]
   //console.log(AliceAgreementState)
 
-  console.log('Alice agreement created and stored.. initiating Bob')
+  console.log('Alice agreement created and stored.. initiating Ingrid')
 
 
   // --------------------------------------------------
@@ -293,23 +293,35 @@ async function test(redisClient) {
 
   // // --------------------------------------------------
 
-  // // Send ether in channel
+  let updateState = {
+    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
+    agreementID: 'battleHub420',
+    channelID: 'respek',
+    type: 'battleEther',
+    partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    partyB: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
+    balanceA: web3.toWei(0.03, 'ether'),
+    balanceB: web3.toWei(0.05, 'ether'),
+    hpA: 100,
+    hpB: 100,
+    attack: 5,
+    ultimateNonce: 0,
+    turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe'
+  }
 
-  // Bob_agreement.dbSalt = 'Bob'
+  // // Send VC update state
 
-  // Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
-  // //console.log(Alice_agreement)
+  await lAlice.gsc.initiateUpdateVCstate('respekAlice', updateState, false)
 
-  // console.log('ether channel now open')
-  // console.log('Bob is initiating ether payment')
+  let Alice_Virtuals = await lAlice.gsc.getVirtuals('respekAlice')
+  console.log(Alice_Virtuals)
 
-  // let updateState = {
-  //   isClose: 0,
-  //   balanceA: web3.toWei(0.06, 'ether'),
-  //   balanceB: web3.toWei(0.02, 'ether')
-  // }
+  let Alice_Vstate = await lAlice.gsc.getStates('respekAliceV')
+  console.log(Alice_Vstate)
 
-  // await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
+  Alice_Virtuals.dbSalt = 'Bob'
+  // confirmChannelUpdate(Alice_Virtuals, updateState)
+  Alice_Virtuals.dbSalt = 'Alice'
 
   // Bob_chan = await lBob.gsc.getChannel('respekBob')
   // //console.log(Bob_chan)
