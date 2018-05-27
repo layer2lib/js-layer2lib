@@ -4,10 +4,11 @@ const BaseStorageProxy = require('./BaseStorageProxy');
 //const MongoClient = require('mongodb').MongoClient
 const prefix = ''; // TODO: in the future use prefix 'layer2_'
 module.exports = class FirebaseStorageProxy extends BaseStorageProxy {
-    constructor(firebase) {
+    constructor(firebase, prefix) {
         super();
         if (!firebase) throw new Error('Firebase instance missing from constructor');
         this.firebase = firebase;
+        this.prefix = prefix;
         // TODO: remove later once API is stable
     }
     logdriver() {
@@ -15,10 +16,10 @@ module.exports = class FirebaseStorageProxy extends BaseStorageProxy {
         console.log('js-layer2lib using Firebase driver');
     }
     async set(k, v) {
-        await this.firebase.database().ref(prefix + k).set(v)
+        await this.firebase.database().ref(this.prefix + k).set(v)
     }
     async get(key) {
-        let res = await this.firebase.database().ref(key).once('value').then(snapshot => {
+        let res = await this.firebase.database().ref(this.prefix + key).once('value').then(snapshot => {
             return snapshot.val()
         })
         return res
