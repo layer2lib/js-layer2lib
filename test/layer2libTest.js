@@ -28,7 +28,7 @@ async function test(redisClient) {
   // ALICE
   let optionsAlice = {
     db: redisProxy,
-    privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
+    privateKey: '0x6cb2b4257e4477b096beacc755b6abf45d9d67738522aa27d3c2e1444eb4ea80'
   }
 
   let lAlice = new Layer2lib("http://localhost:8545", optionsAlice)
@@ -81,7 +81,7 @@ async function test(redisClient) {
   // BOB
   let optionsBob = {
     db: redisProxy,
-    privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
+    privateKey: '0x7d62b5a4caa26ff7833a37c1b0b3cf2ead49d9942f4ed940c54d9d70275b4591'
   }
 
   let lBob = new Layer2lib('http://localhost:8545', optionsBob)
@@ -230,7 +230,7 @@ async function test(redisClient) {
   let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
   //console.log(txs_agreement)
 
-  
+
   // --------------------------------------------------
 
   // Send ether in channel and close channel
