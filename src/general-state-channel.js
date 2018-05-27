@@ -779,8 +779,8 @@ module.exports = function gsc (self) {
 
       // require updateState.attack is in index
       // attatch Alice random seed half for the attack
-      virtual.AliceSeed = '0x1337'
-      virtual.BobSeed = '0x0'
+      virtual.AliceSeed = updateState.randomA
+      virtual.BobSeed = updateState.randomB
 
       let vInputs = []
       vInputs.push(0) // is close
@@ -850,10 +850,29 @@ module.exports = function gsc (self) {
       // TODO: ensure party A is calling this to start battle
       let virtual = updateVC
 
-      virtual.BobSeed = '0x4200'
-
       let vInputs = virtual.stateRaw
 
+      let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
+      let sig = self.utils.sign(stateHash, self.privateKey)
+      let r = self.utils.bufferToHex(sig.r)
+      let s = self.utils.bufferToHex(sig.s)
+      let v = sig.v
+      let sigs = [r,s,v]
+
+      virtual.stateSignatures = []
+
+      rawStates[ChanEntryID+'V'] = []
+      rawStates[ChanEntryID+'V'].push(vInputs)
+
+      virtual.stateSignatures[virtual.stateSignatures.length].push(sigs)
+
+      // store the channel
+      Object.assign(virtuals[ChanEntryID], virtual)
+      await self.storage.set('virtuals', virtuals)
+
+      // store state
+      await self.storage.set('states', rawStates)
+      await self.storage.set('transactions', txs)
     },
 
     confirmUpdateChannelState: async function(updateChannel, updateAgreement, updateState) {
