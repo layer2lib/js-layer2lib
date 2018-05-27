@@ -127,8 +127,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      //let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
-      let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
+      let txHash = await self.web3.eth.sendRawTransaction(this.bufferToHex(serialized))
+      //let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
       await this.waitForConfirm(txHash)
       return txHash
     },
