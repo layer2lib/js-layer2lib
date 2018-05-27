@@ -9,7 +9,7 @@
     "contracts": "cd contracts && npm i",
     "test": "node test/layer2libTest.js",
     "test-random": "node test/randomTest.js",
-    "testvc": "node test/layer2libVCTest.js"
+    "testvc": "node test/layer2libVCTest.js",
     "test-random": "node test/randomTest.js"
   },
   "repository": {
