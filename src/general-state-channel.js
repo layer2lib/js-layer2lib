@@ -689,8 +689,11 @@ module.exports = function gsc (self) {
 
       // TODO !!!!!!!!!!!!!!!!!!!
       // This will transfer the ledger wager based on winner
+      console.log(channel.type)
       if(channel.type == 'battleEther') {
         console.log('WEEEÉ')
+        if(updateState.isClose === 1) {
+        }
       }
 
       rawStates[ChanEntryID].push(chanState)
@@ -832,7 +835,8 @@ module.exports = function gsc (self) {
       vInputs.push(updateState.attack)
       vInputs.push(virtual.AliceSeed)
       vInputs.push(virtual.BobSeed)
-      vInputs.push(updateState.ultimateNonce)
+      vInputs.push(updateState.ultimateNonceA)
+      vInputs.push(updateState.ultimateNonceB)
       vInputs.push(updateState.turn) // Mark whos turn it is, must be other person for next state update
 
       // TODO If attack is ulimate (last attack in index) then update the ultimateNonce == sequence

@@ -313,7 +313,10 @@ async function test(redisClient) {
   let dmgModifier = (1/100) * (random.getCurrentRandom()%100)
   console.log('DMG Modifier: '+dmgModifier)
 
-  console.log('New DMG: '+Math.floor(dmg-(dmg*dmgModifier)))
+  let newDmg = Math.floor(dmg-(dmg*dmgModifier))
+  console.log('New DMG: '+newDmg)
+
+  let partyBHealth = 100 - newDmg
 
   //console.log(Alice_rands)
   //console.log(Bob_rands)
@@ -330,9 +333,10 @@ async function test(redisClient) {
     balanceA: web3.toWei(0.03, 'ether'),
     balanceB: web3.toWei(0.05, 'ether'),
     hpA: 100,
-    hpB: 100,
+    hpB: partyBHealth,
     attack: 2,
-    ultimateNonce: 1,
+    ultimateNonceA: 1,
+    ultimateNonceB: 0,
     turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
     randomA: Alice_rands.hashes[Alice_rands.hashes.length-1],
     randomB: Bob_rands.hashes[Bob_rands.hashes.length-1]
@@ -352,6 +356,45 @@ async function test(redisClient) {
   await lAlice.gsc.confirmVCUpdate(Alice_Virtuals, updateState)
   Alice_Virtuals.dbSalt = 'Alice'
 
+  // Get user attack index
+  dmg = attackTable[1]
+
+  random = new mergeRand(Alice_rands.hashes[Alice_rands.hashes.length-2], Bob_rands.hashes[Bob_rands.hashes.length-2])
+  console.log('RANDOM NUMBER = '+ random.getCurrentRandom())
+
+  dmgModifier = (1/100) * (random.getCurrentRandom()%100)
+  console.log('DMG Modifier: '+dmgModifier)
+
+  newDmg = Math.floor(dmg-(dmg*dmgModifier))
+  console.log('New DMG: '+newDmg)
+
+  let partyAHealth = 100 - newDmg
+  
+  let updateState2 = {
+    isClose: 0,
+    nonce: 2,
+    dbSalt: 'Bob', // for testing multiple layer2 instances on same db
+    agreementID: 'battleHub1337',
+    channelID: 'respek',
+    type: 'battleEther',
+    partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    partyB: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
+    balanceA: web3.toWei(0.03, 'ether'),
+    balanceB: web3.toWei(0.05, 'ether'),
+    hpA: partyAHealth,
+    hpB: partyBHealth,
+    attack: 1,
+    ultimateNonceA: 1,
+    ultimateNonceB: 0,
+    turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    randomA: Alice_rands.hashes[Alice_rands.hashes.length-1],
+    randomB: Bob_rands.hashes[Bob_rands.hashes.length-1]
+  }
+
+  await lBob.gsc.initiateUpdateVCstate('respekBob', updateState2, false)
+
+  let Bob_Virtuals = await lBob.gsc.getVirtuals('respekBob')
+  console.log(Bob_Virtuals)
 
   // Generate a state that pushed HP of a party to 0
   // Signal this as a close state
