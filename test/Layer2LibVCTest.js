@@ -387,8 +387,8 @@ async function test(redisClient) {
     ultimateNonceA: 1,
     ultimateNonceB: 0,
     turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
-    randomA: Alice_rands.hashes[Alice_rands.hashes.length-1],
-    randomB: Bob_rands.hashes[Bob_rands.hashes.length-1]
+    randomA: Alice_rands.hashes[Alice_rands.hashes.length-2],
+    randomB: Bob_rands.hashes[Bob_rands.hashes.length-2]
   }
 
   await lBob.gsc.initiateUpdateVCstate('respekBob', updateState2, false)

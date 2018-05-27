@@ -17,7 +17,7 @@ module.exports = function gsc (self) {
     },
 
     createAgreement: async function(agreement) {
-      let entryID = agreement.ID+agreement.dbSalt
+      let entryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
@@ -128,7 +128,7 @@ module.exports = function gsc (self) {
 
     // TODO: Replace agreement with just the state sig from counterparty
     joinAgreement: async function(agreement, state) {
-      let entryID = agreement.ID+agreement.dbSalt
+      let entryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
@@ -198,7 +198,7 @@ module.exports = function gsc (self) {
     },
 
     updateAgreement: async function(agreement) {
-      let entryID = agreement.ID+agreement.dbSalt
+      let entryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
@@ -210,7 +210,7 @@ module.exports = function gsc (self) {
     },
 
     updateChannel: async function(channel) {
-      let entryID = channel.ID+channel.dbSalt
+      let entryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(entryID)) channels[entryID] = {}
 
@@ -222,7 +222,7 @@ module.exports = function gsc (self) {
     },
 
     updateChannelSigs: async function(channel) {
-      let entryID = channel.ID+channel.dbSalt
+      let entryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(entryID)) return
 
@@ -285,7 +285,7 @@ module.exports = function gsc (self) {
     },
 
     confirmCloseAgreement: async function(agreement, state) {
-      let agreementID = agreement.ID+agreement.dbSalt
+      let agreementID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreementID)) return
 
@@ -380,12 +380,12 @@ module.exports = function gsc (self) {
     // Alice creates channel agreement for Bob with Ingrid
     // Bob confirms and creates agreement for Alice with Ingrid
     openChannel: async function(channel) {
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = agreements[AgreeEntryID]
 
-      let ChanEntryID = channel.ID+channel.dbSalt
+      let ChanEntryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
@@ -527,11 +527,11 @@ module.exports = function gsc (self) {
     // TODO: replace agreement param with signature
     // you must respond to any request before updating any other state (everything pulls from latest)
     joinChannel: async function(channel, agreement, channelState) {
-      let AgreeEntryID = agreement.ID+channel.dbSalt
+      let AgreeEntryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
 
-      let ChanEntryID = channel.ID+channel.dbSalt
+      let ChanEntryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
@@ -643,7 +643,7 @@ module.exports = function gsc (self) {
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -784,12 +784,12 @@ module.exports = function gsc (self) {
       let txs = await self.storage.get('transactions') || {}
       if(!txs.hasOwnProperty(id)) return
 
-      let ChanEntryID = updateState.channelID + updateState.dbSalt
+      let ChanEntryID = updateState.channelID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = agreements[AgreeEntryID]
@@ -868,7 +868,7 @@ module.exports = function gsc (self) {
     },
 
     confirmVCUpdate: async function(updateVC, updateState) {
-      let id = updateVC.channelID + updateVC.dbSalt
+      let id = updateVC.channelID
       let txs = await self.storage.get('transactions') || {}
       if(!txs.hasOwnProperty(id)) return
 
@@ -910,12 +910,12 @@ module.exports = function gsc (self) {
     },
 
     confirmUpdateChannelState: async function(updateChannel, updateAgreement, updateState) {
-      let ChanEntryID = updateChannel.ID+updateChannel.dbSalt
+      let ChanEntryID = updateChannel.ID+updateChannel.db
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -995,7 +995,7 @@ module.exports = function gsc (self) {
       if(!channels.hasOwnProperty(channelID)) return
       let channel = await this.getChannel(channelID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -1053,7 +1053,7 @@ module.exports = function gsc (self) {
       if(!channels.hasOwnProperty(channelID)) return
       let channel = await this.getChannel(channelID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
