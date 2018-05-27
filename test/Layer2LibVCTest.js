@@ -291,6 +291,8 @@ async function test(redisClient) {
 
   console.log('Virtual Channel ready for updates')
 
+  console.log('Negotiate the random half before creating update state on VC')
+
   // // --------------------------------------------------
 
   let updateState = {
@@ -306,7 +308,9 @@ async function test(redisClient) {
     hpB: 100,
     attack: 5,
     ultimateNonce: 0,
-    turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe'
+    turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    randomA: '0x1337',
+    randomB: '0x4200'
   }
 
   // // Send VC update state
