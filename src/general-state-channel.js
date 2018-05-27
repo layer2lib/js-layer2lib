@@ -777,16 +777,18 @@ module.exports = function gsc (self) {
       let virtual = channel
       let attackTable = ['12', '4', '9', '14', '6']
 
+      // TODO: Calculate damage on counterparty based on random halves and attack chosen
+      
       // require updateState.attack is in index
       // attatch Alice random seed half for the attack
       virtual.AliceSeed = updateState.randomA
       virtual.BobSeed = updateState.randomB
 
       let vInputs = []
-      vInputs.push(0) // is close
+      vInputs.push(updateState.isClose) // is close
       vInputs.push(1) // is force push channel
       vInputs.push(1) // channel sequence
-      vInputs.push(0) // timeout length ms
+      vInputs.push(updateState.nonce) // timeout length ms
       vInputs.push(self.battleEtherInterpreter) // ether payment interpreter library address
       vInputs.push(channel.ID) // ID of channel
       vInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
@@ -834,7 +836,7 @@ module.exports = function gsc (self) {
     },
 
     confirmVCUpdate: async function(updateVC, updateState) {
-      let id = updateVC.ID + updateVC.dbSalt
+      let id = updateVC.channelID + updateVC.dbSalt
       let txs = await self.storage.get('transactions') || {}
       if(!txs.hasOwnProperty(id)) return
 
@@ -861,13 +863,13 @@ module.exports = function gsc (self) {
 
       virtual.stateSignatures = []
 
-      rawStates[ChanEntryID+'V'] = []
-      rawStates[ChanEntryID+'V'].push(vInputs)
+      rawStates[id+'V'] = []
+      rawStates[id+'V'].push(vInputs)
 
       virtual.stateSignatures[virtual.stateSignatures.length].push(sigs)
 
       // store the channel
-      Object.assign(virtuals[ChanEntryID], virtual)
+      Object.assign(virtuals[id], virtual)
       await self.storage.set('virtuals', virtuals)
 
       // store state

@@ -295,7 +295,11 @@ async function test(redisClient) {
 
   // // --------------------------------------------------
 
+  // TODO: Get Bob's random half and calculate the damage done
+
   let updateState = {
+    isClose: 0,
+    nonce: 0,
     dbSalt: 'Alice', // for testing multiple layer2 instances on same db
     agreementID: 'battleHub420',
     channelID: 'respek',
@@ -324,8 +328,11 @@ async function test(redisClient) {
   console.log(Alice_Vstate)
 
   Alice_Virtuals.dbSalt = 'Bob'
-  // confirmChannelUpdate(Alice_Virtuals, updateState)
+  await lAlice.gsc.confirmVCUpdate(Alice_Virtuals, updateState)
   Alice_Virtuals.dbSalt = 'Alice'
+
+  //todo update
+  //todo 
 
   // Bob_chan = await lBob.gsc.getChannel('respekBob')
   // //console.log(Bob_chan)
