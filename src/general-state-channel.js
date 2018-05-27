@@ -454,6 +454,7 @@ module.exports = function gsc (self) {
       newState[5] = channelRoot
       // set nonce 
       newState[1]++
+      agreement.nonce = newState[1]
 
       // TODO module this
       if(agreement.types[0] === 'Ether') {
@@ -539,7 +540,8 @@ module.exports = function gsc (self) {
       newState[5] = agreement.channelRootHash
       // set nonce 
       newState[1]++
-
+      agreement.nonce = newState[1]
+      
       // TODO module this
       if(agreement.types[0] === 'Ether') {
         //adjust balance on agreement state
@@ -672,6 +674,12 @@ module.exports = function gsc (self) {
         }
       }
 
+      // TODO !!!!!!!!!!!!!!!!!!!
+      // This will transfer the ledger wager based on winner
+      if(channel.type == 'battleEther') {
+        console.log('WEEEÉ')
+      }
+
       rawStates[ChanEntryID].push(chanState)
 
       channel.stateSerialized = self.utils.serializeState(chanState)
@@ -775,10 +783,12 @@ module.exports = function gsc (self) {
 
       // TODO: ensure party A is calling this to start battle
       let virtual = channel
-      let attackTable = ['12', '4', '9', '14', '6']
+      let attackTable = ['12', '4', '9', '14', '6', '16']
 
       // TODO: Calculate damage on counterparty based on random halves and attack chosen
-      
+      let damage = attackTable[updateState.attack]
+      console.log('DAMAGE: '+damage)
+
       // require updateState.attack is in index
       // attatch Alice random seed half for the attack
       virtual.AliceSeed = updateState.randomA
@@ -811,6 +821,7 @@ module.exports = function gsc (self) {
       // TODO If attack is ulimate (last attack in index) then update the ultimateNonce == sequence
 
       virtual.stateSerialized =  self.utils.serializeState(vInputs)
+      virtual.stateRaw = vInputs
 
       let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)

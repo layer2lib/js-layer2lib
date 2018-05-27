@@ -2,6 +2,8 @@
 const Web3 = require('web3')
 const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
+const rand = require('../src/random.js').RandomPieceGenerator
+const mergeRand = require('../src/random.js').MergedRandomGenerator
 const Promise = require('bluebird');
 
 const redisFake = require("fakeredis");
@@ -263,7 +265,7 @@ async function test(redisClient) {
   await lAlice.gsc.updateAgreement(Ingrid_agreement_1)
 
 
-  // Ingrid calls join channel on Alice-------------
+  // Ingrid calls join channel on Bob-------------
 
   let chanIngrid_2 = JSON.parse(JSON.stringify(Bob_chan))
   chanIngrid_2.dbSalt = 'Ingrid-b'
@@ -297,6 +299,15 @@ async function test(redisClient) {
 
   // TODO: Get Bob's random half and calculate the damage done
 
+  let Alice_rands = new rand('test', 100)
+  let Bob_rands = new rand('test2', 100)
+
+  let random = new mergeRand(Alice_rands.hashes[Alice_rands.hashes.length-1], Bob_rands.hashes[Bob_rands.hashes.length-1])
+  console.log('RANDOM NUMBER = '+ random.getCurrentRandom())
+
+  //console.log(Alice_rands)
+  //console.log(Bob_rands)
+
   let updateState = {
     isClose: 0,
     nonce: 0,
@@ -313,8 +324,8 @@ async function test(redisClient) {
     attack: 5,
     ultimateNonce: 0,
     turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
-    randomA: '0x1337',
-    randomB: '0x4200'
+    randomA: Alice_rands.hashes[Alice_rands.hashes.length-1],
+    randomB: Bob_rands.hashes[Bob_rands.hashes.length-1]
   }
 
   // // Send VC update state
@@ -325,14 +336,33 @@ async function test(redisClient) {
   console.log(Alice_Virtuals)
 
   let Alice_Vstate = await lAlice.gsc.getStates('respekAliceV')
-  console.log(Alice_Vstate)
+  //console.log(Alice_Vstate)
 
   Alice_Virtuals.dbSalt = 'Bob'
   await lAlice.gsc.confirmVCUpdate(Alice_Virtuals, updateState)
   Alice_Virtuals.dbSalt = 'Alice'
 
-  //todo update
-  //todo 
+
+  // Generate a state that pushed HP of a party to 0
+  // Signal this as a close state
+  // Get both parties sigs
+  // Send to Ingrid
+  // Have Ingrid call update channel state on channelAlice with the adjusted wager winnings
+
+  // assume Alice wins
+  // Ingrid constructs update channel to adjust bobs balance ledger, this 
+  updateState = {
+    isClose: 1,
+    balanceA: web3.toWei(0.08, 'ether'),
+    balanceB: web3.toWei(0, 'ether'),
+    bond: web3.toWei(0, 'ether')
+  }
+  Ingrid_agreement = await lIngrid.getGSCAgreement('battleHub420Ingrid')
+  //console.log(Ingrid_agreement)
+  await lIngrid.gsc.initiateUpdateChannelState('respekIngrid-b', updateState, false)
+
+  Ingrid_chan_2 = await lIngrid.gsc.getChannel('respekIngrid-b')
+  //console.log(Ingrid_chan_2)
 
   // Bob_chan = await lBob.gsc.getChannel('respekBob')
   // //console.log(Bob_chan)

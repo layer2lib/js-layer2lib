@@ -30,7 +30,8 @@
     "ethereumjs-util": "^5.1.5",
     "mongodb": "^3.1.0-beta4",
     "web3": "^0.20.1",
-    "web3-latest": "npm:web3"
+    "web3-latest": "npm:web3",
+    "yarn": "^1.7.0"
   },
   "devDependencies": {
     "fakeredis": "^2.0.0",
