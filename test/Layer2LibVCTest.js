@@ -23,6 +23,8 @@ let battleEthIntAddress = '0x'
 let etherPaymentExtAddress = '0x'
 let CTFregistryAddress = '0x'
 
+let attackTable = ['12', '6', '25']
+
 async function test(redisClient) {
   const redis = Promise.promisifyAll(redisClient);
   const redisProxy = new Layer2lib.RedisStorageProxy(redis);
@@ -302,15 +304,23 @@ async function test(redisClient) {
   let Alice_rands = new rand('test', 100)
   let Bob_rands = new rand('test2', 100)
 
+  // Get user attack index
+  let dmg = attackTable[2]
+
   let random = new mergeRand(Alice_rands.hashes[Alice_rands.hashes.length-1], Bob_rands.hashes[Bob_rands.hashes.length-1])
   console.log('RANDOM NUMBER = '+ random.getCurrentRandom())
+
+  let dmgModifier = (1/100) * (random.getCurrentRandom()%100)
+  console.log('DMG Modifier: '+dmgModifier)
+
+  console.log('New DMG: '+Math.floor(dmg-(dmg*dmgModifier)))
 
   //console.log(Alice_rands)
   //console.log(Bob_rands)
 
   let updateState = {
     isClose: 0,
-    nonce: 0,
+    nonce: 1,
     dbSalt: 'Alice', // for testing multiple layer2 instances on same db
     agreementID: 'battleHub420',
     channelID: 'respek',
@@ -321,8 +331,8 @@ async function test(redisClient) {
     balanceB: web3.toWei(0.05, 'ether'),
     hpA: 100,
     hpB: 100,
-    attack: 5,
-    ultimateNonce: 0,
+    attack: 2,
+    ultimateNonce: 1,
     turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
     randomA: Alice_rands.hashes[Alice_rands.hashes.length-1],
     randomB: Bob_rands.hashes[Bob_rands.hashes.length-1]

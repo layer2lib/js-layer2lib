@@ -541,7 +541,7 @@ module.exports = function gsc (self) {
       // set nonce 
       newState[1]++
       agreement.nonce = newState[1]
-      
+
       // TODO module this
       if(agreement.types[0] === 'Ether') {
         //adjust balance on agreement state
@@ -711,6 +711,7 @@ module.exports = function gsc (self) {
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
       newState[5] = channelRoot
       newState[1]++
+      agreement.nonce = newState[1]
 
       if(updateState.isClose === 1) {
         newState[5] = '0x0'
@@ -783,11 +784,13 @@ module.exports = function gsc (self) {
 
       // TODO: ensure party A is calling this to start battle
       let virtual = channel
-      let attackTable = ['12', '4', '9', '14', '6', '16']
+      let attackTable = ['12', '6', '25']
 
       // TODO: Calculate damage on counterparty based on random halves and attack chosen
       let damage = attackTable[updateState.attack]
       console.log('DAMAGE: '+damage)
+      console.log(updateState.attack)
+      // TODO verify damage and ultimate isn't called early
 
       // require updateState.attack is in index
       // attatch Alice random seed half for the attack
