@@ -707,6 +707,7 @@ module.exports = function gsc (self) {
       agreement.channels = agreement.channels || [];
       let elems = agreement.channels.slice(0)
 
+
       for(var i=0; i<agreement.channels.length; i++) {
         if(oldStateHash === elems[i]) {
           agreement.channels[i] = elem
@@ -853,8 +854,8 @@ module.exports = function gsc (self) {
 
       virtual.stateSignatures = []
 
-      rawStates[ChanEntryID+'V'] = []
-      rawStates[ChanEntryID+'V'].push(vInputs)
+      rawStates[ChanEntryID] = []
+      rawStates[ChanEntryID].push(vInputs)
 
       virtual.stateSignatures[virtual.stateSignatures.length] = sigs
 
@@ -895,8 +896,8 @@ module.exports = function gsc (self) {
 
       virtual.stateSignatures = []
 
-      rawStates[id+'V'] = []
-      rawStates[id+'V'].push(vInputs)
+      rawStates[id] = []
+      rawStates[id].push(vInputs)
 
       virtual.stateSignatures[virtual.stateSignatures.length].push(sigs)
 
@@ -910,7 +911,7 @@ module.exports = function gsc (self) {
     },
 
     confirmUpdateChannelState: async function(updateChannel, updateAgreement, updateState) {
-      let ChanEntryID = updateChannel.ID+updateChannel.db
+      let ChanEntryID = updateChannel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
