@@ -415,7 +415,10 @@ async function test(redisClient) {
   await lIngrid.gsc.initiateUpdateChannelState('respekIngrid-b', updateState, false)
 
   Ingrid_chan_2 = await lIngrid.gsc.getChannel('respekIngrid-b')
-  //console.log(Ingrid_chan_2)
+  console.log(Ingrid_chan_2)
+
+  // TODO fix db keys
+  // build proper handling of updage state with close flag
 
   // Bob_chan = await lBob.gsc.getChannel('respekBob')
   // //console.log(Bob_chan)
