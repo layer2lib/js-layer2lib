@@ -1,4 +1,4 @@
-const web3 = require('web3-latest');
+const web3 = require('web3');
 var BigNumber = require('bignumber.js');
 
 class RandomPieceGenerator {

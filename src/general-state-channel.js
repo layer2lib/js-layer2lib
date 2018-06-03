@@ -69,7 +69,7 @@ module.exports = function gsc (self) {
 
       agreement.stateSerialized = self.utils.serializeState(initialState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures = []
       let state0sig = self.utils.sign(stateHash, self.privateKey)
 
@@ -140,7 +140,7 @@ module.exports = function gsc (self) {
 
       rawStates[entryID].push(state)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -255,7 +255,7 @@ module.exports = function gsc (self) {
       rawStates[agreementID].push(oldState)
       agreement.stateSerialized = self.utils.serializeState(oldState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
 
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
@@ -297,7 +297,7 @@ module.exports = function gsc (self) {
 
       rawStates[agreementID].push(state[state.length-1])
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -484,7 +484,7 @@ module.exports = function gsc (self) {
 
       agreement.stateSerialized = self.utils.serializeState(newState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
 
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
@@ -577,7 +577,7 @@ module.exports = function gsc (self) {
 
       //TODO: check that the channel state provided is valid
 
-      // let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
+      // let channelHash = self.web3.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
       // // calculate channel root hash
       // let elem = self.utils.sha3(channelHash)
@@ -595,7 +595,7 @@ module.exports = function gsc (self) {
       // if(channelRoot != agreement.stateRaw[4]) return
 
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -741,7 +741,7 @@ module.exports = function gsc (self) {
 
       agreement.stateSerialized = self.utils.serializeState(newState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -764,7 +764,7 @@ module.exports = function gsc (self) {
         nonce: tx_nonce,
         timestamp: Date.now(),
         data: updateState,
-        txHash: self.web3.sha3(updateState.toString(), {encoding: 'hex'})
+        txHash: self.web3.utils.sha3(updateState.toString(), {encoding: 'hex'})
       }
       txs[ChanEntryID].push(tx)
 
@@ -845,7 +845,7 @@ module.exports = function gsc (self) {
       virtual.stateSerialized =  self.utils.serializeState(vInputs)
       virtual.stateRaw = vInputs
 
-      let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(virtual.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -887,7 +887,7 @@ module.exports = function gsc (self) {
 
       let vInputs = virtual.stateRaw
 
-      let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(virtual.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -951,7 +951,7 @@ module.exports = function gsc (self) {
       // add latest state
       rawStates[AgreeEntryID].push(newState)
 
-      let stateHash = self.web3.sha3(updateAgreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(updateAgreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -973,7 +973,7 @@ module.exports = function gsc (self) {
         nonce: tx_nonce,
         timestamp: Date.now(),
         data: updateState,
-        txHash: self.web3.sha3(updateState.toString(), {encoding: 'hex'})
+        txHash: self.web3.utils.sha3(updateState.toString(), {encoding: 'hex'})
       }
       txs[ChanEntryID].push(tx)
 
