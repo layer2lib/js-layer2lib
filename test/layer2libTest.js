@@ -28,8 +28,8 @@ async function test(redisClient) {
   const partyAPrivate = '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   const partyB = '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc'
   const partyBPrivate = '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
-  const aliceProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyA}`);
-  const bobProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyB}`);
+  const aliceProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyA}/`);
+  const bobProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyB}/`);
 
   // ALICE
   let optionsAlice = {
@@ -55,8 +55,8 @@ async function test(redisClient) {
   // clear database
   await lAlice.gsc.clearStorage()
 
-  let agreementAlice = {
-    ID: 'agreementAlice',
+  let agreement = {
+    ID: 'agreementId',
     types: ['Ether'],
     partyA, // Viewer or performer public key
     partyB, // Spank Hub public key
@@ -64,13 +64,13 @@ async function test(redisClient) {
     balanceB: web3.utils.toWei('0.2', 'ether')
   }
 
-  await lAlice.createGSCAgreement(agreementAlice)
+  await lAlice.createGSCAgreement(agreement)
 
-  let Alice_agreement = await lAlice.getGSCAgreement('agreementAlice')
+  let Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(col)
-  let Alice_tx = await lAlice.gsc.getTransactions('agreementAlice')
+  let Alice_tx = await lAlice.gsc.getTransactions('agreementId')
   //console.log(Alice_tx)
-  let AliceAgreementState = await lAlice.gsc.getStates('agreementAlice')
+  let AliceAgreementState = await lAlice.gsc.getStates('agreementId')
   //Grab the latest (currently only state in list)
   AliceAgreementState = AliceAgreementState[0]
   //console.log(AliceAgreementState)
@@ -89,28 +89,29 @@ async function test(redisClient) {
 
   console.log('Bob initialized, receive agreement from Alice and joins')
 
-  let agreementBob = JSON.parse(JSON.stringify(agreementAlice))
-  agreementBob.ID = 'agreementBob'
-  await lBob.joinGSCAgreement(agreementBob, AliceAgreementState)
+  let bobAgreement = JSON.parse(JSON.stringify(agreement))
 
-  let Bob_agreement = await lBob.getGSCAgreement('agreementBob')
+  await lBob.joinGSCAgreement(bobAgreement, AliceAgreementState)
+
+  let Bob_agreement = await lBob.getGSCAgreement('agreementId')
   //console.log(Bob_agreement)
-  let Bob_tx = await lBob.gsc.getTransactions('agreementBob')
+  let Bob_tx = await lBob.gsc.getTransactions('agreementId')
   //console.log(Bob_tx)
-  let BobAgreementState = await lBob.gsc.getStates('agreementBob')
+  let BobAgreementState = await lBob.gsc.getStates('agreementId')
   //console.log(BobAgreementState)
 
   console.log('Bob now sends openchannel ack to Alice')
 
-  let isOpenAlice = await lAlice.gsc.isAgreementOpen('agreementAlice')
+  let isOpenAlice = await lAlice.gsc.isAgreementOpen('agreementId')
   console.log('Alice state is agreement open: ' + isOpenAlice)
-  let isOpenBob = await lBob.gsc.isAgreementOpen('agreementBob')
+  let isOpenBob = await lBob.gsc.isAgreementOpen('agreementId')
   console.log('Bob state is agreement open: ' + isOpenBob)
   // alice updates agreement with ack
-  agreementBob.ID = 'agreementAlice'
-  await lAlice.gsc.updateAgreement(agreementBob)
 
-  isOpenAlice = await lAlice.gsc.isAgreementOpen('agreementAlice')
+  // Load Bob's ack into Alice db
+  await lAlice.gsc.updateAgreement(bobAgreement)
+
+  isOpenAlice = await lAlice.gsc.isAgreementOpen('agreementId')
   console.log('Alice state is agreement open: ' + isOpenAlice)
 
 
@@ -120,48 +121,45 @@ async function test(redisClient) {
 
   // Open a channel
 
-  let channelAlice = {
-    ID: 'channelAlice',
-    agreementID: 'agreementAlice',
+  let channel = {
+    ID: 'channelId',
+    agreementID: 'agreementId',
     type: 'ether',
     balanceA: web3.utils.toWei('0.03', 'ether'),
     balanceB: web3.utils.toWei('0.05', 'ether')
   }
 
-  await lAlice.openGSCChannel(channelAlice)
+  await lAlice.openGSCChannel(channel)
 
 
-  let Alice_chan = await lAlice.gsc.getChannel('channelAlice')
+  let Alice_chan = await lAlice.gsc.getChannel('channelId')
   //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('agreementAlice')
+  Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(Alice_agreement)
-  let AliceChanState = await lAlice.gsc.getStates('channelAlice')
+  let AliceChanState = await lAlice.gsc.getStates('channelId')
   //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('agreementAlice')
+  AliceAgreementState = await lAlice.gsc.getStates('agreementId')
   //console.log(AliceAgreementState)
 
   let chanBob = JSON.parse(JSON.stringify(Alice_chan))
-  chanBob.ID = 'channelBob'
   Bob_agreement = JSON.parse(JSON.stringify(Alice_agreement))
-  Bob_agreement.ID = 'agreementBob'
   await lBob.gsc.joinChannel(chanBob, Bob_agreement, chanBob.stateRaw)
 
-  let Bob_chan = await lBob.gsc.getChannel('channelBob')
+  let Bob_chan = await lBob.gsc.getChannel('channelId')
   //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('agreementBob')
+  Bob_agreement = await lBob.getGSCAgreement('agreementId')
   //console.log(Bob_agreement)
-  let BobChanState = await lBob.gsc.getStates('channelBob')
+  let BobChanState = await lBob.gsc.getStates('channelId')
   //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('agreementBob')
+  BobAgreementState = await lBob.gsc.getStates('agreementId')
   //console.log(BobAgreementState)
 
-  let txs_agreement = await lBob.gsc.getTransactions('agreementBob')
-  let txs_channel = await lBob.gsc.getTransactions('channelBob')
+  let txs_agreement = await lBob.gsc.getTransactions('agreementId')
+  let txs_channel = await lBob.gsc.getTransactions('channelId')
   //console.log(txs_agreement)
   //console.log(txs_channel)
 
   console.log('Bob sends join channel ack to Alice')
-  Bob_agreement.ID = 'agreementAlice'
   await lAlice.gsc.updateAgreement(Bob_agreement)
 
 
@@ -169,9 +167,9 @@ async function test(redisClient) {
 
   // Send ether in channel
 
-  Bob_agreement.ID = 'agreementBob'
 
-  Alice_agreement = await lAlice.getGSCAgreement('agreementAlice')
+
+  Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(Alice_agreement)
 
   console.log('ether channel now open')
@@ -183,15 +181,15 @@ async function test(redisClient) {
     balanceB: web3.utils.toWei('0.02', 'ether')
   }
 
-  await lBob.gsc.initiateUpdateChannelState('channelBob', updateState, false)
+  await lBob.gsc.initiateUpdateChannelState('channelId', updateState, false)
 
-  Bob_chan = await lBob.gsc.getChannel('channelBob')
+  Bob_chan = await lBob.gsc.getChannel('channelId')
   //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('agreementBob')
+  Bob_agreement = await lBob.getGSCAgreement('agreementId')
   //console.log(Bob_agreement)
-  BobChanState = await lBob.gsc.getStates('channelBob')
+  BobChanState = await lBob.gsc.getStates('channelId')
   //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('agreementBob')
+  BobAgreementState = await lBob.gsc.getStates('agreementId')
   //console.log(BobAgreementState)
 
   console.log('Bob sends channel state update to Alice')
@@ -199,31 +197,28 @@ async function test(redisClient) {
   let chanAlice = JSON.parse(JSON.stringify(Bob_chan))
   let agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
   //console.log(agreeAlice)
-  chanAlice.ID = 'channelAlice'
-  agreeAlice.ID = 'agreementAlice'
+
 
   await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
 
-  Alice_chan = await lAlice.gsc.getChannel('channelAlice')
+  Alice_chan = await lAlice.gsc.getChannel('channelId')
   //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('agreementAlice')
+  Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(Alice_agreement)
   // console.log(Alice_agreement.stateSignatures)
-  AliceChanState = await lAlice.gsc.getStates('channelAlice')
+  AliceChanState = await lAlice.gsc.getStates('channelId')
   //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('agreementAlice')
+  AliceAgreementState = await lAlice.gsc.getStates('agreementId')
   //console.log(AliceAgreementState)
 
   console.log('Alice confirmed channel state update, sends ack to Bob')
 
-  Alice_agreement.ID = 'agreementBob'
   await lBob.gsc.updateAgreement(Alice_agreement)
-  Alice_agreement.ID = 'agreementAlice'
 
-  txs_channel = await lBob.gsc.getTransactions('channelBob')
-  txs_agreement = await lBob.gsc.getTransactions('agreementBob')
-  Alice_tx = await lAlice.gsc.getTransactions('agreementAlice')
-  let Alice_tx_chan = await lAlice.gsc.getTransactions('channelAlice')
+  txs_channel = await lBob.gsc.getTransactions('channelId')
+  txs_agreement = await lBob.gsc.getTransactions('agreementId')
+  Alice_tx = await lAlice.gsc.getTransactions('agreementId')
+  let Alice_tx_chan = await lAlice.gsc.getTransactions('channelId')
   //console.log(txs_agreement)
 
 
@@ -235,8 +230,8 @@ async function test(redisClient) {
 
   // updateState = {
   //   isClose: 1,
-  //   balanceA: web3.utils.toWei('0.07', 'ether'),
-  //   balanceB: web3.utils.toWei('0.01', 'ether')
+  //   balanceA: web3.utils.toWei(0.07, 'ether'),
+  //   balanceB: web3.utils.toWei(0.01, 'ether')
   // }
   // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
   // //console.log(Bob_agreement)
@@ -305,11 +300,11 @@ async function test(redisClient) {
 
   // Close Channel Byzantine
 
-  await lBob.gsc.startSettleChannel('channelBob')
+  await lBob.gsc.startSettleChannel('channelId')
 
   console.log('Settlement period started on channel, calling close after')
 
-  await lBob.gsc.closeByzantineChannel('channelBob')
+  await lBob.gsc.closeByzantineChannel('channelId')
 
   console.log('Agreement finalized, quiting...')
 
