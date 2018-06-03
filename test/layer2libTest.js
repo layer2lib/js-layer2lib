@@ -42,9 +42,10 @@ async function test(redisClient) {
   web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io'))
 
   try {
-    let account = partyA
-    let t = await lAlice.getMainnetBalance(account)
-    console.log(t)
+    const balA = await lAlice.getMainnetBalance(partyA)
+    const balB = await lAlice.getMainnetBalance(partyB)
+    console.log('alice starting balance:', balA)
+    console.log('bob starting balance:', balB)
   } catch (e) {
     console.log(e)
   }
@@ -311,5 +312,15 @@ async function test(redisClient) {
   await lBob.gsc.closeByzantineChannel('channelBob')
 
   console.log('Agreement finalized, quiting...')
+
+  try {
+    const balA = await lAlice.getMainnetBalance(partyA)
+    const balB = await lAlice.getMainnetBalance(partyB)
+    console.log('alice ending balance:', balA)
+    console.log('bob ending balance:', balB)
+  } catch (e) {
+    console.log(e)
+  }
+
   redisClient.quit()
 }
