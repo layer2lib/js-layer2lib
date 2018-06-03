@@ -23,20 +23,26 @@ let CTFregistryAddress = '0x'
 
 async function test(redisClient) {
   const redis = Promise.promisifyAll(redisClient);
-  const redisProxy = new Layer2lib.RedisStorageProxy(redis);
+  // alice + bob keys from rinkeby
+  const partyA = '0x1e8524370B7cAf8dC62E3eFfBcA04cCc8e493FfE'
+  const partyAPrivate = '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
+  const partyB = '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc'
+  const partyBPrivate = '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
+  const aliceProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyA}`);
+  const bobProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyB}`);
 
   // ALICE
   let optionsAlice = {
-    db: redisProxy,
-    privateKey: '0x7236c4adfa6773526620f0ab4e4d626a9875a43f56bb2221f223755e43a75ae9'
+    db: aliceProxy,
+    privateKey: partyAPrivate
   }
 
-  let lAlice = new Layer2lib("http://localhost:7545", optionsAlice)
+  let lAlice = new Layer2lib('https://rinkeby.infura.io', optionsAlice)
 
-  web3.setProvider(new web3.providers.HttpProvider('http://localhost:7545'))
+  web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io'))
 
   try {
-    let account = '0x73307362a4d6d9158a3892a97318677c53b72ae4'
+    let account = partyA
     let t = await lAlice.getMainnetBalance(account)
     console.log(t)
   } catch (e) {
@@ -51,8 +57,8 @@ async function test(redisClient) {
   let agreementAlice = {
     ID: 'agreementAlice',
     types: ['Ether'],
-    partyA: '0x73307362a4d6d9158a3892a97318677c53b72ae4', // Viewer or performer public key
-    partyB: '0x9c62a6bb961ade972d381376d3dbf093585c233b', // Spank Hub public key
+    partyA, // Viewer or performer public key
+    partyB, // Spank Hub public key
     balanceA: web3.utils.toWei('0.1', 'ether'),
     balanceB: web3.utils.toWei('0.2', 'ether')
   }
@@ -73,11 +79,11 @@ async function test(redisClient) {
 
   // BOB
   let optionsBob = {
-    db: redisProxy,
-    privateKey: '0x2378cd9ea07f78b9bc458b00019dc3799d4988794acf65d7ae127fc4e40326a4'
+    db: bobProxy,
+    privateKey: partyBPrivate
   }
 
-  let lBob = new Layer2lib('http://localhost:7545', optionsBob)
+  let lBob = new Layer2lib('https://rinkeby.infura.io', optionsBob)
   lBob.initGSC()
 
   console.log('Bob initialized, receive agreement from Alice and joins')
