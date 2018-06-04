@@ -2,6 +2,7 @@ const Buffer = require('buffer').Buffer
 const ethutil = require('ethereumjs-util')
 const TX = require('ethereumjs-tx')
 const Promise = require('bluebird')
+const BigNumber = require('bignumber.js')
 
 module.exports = function(self) {
   return {
@@ -285,7 +286,7 @@ module.exports = function(self) {
 
       let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
       await this.waitForConfirm(txHash)
-      let metaDeployed = await c.resolveAddress(metaCTF)
+      let metaDeployed = await c.methods.resolveAddress(metaCTF).call()
       //let metaDeployed = '0x69d374647049341aa74f2216434fe2d0715546b4'
       console.log(metaDeployed)
       return metaDeployed
@@ -340,6 +341,9 @@ module.exports = function(self) {
       let callData = c.methods.startSettleStateSubchannel(proof, agreeState, chanState, sigV, sigR, sigS).encodeABI()
 
       let gas = await self.web3.eth.getGasPrice()
+      // avoid out of gas error
+      // running into issues here -Lex
+      //gas = BigNumber('20000000000')
 
       const nonce = await self.web3.eth.getTransactionCount(signer)
 
@@ -360,8 +364,8 @@ module.exports = function(self) {
       let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
       //let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
       await this.waitForConfirm(txHash)
-
-      let subchannel = await c.getSubChannel(this.serializeState(['respek']))
+      // TODO remove hardcoded ID :(
+      let subchannel = await c.methdos.getSubChannel(this.serializeState(['channelId'])).call()
       console.log(subchannel)
       return txHash
 

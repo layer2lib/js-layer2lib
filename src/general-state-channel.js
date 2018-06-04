@@ -46,6 +46,7 @@ module.exports = function gsc (self) {
       rawStates[metachannelCTFaddress] = metaCTFbytes
 
       agreement.metachannelCTFaddress = metachannelCTFaddress
+      agreement.metachannelCTFbytes = metaCTFbytes
       let metaSig = self.utils.sign(agreement.metachannelCTFaddress, self.privateKey)
       let mr = self.utils.bufferToHex(metaSig.r)
       let ms = self.utils.bufferToHex(metaSig.s)
@@ -139,6 +140,7 @@ module.exports = function gsc (self) {
       if(!rawStates.hasOwnProperty(entryID)) rawStates[entryID] = []
 
       rawStates[entryID].push(state)
+      rawStates[agreement.metachannelCTFaddress] = agreement.metachannelCTFbytes
 
       let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
