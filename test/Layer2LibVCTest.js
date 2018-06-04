@@ -50,8 +50,8 @@ async function test(redisClient) {
     types: ['Battle-Ether'],
     partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe', // Player Alice public Key
     partyB: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416', // Game Hub public key
-    balanceA: web3.toWei(0.1, 'ether'),
-    balanceB: web3.toWei(0.2, 'ether')
+    balanceA: web3.utils.toWei('0.1', 'ether'),
+    balanceB: web3.utils.toWei('0.2', 'ether')
   }
 
   let entryID = agreementAlice.ID + agreementAlice.dbSalt
@@ -123,7 +123,7 @@ async function test(redisClient) {
 
   let lBob = new Layer2lib("https://rinkeby.infura.io", optionsBob)
 
-  web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
+  web3.setProvider(new web3.providers.HttpProvider('http://localhost:7545'))
 
   lBob.initGSC()
 
@@ -133,8 +133,8 @@ async function test(redisClient) {
     types: ['Battle-Ether'],
     partyA: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc', // Viewer or performer public key
     partyB: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416', // Spank Hub public key
-    balanceA: web3.toWei(0.1, 'ether'),
-    balanceB: web3.toWei(0.2, 'ether')
+    balanceA: web3.utils.toWei('0.1', 'ether'),
+    balanceB: web3.utils.toWei('0.2', 'ether')
   }
 
   let entryID_b = agreementBob.ID + agreementBob.dbSalt
@@ -192,9 +192,9 @@ async function test(redisClient) {
     agreementID: 'battleHub1337',
     type: 'battleEther',
     counterparty: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
-    bond: web3.toWei(0.03, 'ether')
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
+    bond: web3.utils.toWei('0.03', 'ether')
   }
 
   await lAlice.openGSCChannel(channelAlice)
@@ -219,9 +219,9 @@ async function test(redisClient) {
     agreementID: 'battleHub420',
     type: 'battleEther',
     counterparty: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
-    bond: web3.toWei(0.05, 'ether')
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
+    bond: web3.utils.toWei('0.05', 'ether')
   }
 
 
@@ -330,8 +330,8 @@ async function test(redisClient) {
     type: 'battleEther',
     partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
     partyB: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
     hpA: 100,
     hpB: partyBHealth,
     attack: 2,
@@ -369,7 +369,7 @@ async function test(redisClient) {
   console.log('New DMG: '+newDmg)
 
   let partyAHealth = 100 - newDmg
-  
+
   let updateState2 = {
     isClose: 0,
     nonce: 2,
@@ -379,8 +379,8 @@ async function test(redisClient) {
     type: 'battleEther',
     partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
     partyB: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
     hpA: partyAHealth,
     hpB: partyBHealth,
     attack: 1,
@@ -403,12 +403,12 @@ async function test(redisClient) {
   // Have Ingrid call update channel state on channelAlice with the adjusted wager winnings
 
   // assume Alice wins
-  // Ingrid constructs update channel to adjust bobs balance ledger, this 
+  // Ingrid constructs update channel to adjust bobs balance ledger, this
   updateState = {
     isClose: 1,
-    balanceA: web3.toWei(0.08, 'ether'),
-    balanceB: web3.toWei(0, 'ether'),
-    bond: web3.toWei(0, 'ether')
+    balanceA: web3.utils.toWei('0.08', 'ether'),
+    balanceB: web3.utils.toWei('0', 'ether'),
+    bond: web3.utils.toWei('0', 'ether')
   }
   Ingrid_agreement = await lIngrid.getGSCAgreement('battleHub420Ingrid')
   //console.log(Ingrid_agreement)
@@ -461,7 +461,7 @@ async function test(redisClient) {
   // let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
   // //console.log(txs_agreement)
 
-  
+
   // // --------------------------------------------------
 
   // // Send ether in channel and close channel
@@ -470,8 +470,8 @@ async function test(redisClient) {
 
   // // updateState = {
   // //   isClose: 1,
-  // //   balanceA: web3.toWei(0.07, 'ether'),
-  // //   balanceB: web3.toWei(0.01, 'ether')
+  // //   balanceA: web3.utils.toWei('0.07', 'ether'),
+  // //   balanceB: web3.utils.toWei('0.01', 'ether')
   // // }
   // // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
   // // //console.log(Bob_agreement)

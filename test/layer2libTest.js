@@ -23,22 +23,29 @@ let CTFregistryAddress = '0x'
 
 async function test(redisClient) {
   const redis = Promise.promisifyAll(redisClient);
-  const redisProxy = new Layer2lib.RedisStorageProxy(redis);
+  // alice + bob keys from rinkeby
+  const partyA = '0x1e8524370B7cAf8dC62E3eFfBcA04cCc8e493FfE'
+  const partyAPrivate = '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
+  const partyB = '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc'
+  const partyBPrivate = '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
+  const aliceProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyA}/`);
+  const bobProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyB}/`);
 
   // ALICE
   let optionsAlice = {
-    db: redisProxy,
-    privateKey: '0x6cb2b4257e4477b096beacc755b6abf45d9d67738522aa27d3c2e1444eb4ea80'
+    db: aliceProxy,
+    privateKey: partyAPrivate
   }
 
-  let lAlice = new Layer2lib("http://localhost:8545", optionsAlice)
+  let lAlice = new Layer2lib('https://rinkeby.infura.io', optionsAlice)
 
-  web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
+  web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io'))
 
   try {
-    let account = '0xa84135fdbd790a6feeffd204b14a103bb2e41e92'
-    let t = await lAlice.getMainnetBalance(account)
-    console.log(t)
+    const balA = await lAlice.getMainnetBalance(partyA)
+    const balB = await lAlice.getMainnetBalance(partyB)
+    console.log('alice starting balance:', balA)
+    console.log('bob starting balance:', balB)
   } catch (e) {
     console.log(e)
   }
@@ -48,72 +55,63 @@ async function test(redisClient) {
   // clear database
   await lAlice.gsc.clearStorage()
 
-  let agreementAlice = {
-    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
-    ID: 'spankHub1337',
+  let agreement = {
+    ID: 'agreementId',
     types: ['Ether'],
-    partyA: web3.eth.accounts[0], // Viewer or performer public key
-    partyB: web3.eth.accounts[1], // Spank Hub public key
-    balanceA: web3.toWei(0.1, 'ether'),
-    balanceB: web3.toWei(0.2, 'ether')
+    partyA, // Viewer or performer public key
+    partyB, // Spank Hub public key
+    balanceA: web3.utils.toWei('0.1', 'ether'),
+    balanceB: web3.utils.toWei('0.2', 'ether')
   }
 
-  let entryID = agreementAlice.ID + agreementAlice.dbSalt
+  await lAlice.createGSCAgreement(agreement)
 
-  await lAlice.createGSCAgreement(agreementAlice)
-
-  let Alice_agreement = await lAlice.getGSCAgreement(entryID)
+  let Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(col)
-  let Alice_tx = await lAlice.gsc.getTransactions(entryID)
+  let Alice_tx = await lAlice.gsc.getTransactions('agreementId')
   //console.log(Alice_tx)
-  let AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  let AliceAgreementState = await lAlice.gsc.getStates('agreementId')
   //Grab the latest (currently only state in list)
   AliceAgreementState = AliceAgreementState[0]
   //console.log(AliceAgreementState)
 
   console.log('Alice agreement created and stored.. initiating Bob')
-
-
   // --------------------------------------------------
-
-
 
   // BOB
   let optionsBob = {
-    db: redisProxy,
-    privateKey: '0x7d62b5a4caa26ff7833a37c1b0b3cf2ead49d9942f4ed940c54d9d70275b4591'
+    db: bobProxy,
+    privateKey: partyBPrivate
   }
 
-  let lBob = new Layer2lib('http://localhost:8545', optionsBob)
+  let lBob = new Layer2lib('https://rinkeby.infura.io', optionsBob)
   lBob.initGSC()
 
   console.log('Bob initialized, receive agreement from Alice and joins')
 
-  let agreementBob = JSON.parse(JSON.stringify(agreementAlice))
-  agreementBob.dbSalt = 'Bob'
+  let bobAgreement = JSON.parse(JSON.stringify(agreement))
 
-  await lBob.joinGSCAgreement(agreementBob, AliceAgreementState)
+  await lBob.joinGSCAgreement(bobAgreement, AliceAgreementState)
 
-  let Bob_agreement = await lAlice.getGSCAgreement('spankHub1337Bob')
+  let Bob_agreement = await lBob.getGSCAgreement('agreementId')
   //console.log(Bob_agreement)
-  let Bob_tx = await lBob.gsc.getTransactions('spankHub1337Bob')
+  let Bob_tx = await lBob.gsc.getTransactions('agreementId')
   //console.log(Bob_tx)
-  let BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  let BobAgreementState = await lBob.gsc.getStates('agreementId')
   //console.log(BobAgreementState)
 
   console.log('Bob now sends openchannel ack to Alice')
 
-  let isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  let isOpenAlice = await lAlice.gsc.isAgreementOpen('agreementId')
   console.log('Alice state is agreement open: ' + isOpenAlice)
-  let isOpenBob = await lBob.gsc.isAgreementOpen('spankHub1337Bob')
+  let isOpenBob = await lBob.gsc.isAgreementOpen('agreementId')
   console.log('Bob state is agreement open: ' + isOpenBob)
+  // alice updates agreement with ack
 
   // Load Bob's ack into Alice db
-  agreementBob.dbSalt = 'Alice'
-  await lAlice.gsc.updateAgreement(agreementBob)
-  agreementBob.dbSalt = 'Bob'
+  await lAlice.gsc.updateAgreement(bobAgreement)
 
-  isOpenAlice = await lAlice.gsc.isAgreementOpen('spankHub1337Alice')
+  isOpenAlice = await lAlice.gsc.isAgreementOpen('agreementId')
   console.log('Alice state is agreement open: ' + isOpenAlice)
 
 
@@ -123,49 +121,45 @@ async function test(redisClient) {
 
   // Open a channel
 
-  let channelAlice = {
-    dbSalt: 'Alice', // for testing multiple layer2 instances on same db
-    ID: 'respek',
-    agreementID: 'spankHub1337',
+  let channel = {
+    ID: 'channelId',
+    agreementID: 'agreementId',
     type: 'ether',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether')
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether')
   }
 
-  await lAlice.openGSCChannel(channelAlice)
+  await lAlice.openGSCChannel(channel)
 
 
-  let Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  let Alice_chan = await lAlice.gsc.getChannel('channelId')
   //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(Alice_agreement)
-  let AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  let AliceChanState = await lAlice.gsc.getStates('channelId')
   //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  AliceAgreementState = await lAlice.gsc.getStates('agreementId')
   //console.log(AliceAgreementState)
 
   let chanBob = JSON.parse(JSON.stringify(Alice_chan))
-  chanBob.dbSalt = 'Bob'
   Bob_agreement = JSON.parse(JSON.stringify(Alice_agreement))
-  Bob_agreement.dbSalt = 'Bob'
   await lBob.gsc.joinChannel(chanBob, Bob_agreement, chanBob.stateRaw)
 
-  let Bob_chan = await lBob.gsc.getChannel('respekBob')
+  let Bob_chan = await lBob.gsc.getChannel('channelId')
   //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  Bob_agreement = await lBob.getGSCAgreement('agreementId')
   //console.log(Bob_agreement)
-  let BobChanState = await lBob.gsc.getStates('respekBob')
+  let BobChanState = await lBob.gsc.getStates('channelId')
   //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  BobAgreementState = await lBob.gsc.getStates('agreementId')
   //console.log(BobAgreementState)
 
-  let txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
-  let txs_channel = await lBob.gsc.getTransactions('respekBob')
+  let txs_agreement = await lBob.gsc.getTransactions('agreementId')
+  let txs_channel = await lBob.gsc.getTransactions('channelId')
   //console.log(txs_agreement)
   //console.log(txs_channel)
 
   console.log('Bob sends join channel ack to Alice')
-  Bob_agreement.dbSalt = 'Alice'
   await lAlice.gsc.updateAgreement(Bob_agreement)
 
 
@@ -173,9 +167,9 @@ async function test(redisClient) {
 
   // Send ether in channel
 
-  Bob_agreement.dbSalt = 'Bob'
 
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+
+  Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(Alice_agreement)
 
   console.log('ether channel now open')
@@ -183,19 +177,19 @@ async function test(redisClient) {
 
   let updateState = {
     isClose: 0,
-    balanceA: web3.toWei(0.06, 'ether'),
-    balanceB: web3.toWei(0.02, 'ether')
+    balanceA: web3.utils.toWei('0.06', 'ether'),
+    balanceB: web3.utils.toWei('0.02', 'ether')
   }
 
-  await lBob.gsc.initiateUpdateChannelState('respekBob', updateState, false)
+  await lBob.gsc.initiateUpdateChannelState('channelId', updateState, false)
 
-  Bob_chan = await lBob.gsc.getChannel('respekBob')
+  Bob_chan = await lBob.gsc.getChannel('channelId')
   //console.log(Bob_chan)
-  Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
+  Bob_agreement = await lBob.getGSCAgreement('agreementId')
   //console.log(Bob_agreement)
-  BobChanState = await lBob.gsc.getStates('respekBob')
+  BobChanState = await lBob.gsc.getStates('channelId')
   //console.log(BobChanState)
-  BobAgreementState = await lBob.gsc.getStates('spankHub1337Bob')
+  BobAgreementState = await lBob.gsc.getStates('agreementId')
   //console.log(BobAgreementState)
 
   console.log('Bob sends channel state update to Alice')
@@ -203,31 +197,28 @@ async function test(redisClient) {
   let chanAlice = JSON.parse(JSON.stringify(Bob_chan))
   let agreeAlice = JSON.parse(JSON.stringify(Bob_agreement))
   //console.log(agreeAlice)
-  chanAlice.dbSalt = 'Alice'
-  agreeAlice.dbSalt = 'Alice'
+
 
   await lAlice.gsc.confirmUpdateChannelState(chanAlice, agreeAlice, updateState)
 
-  Alice_chan = await lAlice.gsc.getChannel('respekAlice')
+  Alice_chan = await lAlice.gsc.getChannel('channelId')
   //console.log(Alice_chan)
-  Alice_agreement = await lAlice.getGSCAgreement('spankHub1337Alice')
+  Alice_agreement = await lAlice.getGSCAgreement('agreementId')
   //console.log(Alice_agreement)
   // console.log(Alice_agreement.stateSignatures)
-  AliceChanState = await lAlice.gsc.getStates('respekAlice')
+  AliceChanState = await lAlice.gsc.getStates('channelId')
   //console.log(AliceChanState)
-  AliceAgreementState = await lAlice.gsc.getStates('spankHub1337Alice')
+  AliceAgreementState = await lAlice.gsc.getStates('agreementId')
   //console.log(AliceAgreementState)
 
   console.log('Alice confirmed channel state update, sends ack to Bob')
 
-  Alice_agreement.dbSalt = 'Bob'
   await lBob.gsc.updateAgreement(Alice_agreement)
-  Alice_agreement.dbSalt = 'Alice'
 
-  txs_channel = await lBob.gsc.getTransactions('respekBob')
-  txs_agreement = await lBob.gsc.getTransactions('spankHub1337Bob')
-  Alice_tx = await lAlice.gsc.getTransactions('spankHub1337Alice')
-  let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
+  txs_channel = await lBob.gsc.getTransactions('channelId')
+  txs_agreement = await lBob.gsc.getTransactions('agreementId')
+  Alice_tx = await lAlice.gsc.getTransactions('agreementId')
+  let Alice_tx_chan = await lAlice.gsc.getTransactions('channelId')
   //console.log(txs_agreement)
 
 
@@ -239,8 +230,8 @@ async function test(redisClient) {
 
   // updateState = {
   //   isClose: 1,
-  //   balanceA: web3.toWei(0.07, 'ether'),
-  //   balanceB: web3.toWei(0.01, 'ether')
+  //   balanceA: web3.utils.toWei(0.07, 'ether'),
+  //   balanceB: web3.utils.toWei(0.01, 'ether')
   // }
   // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
   // //console.log(Bob_agreement)
@@ -309,12 +300,22 @@ async function test(redisClient) {
 
   // Close Channel Byzantine
 
-  await lBob.gsc.startSettleChannel('respekBob')
+  await lBob.gsc.startSettleChannel('channelId')
 
   console.log('Settlement period started on channel, calling close after')
 
-  await lBob.gsc.closeByzantineChannel('respekBob')
+  await lBob.gsc.closeByzantineChannel('channelId')
 
   console.log('Agreement finalized, quiting...')
+
+  try {
+    const balA = await lAlice.getMainnetBalance(partyA)
+    const balB = await lAlice.getMainnetBalance(partyB)
+    console.log('alice ending balance:', balA)
+    console.log('bob ending balance:', balB)
+  } catch (e) {
+    console.log(e)
+  }
+
   redisClient.quit()
 }

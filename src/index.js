@@ -40,7 +40,8 @@ class Layer2lib {
   }
 
   async getMainnetBalance(address) {
-    return web3.fromWei(web3.eth.getBalance(address), 'ether')
+    const balance = await web3.eth.getBalance(address)
+    return web3.utils.fromWei(balance, 'ether')
   }
 
   async initGSC(options) {
