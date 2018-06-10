@@ -1,4 +1,4 @@
-declare module "js-layer2lib" {
+declare module 'js-layer2lib' {
   export default class Layer2lib {
     web3: any;
     merkleTree: any;
@@ -27,7 +27,7 @@ declare module "js-layer2lib" {
   }
 
   export class BrowserStorageProxy extends BaseStorageProxy {
-    constructor(localforage:any, name?:string);
+    constructor(localforage: any, name?: string);
   }
 
   export class MemStorageProxy extends BaseStorageProxy {
@@ -35,11 +35,15 @@ declare module "js-layer2lib" {
   }
 
   export class RedisStorageProxy extends BaseStorageProxy {
-    constructor(redis:any);
+    constructor(redis: any);
+  }
+
+  export class GunStorageProxy extends BaseStorageProxy {
+    constructor(gun: any);
   }
 
   export class BaseStorageProxy implements L2Database {
-    constructor(redis:any);
+    constructor(redis: any);
     keys(): [string];
     logdriver(): void;
     serialize(): string;
