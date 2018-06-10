@@ -494,7 +494,8 @@ module.exports = function(self) {
       var m = this.getBytes(inputs[0])
 
       for(var i=1; i<inputs.length;i++) {
-        m += this.getBytes(inputs[i]).substr(2, this.getBytes(inputs[i]).length)
+        let x = this.getBytes(inputs[i])
+        m += x.substr(2, x.length)
       }
       return m
     },
