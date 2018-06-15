@@ -3,6 +3,7 @@
 const Web3 = require('web3')
 const web3 = new Web3()
 const GSC = require('./general-state-channel')
+const SET = require('./set-payment-channels')
 const Merkle = require('./MerkleTree')
 
 const BrowserStorageProxy = require('./storage/BrowerStorageProxy')
@@ -33,6 +34,7 @@ class Layer2lib {
 
     this.storage = options.db
     this.gsc = GSC(this)
+    this.set = SET(this)
 
 
     // TODO: store encrypted private key, require password to unlock and sign
