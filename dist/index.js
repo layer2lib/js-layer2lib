@@ -6,6 +6,9 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+require('babel-core/register');
+require('babel-polyfill');
+
 var Web3 = require('web3');
 var web3 = new Web3();
 var GSC = require('./general-state-channel');
