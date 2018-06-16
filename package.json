@@ -2,7 +2,7 @@
   "name": "js-layer2lib",
   "version": "0.0.1",
   "description": "An ethereum layer 2 scalability js library",
-  "main": "./dist/index.js",
+  "main": "dist/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
     "postinstall": "npm run contracts",
@@ -34,7 +34,8 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-latest": "^6.24.1",
     "fakeredis": "^2.0.0",
     "redis": "^2.8.0"
   }
