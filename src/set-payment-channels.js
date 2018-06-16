@@ -10,6 +10,7 @@ module.exports = function gsc (self) {
       // TODO: Check against counterfactual registry and see if any
       // of the channels are being challenged when online
       self.ledgerchannels = '0xe6b119eca4dc6852c027e5d50a0e544a67b41b84'
+    },
 
     createLC: async function(options) {
 
@@ -70,7 +71,7 @@ module.exports = function gsc (self) {
 
     },
 
-    isChannelOpen: async function(agreementID) {
+    isVCOpen: async function(agreementID) {
 
 
     },
