@@ -2,7 +2,7 @@
   "name": "js-layer2lib",
   "version": "0.0.1",
   "description": "An ethereum layer 2 scalability js library",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
     "postinstall": "npm run contracts",
@@ -10,7 +10,8 @@
     "test": "node test/layer2libTest.js",
     "testset": "node test/layer2libSetTest.js",
     "testvc": "node test/layer2libVCTest.js",
-    "test-random": "node test/randomTest.js"
+    "test-random": "node test/randomTest.js",
+    "build": "babel src -d dist"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,11 @@
     "web3": "1.0.0-beta.34"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-latest": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
     "fakeredis": "^2.0.0",
     "redis": "^2.8.0"
   }
