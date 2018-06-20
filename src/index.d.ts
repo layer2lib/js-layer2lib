@@ -44,10 +44,10 @@ declare module 'js-layer2lib' {
 
   export class BaseStorageProxy implements L2Database {
     constructor(redis: any);
-    keys(): [string];
+    //keys(): [string];
+    //serialize(): string;
+    //deserialize(obj: string): void;
     logdriver(): void;
-    serialize(): string;
-    deserialize(obj: string): void;
     set(k: string, v: any): void;
     get(k: string): any;
   }
@@ -70,14 +70,50 @@ declare module 'js-layer2lib' {
     subChannels?: any;
   }
 
+  //type Party = string;
+  type VCID = string;
+  type LCID = string;
+
+  interface PartySig {
+    id: string;
+    pubsig: string;
+  }
+  interface PartyState {
+    id: string;
+    balance: string;
+  }
+  interface PartySigState extends PartySig, PartyState {}
+  interface Transaction {
+    id: string;
+    partyA: PartyState;
+    partyB: PartyState;
+  }
+  interface VChannel {
+    id: string;
+    [key: string]: any;
+  }
+  interface LChannel {
+    id: string;
+    [key: string]: any;
+  }
   export interface L2Database {
-    // connect(address: string, options: any): void;
-    // terminate(): void;
-    keys(): [string];
     logdriver(): void;
-    serialize(): string;
-    deserialize(obj: string): void;
-    set(k: string, v: any): void;
+    set(k: string, v: any): void; // for misc data
     get(k: string): any;
+
+    createLC(data: any): Promise<LChannel>;
+    getLC(ledgerID: VCID): Promise<LChannel>;
+    getLCs(): Promise<LChannel[]>;
+
+    createVChannel(ledger: LCID, partyA: PartySigState, partyB: PartySigState, data: any): Promise<VCID>;
+    getVChannel(ledger: VCID): Promise<VChannel>;
+    getVChannelsByCounterParty(ledger: LCID, partyB: string): Promise<VChannel[]>;
+    getAllVChannels(ledger?: LCID): Promise<VChannel[]>;
+
+    updateVChannel(chan: VCID, data: Transaction): Promise<any>;
+    getVChannelUpdates(chan: VCID): Promise<Transaction[]>;
+
+    setSignature(partyID: string, signature: string): void; // for either VC or LC
+    getSignature(partyID: string): string;
   }
 }
