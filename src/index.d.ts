@@ -21,7 +21,7 @@ declare module 'js-layer2lib' {
      */
     getMainnetBalance(address: string): string;
     initGSC(options: any): void;
-    createGSCAgreement(options: any): void;
+    storeGSCAgreement(options: any): void;
     getGSCAgreement(ID: string): Promise<Agreement>; //agreement
     joinGSCAgreement(agreement: Agreement): Promise<void>;
   }
@@ -101,11 +101,11 @@ declare module 'js-layer2lib' {
     set(k: string, v: any): void; // for misc data
     get(k: string): any;
 
-    createLC(data: any): Promise<LChannel>;
+    storeLC(data: any): Promise<LChannel>;
     getLC(ledgerID: VCID): Promise<LChannel>;
     getLCs(): Promise<LChannel[]>;
 
-    createVChannel(ledger: LCID, partyA: PartySigState, partyB: PartySigState, data: any): Promise<VCID>;
+    storeVChannel(ledger: LCID, partyA: PartySigState, partyB: PartySigState, data: any): Promise<VCID>;
     getVChannel(ledger: VCID): Promise<VChannel>;
     getVChannelsByCounterParty(ledger: LCID, partyB: string): Promise<VChannel[]>;
     getAllVChannels(ledger?: LCID): Promise<VChannel[]>;
