@@ -12,6 +12,7 @@ const BrowserStorageProxy = require('./storage/BrowerStorageProxy')
 const RedisStorageProxy = require('./storage/RedisStorageProxy')
 const MemStorageProxy = require('./storage/MemStorageProxy')
 const FirebaseStorageProxy = require('./storage/FirebaseStorageProxy')
+const GunStorageProxy = require('./storage/GunStorageProxy')
 
 const utils = require('./utils')
 
@@ -87,5 +88,6 @@ Layer2lib.BrowserStorageProxy = BrowserStorageProxy;
 Layer2lib.RedisStorageProxy = RedisStorageProxy;
 Layer2lib.MemStorageProxy = MemStorageProxy;
 Layer2lib.FirebaseStorageProxy = FirebaseStorageProxy;
+Layer2lib.GunStorageProxy = GunStorageProxy;
 
 module.exports = Layer2lib
