@@ -44,9 +44,9 @@ declare module 'js-layer2lib' {
 
   export class BaseStorageProxy implements L2Database {
     constructor(redis: any);
-    //keys(): [string];
-    //serialize(): string;
-    //deserialize(obj: string): void;
+    keys(): [string];
+    serialize(): string;
+    deserialize(obj: string): void;
     logdriver(): void;
     set(k: string, v: any): void;
     get(k: string): any;
