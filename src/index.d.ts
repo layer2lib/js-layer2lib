@@ -70,50 +70,67 @@ declare module 'js-layer2lib' {
     subChannels?: any;
   }
 
+  // ============== START HERE =====================
+  // this.db.
   //type Party = string;
   type VCID = string;
   type LCID = string;
+  type Address = string;
 
-  interface PartySig {
-    id: string;
-    pubsig: string;
+  interface PartyKey {
+    id: Address;
+    pubkey: string;
   }
-  interface PartyState {
-    id: string;
+
+  interface State {
+    Id: string;
+    nonce: string;
+    isClosed: boolean;
+    party: Address;
+    counterparty: Address;
+    sig: string;
+    sig_counterpary?: string;
+  }
+
+  type BigNumber = any;
+  interface Balances {
+    balanceA: BigNumber;
+    balanceB: BigNumber;
+  }
+
+  interface LC_State extends State {
+    openVCs: number;
+    vc_root_hash: string;
+    balances: Balances;
+  }
+
+  interface VC_State extends State {
+    LC_ID: string;
+    balances: Balances;
+    app_state?: { [key: string]: string }; // challenger?: address;
+  }
+
+  interface PaymentState extends LC_State {
+    sender: Address;
     balance: string;
   }
-  interface PartySigState extends PartySig, PartyState {}
-  interface Transaction {
-    id: string;
-    partyA: PartyState;
-    partyB: PartyState;
-  }
-  interface VChannel {
-    id: string;
-    [key: string]: any;
-  }
-  interface LChannel {
-    id: string;
-    [key: string]: any;
-  }
+
   export interface L2Database {
     logdriver(): void;
     set(k: string, v: any): void; // for misc data
     get(k: string): any;
 
-    storeLC(data: any): Promise<LChannel>;
-    getLC(ledgerID: VCID): Promise<LChannel>;
-    getLCs(): Promise<LChannel[]>;
+    storeLC(data: LC_State): Promise<LC_State>;
+    updateLC(data: LC_State): Promise<LC_State>; // replace if same nonce
+    getLC(ledgerID: LCID): Promise<LC_State>; // latest by nonce
+    getLCs(): Promise<LC_State[]>; // latest by nonce
+    delLC(id: LCID): Promise<void>;
 
-    storeVChannel(ledger: LCID, partyA: PartySigState, partyB: PartySigState, data: any): Promise<VCID>;
-    getVChannel(ledger: VCID): Promise<VChannel>;
-    getVChannelsByCounterParty(ledger: LCID, partyB: string): Promise<VChannel[]>;
-    getAllVChannels(ledger?: LCID): Promise<VChannel[]>;
-
-    updateVChannel(chan: VCID, data: Transaction): Promise<any>;
-    getVChannelUpdates(chan: VCID): Promise<Transaction[]>;
-
-    setSignature(partyID: string, signature: string): void; // for either VC or LC
-    getSignature(partyID: string): string;
+    storeVChannel(data: VC_State): Promise<VC_State>;
+    delVChannel(chan: VCID): Promise<void>;
+    // replace if same nonce
+    updateVChannel(chan: VCID, data: VC_State): Promise<VC_State>;
+    getVChannel(ledger: VCID): Promise<VC_State>; // latest by nonce
+    getAllVChannels(ledger?: LCID): Promise<VC_State[]>; // latest by nonce
   }
 }
