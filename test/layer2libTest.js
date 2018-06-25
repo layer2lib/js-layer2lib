@@ -2,34 +2,25 @@
 const Web3 = require('web3')
 const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
-const Promise = require('bluebird');
 
-const redisFake = require("fakeredis");
-const redis = require("redis");
+const GunProxy = require('layer2storage').GunStorageProxy;
+const Gun = require("gun");
 
-// connect to Redis locally otherwise use fakeredis
-var redisClient = redis.createClient();
-redisClient.on('error', err => {
-  if (err.code !== 'ECONNREFUSED') return;
-  redisClient.quit();
-  console.warn('!!! Redis connection failed, defaulting to fakeredis');
-  test(redisFake.createClient());
-});
-redisClient.on('connect', () => test(redisClient));
+const gun = new Gun()
+test(gun);
 
 let etherPaymentIntAddress = '0x'
 let etherPaymentExtAddress = '0x'
 let CTFregistryAddress = '0x'
 
-async function test(redisClient) {
-  const redis = Promise.promisifyAll(redisClient);
+async function test(gun) {
   // alice + bob keys from rinkeby
   const partyA = '0x1e8524370B7cAf8dC62E3eFfBcA04cCc8e493FfE'
   const partyAPrivate = '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   const partyB = '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc'
   const partyBPrivate = '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
-  const aliceProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyA}/`);
-  const bobProxy = new Layer2lib.RedisStorageProxy(redis, `layer2_${partyB}/`);
+  const aliceProxy = new GunProxy(gun, `layer2/${partyA}`);
+  const bobProxy = new GunProxy(gun, `layer2/${partyB}`);
 
   // ALICE
   let optionsAlice = {
@@ -317,5 +308,4 @@ async function test(redisClient) {
     console.log(e)
   }
 
-  redisClient.quit()
 }

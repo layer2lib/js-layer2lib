@@ -4,20 +4,11 @@ const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 const rand = require('../src/random.js').RandomPieceGenerator
 const mergeRand = require('../src/random.js').MergedRandomGenerator
-const Promise = require('bluebird');
+const GunProxy = require('layer2storage').GunStorageProxy;
+const Gun = require("gun");
 
-const redisFake = require("fakeredis");
-const redis = require("redis");
-
-// connect to Redis locally otherwise use fakeredis
-var redisClient = redis.createClient();
-redisClient.on('error', err => {
-  if (err.code !== 'ECONNREFUSED') return;
-  redisClient.quit();
-  console.warn('!!! Redis connection failed, defaulting to fakeredis');
-  test(redisFake.createClient());
-});
-redisClient.on('connect', () => test(redisClient));
+const gun = new Gun()
+test(gun);
 
 let battleEthIntAddress = '0x'
 let etherPaymentExtAddress = '0x'
@@ -25,13 +16,11 @@ let CTFregistryAddress = '0x'
 
 let attackTable = ['12', '6', '25']
 
-async function test(redisClient) {
-  const redis = Promise.promisifyAll(redisClient);
-  const redisProxy = new Layer2lib.RedisStorageProxy(redis);
-
+async function test(gun) {
   // ALICE ----------------------
+  const proxyAlice = new GunProxy(gun, `layer2/Alice`);
   let optionsAlice = {
-    db: redisProxy,
+    db: proxyAlice,
     privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
@@ -75,8 +64,9 @@ async function test(redisClient) {
 
 
   // Ingrid ------------------
+  const proxyIngrid = new GunProxy(gun, 'layer2/Ingrid');
   let optionsIngrid = {
-    db: redisProxy,
+    db: proxyIngrid,
     privateKey: '0x9eb0e84b7cadfcbbec8d49ae7112b25e0c1cb158ecd2160c301afa1f4a1029c8'
   }
 
@@ -116,8 +106,9 @@ async function test(redisClient) {
   // Initiate Bob
 
   // BOB -----------------------
+  const proxyBob = new GunProxy(gun, 'layer2/bob');
   let optionsBob = {
-    db: redisProxy,
+    db: proxyBob,
     privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
   }
 
@@ -547,5 +538,4 @@ async function test(redisClient) {
   // await lBob.gsc.closeByzantineChannel('respekBob')
 
   console.log('Agreement finalized, quiting...')
-  redisClient.quit()
 }

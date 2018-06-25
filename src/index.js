@@ -8,12 +8,6 @@ const GSC = require('./general-state-channel')
 const SET = require('./set-payment-channels')
 const Merkle = require('./MerkleTree')
 
-const BrowserStorageProxy = require('./storage/BrowerStorageProxy')
-const RedisStorageProxy = require('./storage/RedisStorageProxy')
-const MemStorageProxy = require('./storage/MemStorageProxy')
-const FirebaseStorageProxy = require('./storage/FirebaseStorageProxy')
-const GunStorageProxy = require('./storage/GunStorageProxy')
-
 const utils = require('./utils')
 
 // const config = require('./config')
@@ -83,11 +77,5 @@ class Layer2lib {
     await this.gsc.openChannel(options)
   }
 }
-
-Layer2lib.BrowserStorageProxy = BrowserStorageProxy;
-Layer2lib.RedisStorageProxy = RedisStorageProxy;
-Layer2lib.MemStorageProxy = MemStorageProxy;
-Layer2lib.FirebaseStorageProxy = FirebaseStorageProxy;
-Layer2lib.GunStorageProxy = GunStorageProxy;
 
 module.exports = Layer2lib

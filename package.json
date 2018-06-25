@@ -5,12 +5,10 @@
   "main": "dist/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
-    "postinstall": "npm run contracts",
-    "contracts": "cd contracts && npm i",
-    "test": "node test/layer2libTest.js",
-    "testset": "node test/layer2libSetTest.js",
-    "testvc": "node test/layer2libVCTest.js",
-    "test-random": "node test/randomTest.js",
+    "test": "GUN_ENV=false node test/layer2libTest.js",
+    "testset": "GUN_ENV=false node test/layer2libSetTest.js",
+    "testvc": "GUN_ENV=false node test/Layer2LibVCTest.js",
+    "test-random": "GUN_ENV=false node test/randomTest.js",
     "build": "babel src -d dist"
   },
   "repository": {
@@ -39,7 +37,7 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
-    "fakeredis": "^2.0.0",
-    "redis": "^2.8.0"
+    "gun": "^0.9.9991",
+    "layer2storage": "0.0.1"
   }
 }
