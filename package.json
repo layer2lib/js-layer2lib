@@ -40,6 +40,6 @@
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "gun": "^0.9.9991",
-    "layer2storage": "git+https://github.com/layer2lib/layer2storage.git"
+    "layer2storage": "0.0.1"
   }
 }
