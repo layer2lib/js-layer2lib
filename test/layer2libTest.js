@@ -4,8 +4,9 @@ const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
 
 const GunProxy = require('layer2storage').GunStorageProxy;
+const Gun = require("gun");
 
-const gun = require("gun");
+const gun = new Gun()
 test(gun);
 
 let etherPaymentIntAddress = '0x'

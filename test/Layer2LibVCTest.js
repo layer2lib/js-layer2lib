@@ -5,8 +5,9 @@ const Layer2lib = require('../src/index.js')
 const rand = require('../src/random.js').RandomPieceGenerator
 const mergeRand = require('../src/random.js').MergedRandomGenerator
 const GunProxy = require('layer2storage').GunStorageProxy;
+const Gun = require("gun");
 
-const gun = require("gun");
+const gun = new Gun()
 test(gun);
 
 let battleEthIntAddress = '0x'
