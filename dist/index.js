@@ -15,12 +15,6 @@ var GSC = require('./general-state-channel');
 var SET = require('./set-payment-channels');
 var Merkle = require('./MerkleTree');
 
-var BrowserStorageProxy = require('./storage/BrowerStorageProxy');
-var RedisStorageProxy = require('./storage/RedisStorageProxy');
-var MemStorageProxy = require('./storage/MemStorageProxy');
-var FirebaseStorageProxy = require('./storage/FirebaseStorageProxy');
-var GunStorageProxy = require('./storage/GunStorageProxy');
-
 var utils = require('./utils');
 
 // const config = require('./config')
@@ -290,11 +284,5 @@ var Layer2lib = function () {
 
   return Layer2lib;
 }();
-
-Layer2lib.BrowserStorageProxy = BrowserStorageProxy;
-Layer2lib.RedisStorageProxy = RedisStorageProxy;
-Layer2lib.MemStorageProxy = MemStorageProxy;
-Layer2lib.FirebaseStorageProxy = FirebaseStorageProxy;
-Layer2lib.GunStorageProxy = GunStorageProxy;
 
 module.exports = Layer2lib;
