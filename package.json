@@ -5,8 +5,6 @@
   "main": "dist/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
-    "postinstall": "npm run contracts",
-    "contracts": "cd contracts && npm i",
     "test": "node test/layer2libTest.js",
     "testset": "node test/layer2libSetTest.js",
     "testvc": "node test/Layer2LibVCTest.js",
