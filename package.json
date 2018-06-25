@@ -39,7 +39,7 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
-    "fakeredis": "^2.0.0",
-    "redis": "^2.8.0"
+    "gun": "^0.9.9991",
+    "layer2storage": "git+https://github.com/layer2lib/layer2storage.git"
   }
 }
