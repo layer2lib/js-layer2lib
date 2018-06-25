@@ -1,8 +1,8 @@
 'use strict'
 
-const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
-const msig = require('../contracts/general-state-channels/build/contracts/MultiSig.json')
-const reg = require('../contracts/general-state-channels/build/contracts/CTFRegistry.json')
+const metachannel = require('../contracts/MetaChannel.json')
+const msig = require('../contracts/MultiSig.json')
+const reg = require('../contracts/CTFRegistry.json')
 const BigNumber = require('bignumber.js')
 
 module.exports = function gsc (self) {

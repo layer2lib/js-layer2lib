@@ -1,7 +1,7 @@
 'use strict'
 
-const LC = require('../contracts/set-virtual-channels/build/contracts/LedgerChannel.json')
-const EC = require('../contracts/set-virtual-channels/build/contracts/ECTools.json')
+const LC = require('../contracts/LedgerChannel.json')
+const EC = require('../contracts/ECTools.json')
 const BigNumber = require('bignumber.js')
 
 module.exports = function gsc (self) {
