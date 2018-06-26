@@ -88,7 +88,18 @@ module.exports = function(self) {
       //return '0x213c5c4a205fa2ca5833befd0fa34b2f5cb64c8f'
     },
 
-
+    testLC: async function testLC(contractABI, address) {
+      //console.log(contractABI)
+      var newContract = new self.web3.eth.Contract(contractABI, address)
+      //var contractInstance = newContract.at(address)
+      //let c = new self.web3.eth.Contract(contractABI, address)
+      let name = await newContract.methods.NAME().call()
+      let ver = await newContract.methods.VERSION().call()
+      let numChan = await newContract.methods.numChannels().call()
+      console.log(name)
+      console.log(ver)
+      console.log(numChan)
+    },
     // TODO: combine open and join agreement function to executeAgreement.
     // this will just require swaping the method sig
     executeOpenAgreement: async function executeOpenAgreement(
