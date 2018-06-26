@@ -103,8 +103,8 @@ declare module 'js-layer2lib' {
     storeLC(data: LCState): Promise<LCState>;
     updateLC(data: LCState): Promise<LCState>; // replace if same nonce
     getLC(ledgerID: LCID): Promise<LCState>; // latest by nonce
-    getLCs(): Promise<LCState[]>; // latest by nonce
-    getLCsMap(cb: (lc: LCState) => void): void; // TODO replace above
+    //getLCs(): Promise<LCState[]> // latest by nonce
+    getLCs(cb: (lc: LCState) => void): void; // TODO replace above
     delLC(id: LCID): Promise<void>;
 
     storeVChannel(data: VCState): Promise<VCState>;
@@ -112,7 +112,7 @@ declare module 'js-layer2lib' {
     // replace if same nonce
     updateVChannel(data: VCState): Promise<VCState>;
     getVChannel(ledger: VCID): Promise<VCState>; // latest by nonce
-    getVChannels(ledger: LCID, cb: (lc: VCState) => void): Promise<void>; // latest by nonce
-    getAllVChannels(cb: (lc: VCState) => void): Promise<void>;
+    getVChannels(ledger: LCID, cb: (lc: VCState) => void): void; // latest by nonce
+    getAllVChannels(cb: (lc: VCState) => void): void;
   }
 }

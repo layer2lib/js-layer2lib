@@ -38,6 +38,6 @@
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "gun": "^0.9.9991",
-    "layer2storage": "0.0.1"
+    "layer2storage": "0.0.4"
   }
 }
