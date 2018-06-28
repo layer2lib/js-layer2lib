@@ -9,11 +9,13 @@ module.exports = function gsc (self) {
     init: async function(options) {
       // TODO: Check against counterfactual registry and see if any
       // of the channels are being challenged when online
-      self.ledgerchannels = '0xe6b119eca4dc6852c027e5d50a0e544a67b41b84'
+      self.ledgerchannels = '0x31f5575c564c36f2b85b8dbbdc7112e6b078b89d'
+
+
     },
 
     createLC: async function(options) {
-
+        self.utils.testLC(LC.abi, '0x31f5575c564c36f2b85b8dbbdc7112e6b078b89d')
     },
 
     // TODO: Replace agreement with just the state sig from counterparty

@@ -29,6 +29,7 @@
     "crypto-js": "^3.1.9-1",
     "ethereumjs-tx": "^1.3.4",
     "ethereumjs-util": "^5.1.5",
+    "gun": "^0.9.9991",
     "mongodb": "^3.1.0-beta4",
     "web3": "1.0.0-beta.34",
     "babel-polyfill": "^6.26.0"

@@ -78,8 +78,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
       await this.waitForConfirm(txHash)
       let receipt = await self.web3.eth.getTransactionReceipt(txHash.transactionHash)
       let contract_address = receipt.contractAddress
@@ -88,7 +88,18 @@ module.exports = function(self) {
       //return '0x213c5c4a205fa2ca5833befd0fa34b2f5cb64c8f'
     },
 
-
+    testLC: async function testLC(contractABI, address) {
+      //console.log(contractABI)
+      var newContract = new self.web3.eth.Contract(contractABI, address)
+      //var contractInstance = newContract.at(address)
+      //let c = new self.web3.eth.Contract(contractABI, address)
+      let name = await newContract.methods.NAME().call()
+      let ver = await newContract.methods.VERSION().call()
+      let numChan = await newContract.methods.numChannels().call()
+      console.log(name)
+      console.log(ver)
+      console.log(numChan)
+    },
     // TODO: combine open and join agreement function to executeAgreement.
     // this will just require swaping the method sig
     executeOpenAgreement: async function executeOpenAgreement(
@@ -128,8 +139,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0xff0b70a7210b8c70a3d0dc9eb33144d308cce763fdcc10d4f836022f20e03d22'
       await this.waitForConfirm(txHash)
       return txHash
     },
@@ -170,8 +181,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
       await this.waitForConfirm(txHash)
       return txHash
     },
@@ -227,8 +238,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x8d470165aa3cee1f5d6e927b90d20a59a14318964fa67846a230535443b83f07'
       await this.waitForConfirm(txHash)
       return txHash
     },
@@ -284,7 +295,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x0'
       await this.waitForConfirm(txHash)
       let metaDeployed = await c.methods.resolveAddress(metaCTF).call()
       //let metaDeployed = '0x69d374647049341aa74f2216434fe2d0715546b4'
@@ -361,8 +373,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
       await this.waitForConfirm(txHash)
       // TODO remove hardcoded ID :(
       let subchannel = await c.methdos.getSubChannel(this.serializeState(['channelId'])).call()
@@ -394,8 +406,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
       await this.waitForConfirm(txHash)
       return txHash
 
@@ -424,8 +436,8 @@ module.exports = function(self) {
       tx.sign(this.hexToBuffer(self.privateKey))
       const serialized = tx.serialize()
 
-      let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      //let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x34c11641854beb1c01af69aeaf1057ee3e275ead8057eda8a7d5d3260850d24e'
       await this.waitForConfirm(txHash)
       return txHash
 
