@@ -11,54 +11,15 @@ module.exports = function(self) {
       return self.web3.eth.getBlock('latest').timestamp
     },
 
-    increaseTime: function increaseTime(duration) {
-      const id = Date.now()
-
-      return new Promise((resolve, reject) => {
-        self.web3.currentProvider.sendAsync({
-          jsonrpc: '2.0',
-          method: 'evm_increaseTime',
-          params: [duration],
-          id: id,
-        }, e1 => {
-          if (e1) return reject(e1)
-
-          self.web3.currentProvider.sendAsync({
-            jsonrpc: '2.0',
-            method: 'evm_mine',
-            id: id+1,
-          }, (e2, res) => {
-            return e2 ? reject(e2) : resolve(res)
-          })
-        })
-      })
+    recoverSigner: function recoverSigner(state, sig) {
+      const pubkey = ethutil.ecrecover(state, sig.v, sig.r, sig.s)
+      const addrBuf = ethutil.pubToAddress(pubkey)
+      return this.bufferToHex(addrBuf)
     },
 
-    increaseTimeTo: function increaseTimeTo(target) {
-      let now = this.latestTime()
-      if (target < now) throw Error(`Cannot increase current time(${now}) to a moment in the past(${target})`)
-      let diff = target - now
-      return this.increaseTime(diff)
-    },
-
-    assertThrowsAsync: async function assertThrowsAsync(fn, regExp) {
-      let f = () => {};
-      try {
-        await fn();
-      } catch(e) {
-        f = () => {throw e};
-      } finally {
-        assert.throws(f, regExp);
-      }
-    },
-
-    duration: {
-      seconds: function(val) { return val},
-      minutes: function(val) { return val * this.seconds(60) },
-      hours:   function(val) { return val * this.minutes(60) },
-      days:    function(val) { return val * this.hours(24) },
-      weeks:   function(val) { return val * this.days(7) },
-      years:   function(val) { return val * this.days(365)}
+    signState: function signState(state) {
+      // TODO: deal with the protocol this uses to hash and sign...
+      return self.web3.eth.accounts.sign(state, self.privateKey)
     },
 
     deployContract: async function deployContract(bytes, signer) {
@@ -101,8 +62,8 @@ module.exports = function(self) {
         { type: 'bytes32', value: state.rootHash }, // VC root hash
         { type: 'address', value: state.partyA }, // partyA
         { type: 'address', value: state.partyI }, // hub
-        { type: 'uint256', value: web3latest.utils.toWei(state.balanceA) },
-        { type: 'uint256', value: web3latest.utils.toWei(state.balanceI) }
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceA) },
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceI) }
       ) 
 
       return hash

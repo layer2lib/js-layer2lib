@@ -23,8 +23,16 @@ async function test(_db) {
 
   }
 
+
+  const lcS0 = {
+    partyA: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416',
+    partyI: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    balanceA: '0.5',
+    balanceI: '1'
+  }
+
   lAlice.setPayment.init()
-  lAlice.setPayment.createLC()
+  lAlice.setPayment.createLC(lcS0)
 }
 
 test(gun)

@@ -28,16 +28,41 @@ module.exports = function setPayment (self) {
       //   { type: 'uint256', value: web3latest.utils.toWei(state.balan) }
       // ) 
 
-      let lcS0 = {
-        isClose: true,
-        nonce: 0,
-        numOpenVC: 0,
+      const _id = self.utils.getNewChannelId()
+
+      let raw_lcS0 = {
+        isClosed: false,
+        nonce: '0',
+        numOpenVC: '0',
         rootHash: '0x0',
         partyA: options.partyA,
         partyI: options.partyI,
         balanceA: options.balanceA,
         balanceI: options.balanceI
       }
+
+      const _state = await self.utils.createLCStateUpdate(raw_lcS0)
+      const _sig = await self.utils.signState(_state)
+
+      let lcS0 = {
+        id: _id,
+        isClosed: false,
+        nonce: '0',
+        numOpenVC: '0',
+        rootHash: '0x0',
+        partyA: options.partyA,
+        partyI: options.partyI,
+        balanceA: options.balanceA,
+        balanceI: options.balanceI,
+        sig: _sig.signature
+      }
+
+      //console.log(lcS0)
+
+      await self.storage.storeLC(lcS0)
+
+      let lc = await self.storage.getLC(lcS0.id)
+      console.log(lc)
 
       await self.utils.testLC()
       return
