@@ -31,7 +31,7 @@ class Layer2lib {
 
     this.storage = options.db
     this.gsc = GSC(this)
-    this.set = SET(this)
+    this.setPayment = SET(this)
 
 
     // TODO: store encrypted private key, require password to unlock and sign

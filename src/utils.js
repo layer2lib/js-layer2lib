@@ -3,6 +3,7 @@ const ethutil = require('ethereumjs-util')
 const TX = require('ethereumjs-tx')
 const Promise = require('bluebird')
 const BigNumber = require('bignumber.js')
+const crypto = require('crypto')
 
 module.exports = function(self) {
   return {
@@ -88,9 +89,43 @@ module.exports = function(self) {
       //return '0x213c5c4a205fa2ca5833befd0fa34b2f5cb64c8f'
     },
 
-    testLC: async function testLC(contractABI, address) {
+    // SET-PAYMENT HELPERS
+
+    createLCStateUpdate: async function createLCStateUpdate(state) {
+    // generate state update to sign
+      const hash = self.web3.utils.soliditySha3(
+        { type: 'bool', value: state.isClose }, // isclose
+        //{ type: 'bytes32', value: web3.sha3('lc2', {encoding: 'hex'}) }, // lcid
+        { type: 'uint256', value: state.nonce }, // sequence
+        { type: 'uint256', value: state.numOpenVC }, // open VCs
+        { type: 'bytes32', value: state.rootHash }, // VC root hash
+        { type: 'address', value: state.partyA }, // partyA
+        { type: 'address', value: state.partyI }, // hub
+        { type: 'uint256', value: web3latest.utils.toWei(state.balanceA) },
+        { type: 'uint256', value: web3latest.utils.toWei(state.balanceI) }
+      ) 
+
+      return hash
+    },
+
+    createVCStateUpdate: async function createVCStateUpdate(state) {
+    // generate state update to sign
+      const hash = self.web3.utils.soliditySha3(
+        { type: 'bytes32', value: state.channelId },
+        { type: 'uint256', value: state.nonce },
+        { type: 'address', value: state.partyA },
+        { type: 'address', value: state.partyB },
+        { type: 'uint256', value: state.hubBond },
+        { type: 'uint256', value: state.balanceA },
+        { type: 'uint256', value: state.balanceB }
+      )
+
+      return hash
+    },
+
+    testLC: async function testLC() {
       //console.log(contractABI)
-      var newContract = new self.web3.eth.Contract(contractABI, address)
+      var newContract = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
       //var contractInstance = newContract.at(address)
       //let c = new self.web3.eth.Contract(contractABI, address)
       let name = await newContract.methods.NAME().call()
@@ -99,7 +134,16 @@ module.exports = function(self) {
       console.log(name)
       console.log(ver)
       console.log(numChan)
+      console.log(this.getNewChannelId())
+      return
     },
+
+    createLCHandler: async function createLCHandler(state) {
+
+    },
+
+    // OLD GSC HELPERS
+
     // TODO: combine open and join agreement function to executeAgreement.
     // this will just require swaping the method sig
     executeOpenAgreement: async function executeOpenAgreement(
@@ -552,6 +596,12 @@ module.exports = function(self) {
 
     bufferToHex: function bufferToHex(buffer) {
       return '0x'+ buffer.toString('hex')
+    },
+
+    getNewChannelId: function getNewChannelId () {
+      const buf = crypto.randomBytes(32)
+      const channelId = this.bufferToHex(buf)
+      return channelId
     }
   }
 }

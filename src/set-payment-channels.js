@@ -4,18 +4,43 @@ const LC = require('../contracts/LedgerChannel.json')
 const EC = require('../contracts/ECTools.json')
 const BigNumber = require('bignumber.js')
 
-module.exports = function gsc (self) {
+module.exports = function setPayment (self) {
   return {
     init: async function(options) {
       // TODO: Check against counterfactual registry and see if any
       // of the channels are being challenged when online
-      self.ledgerchannels = '0x31f5575c564c36f2b85b8dbbdc7112e6b078b89d'
-
+      self.ledgerAddress = '0x31f5575c564c36f2b85b8dbbdc7112e6b078b89d'
+      self.abi = LC.abi
 
     },
 
     createLC: async function(options) {
-        self.utils.testLC(LC.abi, '0x31f5575c564c36f2b85b8dbbdc7112e6b078b89d')
+
+      // const hash = self.web3.utils.soliditySha3(
+      //   { type: 'bool', value: state.isClose }, // isclose
+      //   //{ type: 'bytes32', value: web3.sha3('lc2', {encoding: 'hex'}) }, // lcid
+      //   { type: 'uint256', value: state.nonce }, // sequence
+      //   { type: 'uint256', value: state.numOpenVC }, // open VCs
+      //   { type: 'bytes32', value: state.rootHash }, // VC root hash
+      //   { type: 'address', value: state.partyA }, // partyA
+      //   { type: 'address', value: state.partyI }, // hub
+      //   { type: 'uint256', value: web3latest.utils.toWei(state.balanceA) },
+      //   { type: 'uint256', value: web3latest.utils.toWei(state.balan) }
+      // ) 
+
+      let lcS0 = {
+        isClose: true,
+        nonce: 0,
+        numOpenVC: 0,
+        rootHash: '0x0',
+        partyA: options.partyA,
+        partyI: options.partyI,
+        balanceA: options.balanceA,
+        balanceI: options.balanceI
+      }
+
+      await self.utils.testLC()
+      return
     },
 
     // TODO: Replace agreement with just the state sig from counterparty
@@ -113,8 +138,7 @@ module.exports = function gsc (self) {
     },
 
     getLC: async function(agreementID) {
-
-
+      return 
     },
 
     getAllLCs: async function() {
