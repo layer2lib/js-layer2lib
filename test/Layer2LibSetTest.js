@@ -2,7 +2,6 @@
 const Web3 = require('web3')
 const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
-const Promise = require('bluebird')
 const GunProxy = require('layer2storage').GunStorageProxy
 
 const Gun = require('gun')
