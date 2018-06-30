@@ -5,7 +5,10 @@ const Layer2lib = require('../src/index.js')
 const GunProxy = require('layer2storage').GunStorageProxy
 
 const Gun = require('gun')
-const gun = new Gun()
+require('gun/lib/then.js')
+require('gun/lib/unset.js')
+require('gun/lib/open.js')
+const gun = new Gun({ radisk: false, localStorage: true })
 
 async function test(_db) {
   // ALICE

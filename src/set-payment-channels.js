@@ -44,7 +44,7 @@ module.exports = function setPayment (self) {
       const _state = await self.utils.createLCStateUpdate(raw_lcS0)
       const _sig = await self.utils.signState(_state)
 
-      let lcS0 = {
+      const lcS0 = {
         id: _id,
         isClosed: false,
         nonce: '0',
@@ -61,8 +61,8 @@ module.exports = function setPayment (self) {
 
       await self.storage.storeLC(lcS0)
 
-      let lc = await self.storage.getLC('lcS0.id')
-      console.log(lc)
+      let lc = await self.storage.getLC(lcS0.id)
+      console.log(lc, lc.partyA, lc.rootHash, _id)
 
       const cd = (channels) => { console.log(channels)}
       //let lcs = await self.storage.getLCs()

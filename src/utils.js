@@ -1,7 +1,6 @@
 const Buffer = require('buffer').Buffer
 const ethutil = require('ethereumjs-util')
 const TX = require('ethereumjs-tx')
-const Promise = require('bluebird')
 const BigNumber = require('bignumber.js')
 const crypto = require('crypto')
 
