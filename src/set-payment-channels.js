@@ -61,8 +61,12 @@ module.exports = function setPayment (self) {
 
       await self.storage.storeLC(lcS0)
 
-      let lc = await self.storage.getLC(lcS0.id)
+      let lc = await self.storage.getLC('lcS0.id')
       console.log(lc)
+
+      const cd = (channels) => { console.log(channels)}
+      //let lcs = await self.storage.getLCs()
+      //console.log(lcs)
 
       await self.utils.testLC()
       return
