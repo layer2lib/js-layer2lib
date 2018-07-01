@@ -42,6 +42,13 @@ async function test(_db) {
   await lIngrid.setPayment.init()
   // todo: await lIngrid.setPayment.validateLCState(lc0Stored)
   await lIngrid.setPayment.joinLC(lc0Stored)
+
+  let lc0Stored2 = await lIngrid.setPayment.getLC(id)
+
+  // generate new lc state with vc state in it
+
+  //await lAlice.setPayment.updateLC(lc0Stored)
+
 }
 
 test(gun)

@@ -125,6 +125,35 @@ module.exports = function(self) {
       return txHash
     },
 
+    joinLCHandler: async function createLCHandler(state) {
+      var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
+
+      const callData = lc.methods.joinChannel(state.id).encodeABI()
+      let gas = await self.web3.eth.getGasPrice()
+      const nonce = await self.web3.eth.getTransactionCount(state.partyI)
+
+      const rawTx = {
+        nonce: await self.web3.utils.toHex(nonce),
+        gasPrice: await self.web3.utils.toHex(gas),
+        gasLimit: await self.web3.utils.toHex(250000),
+        to: self.ledgerAddress,
+        value: await self.web3.utils.numberToHex(self.web3.utils.toWei(state.balanceI)),
+        data: callData,
+        from: state.partyI
+      }
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x467ea0c77c8edfdaee53f40570d7ac7f57461c044c6b3b7f87658bad3f062dd6'
+      await this.waitForConfirm({transactionHash:txHash})
+      //await this.waitForConfirm(txHash)
+      return txHash
+    },
+
+
     // OLD GSC HELPERS
 
     // TODO: combine open and join agreement function to executeAgreement.

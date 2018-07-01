@@ -73,11 +73,25 @@ module.exports = function setPayment (self) {
         balanceI: lc.balanceI
       }
 
+      const _state = await self.utils.createLCStateUpdate(raw_lcS0)
+      const _sig = await self.utils.signState(_state)
 
+      lc.sig_counterparty = _sig
+      await self.storage.storeLC(lc)
+
+      //todo send sig to alice
+
+      let tx_receipt = await self.utils.joinLCHandler(lc)
+
+      return lc.id
     },
 
 
-    updateLC: async function(channel) {
+    updateLC: async function(lc) {
+      let oldState = await this.getLC(lc.id)
+      
+      // todo state update validation
+
 
     },
 
@@ -96,10 +110,7 @@ module.exports = function setPayment (self) {
 
     // channel functions
 
-    // IF battle eth channel
-    // Alice creates channel agreement for Bob with Ingrid
-    // Bob confirms and creates agreement for Alice with Ingrid
-    openVC: async function(channel) {
+    openVC: async function(options) {
 
     },
 
