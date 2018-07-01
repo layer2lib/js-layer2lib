@@ -44,6 +44,7 @@ async function test(_db) {
   await lIngrid.setPayment.joinLC(lc0Stored)
 
   let lc0Stored2 = await lIngrid.setPayment.getLC(id)
+  console.log(lc0Stored2)
 
   // generate new lc state with vc state in it
 

@@ -86,6 +86,10 @@ module.exports = function setPayment (self) {
       return lc.id
     },
 
+    refundOpenLC: async function(lc_id) {
+
+    },
+
 
     updateLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
@@ -96,16 +100,22 @@ module.exports = function setPayment (self) {
     },
 
 
-    initiateCloseChannel: async function(agreementID) {
+    initiateCloseChannel: async function(lc_id) {
+      // require no open vc under this lc
+      let oldState = await this.getLC(lc.id)
 
     },
 
-    confirmCloseChannel: async function(agreement, state) {
+    confirmCloseChannel: async function(lc) {
+      let oldState = await this.getLC(lc.id)
+      
+      // todo state update validation
+
 
     },
 
-    finalizeChannel: async function(agreementID) {
-
+    consensusCloseChannel: async function(lc_id) {
+      // todo call consensus close with double signed close state
     },
 
     // channel functions
@@ -142,6 +152,9 @@ module.exports = function setPayment (self) {
 
     },
 
+
+    // Byzantine functions
+
     startSettleLC: async function(channelID) {
 
     },
@@ -150,20 +163,17 @@ module.exports = function setPayment (self) {
       // TODO: call challengeSettle on metachannel
     },
 
-    // Byzantine functions
 
     startSettleVC: async function(agreementID) {
-      // Require that there are no open channels!
 
-      // TODO: instantiate metachannel, call startSettle
     },
 
     challengeSettleVC: async function(agreementID) {
-      // TODO: call challengeSettle on metachannel
+
     },
 
     closeByzantineVC: async function(agreementID) {
-      // TODO: call msig closeWithMetachannel
+
 
     },
 
@@ -193,19 +203,11 @@ module.exports = function setPayment (self) {
 
     },
 
-    getAllRawStates: async function() {
-
-    },
-
     getVC: async function(channelID) {
 
     },
 
     getTransaction: async function(agreementID) {
-
-    },
-
-    getState: async function(ID) {
 
     },
 
