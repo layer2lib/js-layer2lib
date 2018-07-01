@@ -23,8 +23,8 @@ async function test(_db) {
   const lcS0 = {
     partyA: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416',
     partyI: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
-    balanceA: '0.5',
-    balanceI: '1'
+    balanceA: '0.000001',
+    balanceI: '0.00002'
   }
 
   await lAlice.setPayment.init()
@@ -40,6 +40,7 @@ async function test(_db) {
 
   let lIngrid = new Layer2lib('https://rinkeby.infura.io', optionsIngrid)
   await lIngrid.setPayment.init()
+  // todo: await lIngrid.setPayment.validateLCState(lc0Stored)
   await lIngrid.setPayment.joinLC(lc0Stored)
 }
 

@@ -43,7 +43,7 @@ module.exports = function setPayment (self) {
         balanceA: options.balanceA,
         balanceI: options.balanceI,
         stateHash: _state,
-        sig: _sig.signature
+        sig: _sig
       }
 
       //console.log(self.utils.bufferToHex(self.utils.ecrecover(_state, _sig.v, _sig.r, _sig.s)))
@@ -52,7 +52,9 @@ module.exports = function setPayment (self) {
 
       await self.storage.storeLC(lcS0)
 
-      await self.utils.createLCHandler(lcS0)
+      let tx_receipt = await self.utils.createLCHandler(lcS0)
+
+      await self.utils.testLC()
 
       return _id
     },
@@ -71,7 +73,7 @@ module.exports = function setPayment (self) {
         balanceI: lc.balanceI
       }
 
-      
+
     },
 
 

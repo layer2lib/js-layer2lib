@@ -76,8 +76,8 @@ module.exports = function(self) {
         { type: 'address', value: state.partyA },
         { type: 'address', value: state.partyB },
         { type: 'uint256', value: state.hubBond },
-        { type: 'uint256', value: state.balanceA },
-        { type: 'uint256', value: state.balanceB }
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceA) },
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceB) }
       )
 
       return hash
@@ -94,14 +94,35 @@ module.exports = function(self) {
       console.log(name)
       console.log(ver)
       console.log(numChan)
-      console.log(this.getNewChannelId())
       return
     },
 
     createLCHandler: async function createLCHandler(state) {
       var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
-      console.log(state.partyI)
-      let callData = lc.methods.createChannel(state.id, state.partyI).encodeABI()
+
+      const callData = lc.methods.createChannel(state.id, state.partyI).encodeABI()
+      let gas = await self.web3.eth.getGasPrice()
+      const nonce = await self.web3.eth.getTransactionCount(state.partyA)
+
+      const rawTx = {
+        nonce: await self.web3.utils.toHex(nonce),
+        gasPrice: await self.web3.utils.toHex(gas),
+        gasLimit: await self.web3.utils.toHex(250000),
+        to: self.ledgerAddress,
+        value: await self.web3.utils.numberToHex(self.web3.utils.toWei(state.balanceA)),
+        data: callData,
+        from: state.partyA
+      }
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0x467ea0c77c8edfdaee53f40570d7ac7f57461c044c6b3b7f87658bad3f062dd6'
+      await this.waitForConfirm({transactionHash:txHash})
+      //await this.waitForConfirm(txHash)
+      return txHash
     },
 
     // OLD GSC HELPERS
@@ -450,14 +471,13 @@ module.exports = function(self) {
     },
 
     waitForConfirm: async function(txHash) {
-      //console.log('waiting for '+txHash+' to be confirmed...')
+      console.log('waiting for '+txHash.transactionHash+' to be confirmed...')
       let receipt = await self.web3.eth.getTransactionReceipt(txHash.transactionHash)
 
       if(receipt == null) {
         await this.timeout(1000)
         await this.waitForConfirm(txHash)
       } else {
-        //console.log('Contract Address: '+ receipt.contractAddress)
         return
       }
     },
