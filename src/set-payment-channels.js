@@ -46,19 +46,32 @@ module.exports = function setPayment (self) {
         sig: _sig.signature
       }
 
-      console.log(_sig)
-      console.log(self.utils.bufferToHex(self.utils.ecrecover(_state, _sig.v, _sig.r, _sig.s)))
-      //TODO: contact hub with lcS0
+      //console.log(self.utils.bufferToHex(self.utils.ecrecover(_state, _sig.v, _sig.r, _sig.s)))
+
+      //TODO: contact hub with lcS0, wait for signature response
 
       await self.storage.storeLC(lcS0)
 
-      await self.utils.testLC()
+      await self.utils.createLCHandler(lcS0)
+
       return _id
     },
 
     // TODO: Replace agreement with just the state sig from counterparty
-    joinLC: async function() {
+    joinLC: async function(lc) {
+      //TODO: verify format of lc 
+      let raw_lcS0 = {
+        isClosed: lc.isClosed,
+        nonce: lc.nonce,
+        numOpenVC: lc.numOpenVC,
+        rootHash: lc.rootHash,
+        partyA: lc.partyA,
+        partyI: lc.partyI,
+        balanceA: lc.balanceA,
+        balanceI: lc.balanceI
+      }
 
+      
     },
 
 

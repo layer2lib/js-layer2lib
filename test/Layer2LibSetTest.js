@@ -14,17 +14,11 @@ async function test(_db) {
   // ALICE
   const proxyAlice = new GunProxy(_db, `layer2/Alice`);
   let optionsAlice = {
-    //db: {set: function(){}},
     db: proxyAlice,
-    privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
+    privateKey: '0x9eb0e84b7cadfcbbec8d49ae7112b25e0c1cb158ecd2160c301afa1f4a1029c8'
   }
 
   let lAlice = new Layer2lib('https://rinkeby.infura.io', optionsAlice)
-
-  let lcOptions = {
-
-  }
-
 
   const lcS0 = {
     partyA: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416',
@@ -36,7 +30,17 @@ async function test(_db) {
   await lAlice.setPayment.init()
   const id = await lAlice.setPayment.createLC(lcS0)
   let lc0Stored = await lAlice.setPayment.getLC(id)
-  console.log(lc0Stored) 
+
+  // Ingrid
+  const proxyIngrid = new GunProxy(_db, `layer2/Ingrid`);
+  let optionsIngrid = {
+    db: proxyIngrid,
+    privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
+  }
+
+  let lIngrid = new Layer2lib('https://rinkeby.infura.io', optionsIngrid)
+  await lIngrid.setPayment.init()
+  await lIngrid.setPayment.joinLC(lc0Stored)
 }
 
 test(gun)

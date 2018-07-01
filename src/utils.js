@@ -100,7 +100,8 @@ module.exports = function(self) {
 
     createLCHandler: async function createLCHandler(state) {
       var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
-      
+      console.log(state.partyI)
+      let callData = lc.methods.createChannel(state.id, state.partyI).encodeABI()
     },
 
     // OLD GSC HELPERS
