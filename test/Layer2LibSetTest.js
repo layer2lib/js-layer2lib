@@ -16,7 +16,7 @@ async function test(_db) {
   let optionsAlice = {
     //db: {set: function(){}},
     db: proxyAlice,
-    privateKey: '0x0'
+    privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
   let lAlice = new Layer2lib('https://rinkeby.infura.io', optionsAlice)
@@ -33,8 +33,10 @@ async function test(_db) {
     balanceI: '1'
   }
 
-  lAlice.setPayment.init()
-  lAlice.setPayment.createLC(lcS0)
+  await lAlice.setPayment.init()
+  const id = await lAlice.setPayment.createLC(lcS0)
+  let lc0Stored = await lAlice.setPayment.getLC(id)
+  console.log(lc0Stored) 
 }
 
 test(gun)

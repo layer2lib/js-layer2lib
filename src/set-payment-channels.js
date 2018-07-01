@@ -16,18 +16,6 @@ module.exports = function setPayment (self) {
 
     createLC: async function(options) {
 
-      // const hash = self.web3.utils.soliditySha3(
-      //   { type: 'bool', value: state.isClose }, // isclose
-      //   //{ type: 'bytes32', value: web3.sha3('lc2', {encoding: 'hex'}) }, // lcid
-      //   { type: 'uint256', value: state.nonce }, // sequence
-      //   { type: 'uint256', value: state.numOpenVC }, // open VCs
-      //   { type: 'bytes32', value: state.rootHash }, // VC root hash
-      //   { type: 'address', value: state.partyA }, // partyA
-      //   { type: 'address', value: state.partyI }, // hub
-      //   { type: 'uint256', value: web3latest.utils.toWei(state.balanceA) },
-      //   { type: 'uint256', value: web3latest.utils.toWei(state.balan) }
-      // ) 
-
       const _id = self.utils.getNewChannelId()
 
       let raw_lcS0 = {
@@ -54,22 +42,18 @@ module.exports = function setPayment (self) {
         partyI: options.partyI,
         balanceA: options.balanceA,
         balanceI: options.balanceI,
+        stateHash: _state,
         sig: _sig.signature
       }
 
-      //console.log(lcS0)
+      console.log(_sig)
+      console.log(self.utils.bufferToHex(self.utils.ecrecover(_state, _sig.v, _sig.r, _sig.s)))
+      //TODO: contact hub with lcS0
 
       await self.storage.storeLC(lcS0)
 
-      let lc = await self.storage.getLC(lcS0.id)
-      console.log(lc, lc.partyA, lc.rootHash, _id)
-
-      const cd = (channels) => { console.log(channels)}
-      //let lcs = await self.storage.getLCs()
-      //console.log(lcs)
-
       await self.utils.testLC()
-      return
+      return _id
     },
 
     // TODO: Replace agreement with just the state sig from counterparty
@@ -166,8 +150,9 @@ module.exports = function setPayment (self) {
 
     },
 
-    getLC: async function(agreementID) {
-      return 
+    getLC: async function(id) {
+      let lc = await self.storage.getLC(id)
+      return lc
     },
 
     getAllLCs: async function() {

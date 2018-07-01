@@ -99,7 +99,8 @@ module.exports = function(self) {
     },
 
     createLCHandler: async function createLCHandler(state) {
-
+      var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
+      
     },
 
     // OLD GSC HELPERS
