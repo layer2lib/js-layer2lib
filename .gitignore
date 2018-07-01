@@ -4,4 +4,3 @@ build
 /coverage
 /contracts/general-state-channels/build/contracts/*
 /dist
-data.json
