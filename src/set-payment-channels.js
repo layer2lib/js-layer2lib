@@ -9,7 +9,7 @@ module.exports = function setPayment (self) {
     init: async function(options) {
       // TODO: Check against counterfactual registry and see if any
       // of the channels are being challenged when online
-      self.ledgerAddress = '0x31f5575c564c36f2b85b8dbbdc7112e6b078b89d'
+      self.ledgerAddress = '0x009d610444387202fec65eb056b0a7c141e4b9ed'
       self.abi = LC.abi
 
     },
@@ -217,14 +217,6 @@ module.exports = function setPayment (self) {
 
     syncDatabase: async function(agreement) {
 
-    },
-
-    clearStorage: async function() {
-      await self.storage.set('agreements', {})
-      await self.storage.set('transactions', {})
-      await self.storage.set('states', {})
-      await self.storage.set('channels', {})
-      await self.storage.set('virtuals', {})
     }
   }
 }

@@ -100,7 +100,7 @@ module.exports = function(self) {
     createLCHandler: async function createLCHandler(state) {
       var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
 
-      const callData = lc.methods.createChannel(state.id, state.partyI).encodeABI()
+      const callData = lc.methods.createChannel(state.id, state.partyI, '0').encodeABI()
       let gas = await self.web3.eth.getGasPrice()
       const nonce = await self.web3.eth.getTransactionCount(state.partyA)
 
