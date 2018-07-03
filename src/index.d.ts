@@ -103,7 +103,9 @@ declare module 'js-layer2lib' {
     storeLC(data: LCState): Promise<LCState>;
     updateLC(data: LCState): Promise<LCState>; // replace if same nonce
     getLC(ledgerID: LCID): Promise<LCState>; // latest by nonce
-    //getLCs(): Promise<LCState[]> // latest by nonce
+    getLCElder(id: VCID): Promise<VCState | null>;
+
+    getLCbyNonce(id: LCID, seq: number): Promise<VCState | null>;
     getLCs(cb: (lc: LCState) => void): void; // TODO replace above
     getLCsList(): Promise<LCState[]>;
 
@@ -113,11 +115,16 @@ declare module 'js-layer2lib' {
     delVChannel(chan: VCID): Promise<void>;
     // replace if same nonce
     updateVChannel(data: VCState): Promise<VCState>;
-    getVChannel(ledger: VCID): Promise<VCState>; // latest by nonce
+    getVChannel(id: VCID): Promise<VCState | null>; // latest by nonce
+    getVChannelElder(id: VCID): Promise<VCState | null>; // latest by nonce
+    getVChannelbyNonce(id: VCID, seq: number): Promise<VCState | null>;
 
     getVChannels(ledger: LCID, cb: (lc: VCState) => void): void; // latest by nonce
     getVChannelsList(ledger: LCID): Promise<VCState[]>;
     getAllVChannels(cb: (lc: VCState) => void): void;
     getAllVChannelsList(): Promise<VCState[]>;
+
+    getVChannelStateCount(id: string): Promise<number>;
+    getLCStateCount(id: string): Promise<number>;
   }
 }
