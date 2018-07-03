@@ -103,9 +103,9 @@ declare module 'js-layer2lib' {
     storeLC(data: LCState): Promise<LCState>;
     updateLC(data: LCState): Promise<LCState>; // replace if same nonce
     getLC(ledgerID: LCID): Promise<LCState>; // latest by nonce
-    getLCElder(id: VCID): Promise<VCState | null>;
+    getLCElder(id: VCID): Promise<LCState | null>;
 
-    getLCbyNonce(id: LCID, seq: number): Promise<VCState | null>;
+    getLCbyNonce(id: LCID, seq: number): Promise<LCState | null>;
     getLCs(cb: (lc: LCState) => void): void; // TODO replace above
     getLCsList(): Promise<LCState[]>;
 
