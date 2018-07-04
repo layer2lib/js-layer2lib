@@ -1,13 +1,17 @@
 'use strict'
 const Web3 = require('web3')
 const web3 = new Web3()
-const Layer2lib = require('../src/index.js')
-const GunProxy = require('layer2storage').GunStorageProxy
-
 const Gun = require('gun')
 require('gun/lib/then.js')
 require('gun/lib/unset.js')
 require('gun/lib/open.js')
+require('gun/lib/load.js')
+require('gun/lib/not.js')
+require('gun/lib/path.js')
+
+const Layer2lib = require('../src/index.js')
+const GunProxy = require('layer2storage').GunStorageProxy
+
 const gun = new Gun({ radisk: false, localStorage: true })
 
 async function test(_db) {
