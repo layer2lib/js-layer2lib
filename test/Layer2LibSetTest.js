@@ -39,7 +39,7 @@ async function test(_db) {
   await lAlice.setPayment.init()
   const id = await lAlice.setPayment.createLC(lcS0)
   let lc0Stored = await lAlice.setPayment.getLC(id)
-  console.log(lc0Stored)
+  //console.log(lc0Stored)
 
 
   // Bob
@@ -80,9 +80,9 @@ async function test(_db) {
   await lIngrid.setPayment.joinLC(lc0Stored)
   await lIngrid.setPayment.joinLC(lc0Stored_b)
 
-  let lc0Stored2 = await lIngrid.setPayment.getLC(id)
+  let lc0Stored2 = await lAlice.setPayment.getLC(id)
   let lc0Stored2_b = await lIngrid.setPayment.getLC(id_b)
-  //console.log(lc0Stored2_b)
+  console.log(lc0Stored2)
 
   // generate new lc state with vc state in it
   const vcS0 = {
@@ -122,6 +122,8 @@ async function test(_db) {
   await lAlice.setPayment.initiateCloseLC(lcS2)
   let lc1Stored = await lAlice.setPayment.getLC(id)
   console.log(lc1Stored)
+
+  await lIngrid.setPayment.confirmCloseLC(id)
 }
 
 test(gun)
