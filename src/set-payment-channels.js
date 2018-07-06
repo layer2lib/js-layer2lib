@@ -94,6 +94,7 @@ module.exports = function setPayment (self) {
     updateLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
       
+      // console.log(oldState)
       // todo state update validation
 
 
@@ -120,8 +121,8 @@ module.exports = function setPayment (self) {
 
     // channel functions
 
-    openVC: async function(options) {
-
+    openVC: async function(lc_id, balanceA, balanceB, partyB) {
+      let lcState = await this.getLC(lc_id)
     },
 
     // TODO: replace agreement param with signature
