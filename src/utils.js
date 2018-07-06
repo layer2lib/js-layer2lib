@@ -119,7 +119,7 @@ module.exports = function(self) {
       const serialized = tx.serialize()
 
       //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      let txHash = '0x467ea0c77c8edfdaee53f40570d7ac7f57461c044c6b3b7f87658bad3f062dd6'
+      let txHash = '0xba0c15d2c36a7f848a699b3a767abccee471de54ceb81d03bd3d7687c4c48141'
       await this.waitForConfirm({transactionHash:txHash})
       //await this.waitForConfirm(txHash)
       return txHash
@@ -147,10 +147,38 @@ module.exports = function(self) {
       const serialized = tx.serialize()
 
       //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
-      let txHash = '0x467ea0c77c8edfdaee53f40570d7ac7f57461c044c6b3b7f87658bad3f062dd6'
+      let txHash = '0xffaca6f4a3eec5b17a58cfdaac7676be46f8deef34ee6e6ad9a5550a3bf8685a'
       await this.waitForConfirm({transactionHash:txHash})
       //await this.waitForConfirm(txHash)
       return txHash
+    },
+
+    consensusCloseLCHandler: async function consensusCloseLCHandler(state) {
+      // var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
+
+      // const callData = lc.methods.joinChannel(state.id).encodeABI()
+      // let gas = await self.web3.eth.getGasPrice()
+      // const nonce = await self.web3.eth.getTransactionCount(state.partyI)
+
+      // const rawTx = {
+      //   nonce: await self.web3.utils.toHex(nonce),
+      //   gasPrice: await self.web3.utils.toHex(gas),
+      //   gasLimit: await self.web3.utils.toHex(250000),
+      //   to: self.ledgerAddress,
+      //   value: await self.web3.utils.numberToHex(self.web3.utils.toWei(state.balanceI)),
+      //   data: callData,
+      //   from: state.partyI
+      // }
+
+      // const tx = new TX(rawTx, 3)
+      // tx.sign(this.hexToBuffer(self.privateKey))
+      // const serialized = tx.serialize()
+
+      // //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      // let txHash = '0xffaca6f4a3eec5b17a58cfdaac7676be46f8deef34ee6e6ad9a5550a3bf8685a'
+      // await this.waitForConfirm({transactionHash:txHash})
+      // //await this.waitForConfirm(txHash)
+      // return txHash
     },
 
 

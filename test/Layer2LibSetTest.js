@@ -39,6 +39,7 @@ async function test(_db) {
   await lAlice.setPayment.init()
   const id = await lAlice.setPayment.createLC(lcS0)
   let lc0Stored = await lAlice.setPayment.getLC(id)
+  console.log(lc0Stored)
 
 
   // Bob
@@ -62,6 +63,7 @@ async function test(_db) {
   const id_b = await lBob.setPayment.createLC(lcS0_b)
   let lc0Stored_b = await lBob.setPayment.getLC(id_b)
 
+
   // Ingrid
   const proxyIngrid = new GunProxy(_db, `layer2/Ingrid`);
   let optionsIngrid = {
@@ -72,21 +74,54 @@ async function test(_db) {
   let lIngrid = new Layer2lib('https://rinkeby.infura.io', optionsIngrid)
   await lIngrid.setPayment.init()
   // todo: await lIngrid.setPayment.validateLCState(lc0Stored)
+  // cannot get alice / bob state by id until we have a system that watches for updates
+  // await lIngrid.setPayment.joinLC(id)
+  // await lIngrid.setPayment.joinLC(id_b)
   await lIngrid.setPayment.joinLC(lc0Stored)
   await lIngrid.setPayment.joinLC(lc0Stored_b)
 
   let lc0Stored2 = await lIngrid.setPayment.getLC(id)
   let lc0Stored2_b = await lIngrid.setPayment.getLC(id_b)
-  console.log(lc0Stored2_b)
+  //console.log(lc0Stored2_b)
 
   // generate new lc state with vc state in it
-  let vcS0 = await lAlice.setPayment.openVC(id, '0.000005', '0.000004', _partyB)
+  const vcS0 = {
+    lcid: id,
+    partyA: _partyA,
+    partyB: _partyB,
+    balanceA: '0.000005',
+    balanceB: '0.000004'
+  }
+
+  let vcid = await lAlice.setPayment.openVC(vcS0)
+  let vc0Stored = await lAlice.setPayment.getVC(vcid)
+
+  // bob joins when they see a request with given vcid
+
+  //await lBob.setPayment.joinVC(vc_id)
 
   let lcS1 = lc0Stored2
 
 
   await lAlice.setPayment.updateLC(lc0Stored)
 
+  // both alice and bob update request to hub db for their lc channels
+
+
+
+  // Close channel
+
+  const lcS2 = {
+    id: id,
+    partyA: _partyA,
+    partyI: _partyI,
+    balanceA: '0.000001',
+    balanceI: '0.00002'
+  }
+
+  await lAlice.setPayment.initiateCloseLC(lcS2)
+  let lc1Stored = await lAlice.setPayment.getLC(id)
+  console.log(lc1Stored)
 }
 
 test(gun)

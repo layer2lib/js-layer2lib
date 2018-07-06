@@ -62,6 +62,8 @@ module.exports = function setPayment (self) {
     // TODO: Replace agreement with just the state sig from counterparty
     joinLC: async function(lc) {
       //TODO: verify format of lc 
+      // need lc data updated to database before just id will work
+      //let lc = await this.getLC(id)
       let raw_lcS0 = {
         isClosed: lc.isClosed,
         nonce: lc.nonce,
@@ -101,13 +103,39 @@ module.exports = function setPayment (self) {
     },
 
 
-    initiateCloseChannel: async function(lc_id) {
-      // require no open vc under this lc
+    initiateCloseLC: async function(lc) {
+      // todo call consensus close with double signed close state
       let oldState = await this.getLC(lc.id)
+      // todo: verify latest known lc state from db doesn't have open vc on it
+
+      let _nonce = parseInt(oldState.nonce, 10)
+      _nonce = _nonce+1
+
+      let raw_lcS = {
+        isClosed: true,
+        nonce: _nonce,
+        numOpenVC: '0',
+        rootHash: '0x0',
+        partyA: oldState.partyA,
+        partyI: oldState.partyI,
+        balanceA: lc.balanceA,
+        balanceI: lc.balanceI
+      }
+
+      const _state = await self.utils.createLCStateUpdate(raw_lcS)
+      const _sig = await self.utils.signState(_state)
+
+      let lcS =  raw_lcS
+      lcS.stateHash = _state
+      lcS.sig = _sig
+      lcS.id = lc.id
+
+      // contact hub message node
+      await self.storage.updateLC(lcS)
 
     },
 
-    confirmCloseChannel: async function(lc) {
+    confirmCloseLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
       
       // todo state update validation
@@ -115,36 +143,33 @@ module.exports = function setPayment (self) {
 
     },
 
-    consensusCloseChannel: async function(lc_id) {
-      // todo call consensus close with double signed close state
+    consensusCloseLC: async function(lc) {
+
+
     },
 
     // channel functions
 
-    openVC: async function(lc_id, balanceA, balanceB, partyB) {
-      let lcState = await this.getLC(lc_id)
+    openVC: async function(options) {
+      let lcState = await this.getLC(options.lcid)
+      //console.log(lcState)
     },
 
     // TODO: replace agreement param with signature
     // you must respond to any request before updating any other state (everything pulls from latest)
-    joinVC: async function(channel, agreement, channelState) {
+    joinVC: async function(vc) {
 
 
     },
 
     // When Ingrid receives both agreements
-    hubConfirmVC: async function(channelA, channelB, agreementA, agreementB, channelState) {
+    hubConfirmVC: async function(lcid_A, lcid_B, vc_id) {
 
     },
 
     // TODO: before updating any channel state we should check that the channel
     // is not closed. Check previous channel state for close flag
-    initiateUpdateVCState: async function(id, updateState) {
-
-    },
-
-
-    confirmVCUpdate: async function(updateVC, updateState) {
+    updateVCState: async function(id, updateState) {
 
     },
 
@@ -153,7 +178,9 @@ module.exports = function setPayment (self) {
 
     },
 
+    closeVC: async function(vc_id) {
 
+    },
     // Byzantine functions
 
     startSettleLC: async function(channelID) {
@@ -187,9 +214,16 @@ module.exports = function setPayment (self) {
 
     },
 
+    // DB helpers
+
     getLC: async function(id) {
       let lc = await self.storage.getLC(id)
       return lc
+    },
+
+    getVC: async function(id) {
+      let vc = await self.storage.getVChannel(id)
+      return vc
     },
 
     getAllLCs: async function() {
@@ -209,10 +243,6 @@ module.exports = function setPayment (self) {
     },
 
     getTransaction: async function(agreementID) {
-
-    },
-
-    updateLCSigsDB: async function(channel) {
 
     },
 
