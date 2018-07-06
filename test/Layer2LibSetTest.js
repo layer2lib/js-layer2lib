@@ -80,7 +80,8 @@ async function test(_db) {
   await lIngrid.setPayment.joinLC(lc0Stored)
   await lIngrid.setPayment.joinLC(lc0Stored_b)
 
-  let lc0Stored2 = await lAlice.setPayment.getLC(id)
+  // todo get sig from some update mechanism, then update database for alice
+  let lc0Stored2 = await lAlice.setPayment.getLC(id) // this should not have ingrids sig on it
   let lc0Stored2_b = await lIngrid.setPayment.getLC(id_b)
   console.log(lc0Stored2)
 
@@ -97,7 +98,7 @@ async function test(_db) {
   let vc0Stored = await lAlice.setPayment.getVC(vcid)
 
   // bob joins when they see a request with given vcid
-
+  // find some way to get the state from alice to bob's db
   //await lBob.setPayment.joinVC(vc_id)
 
   let lcS1 = lc0Stored2
