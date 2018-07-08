@@ -528,7 +528,7 @@ module.exports = function(self) {
     },
 
     waitForConfirm: async function(txHash) {
-      console.log('waiting for '+txHash.transactionHash+' to be confirmed...')
+      //console.log('waiting for '+txHash.transactionHash+' to be confirmed...')
       let receipt = await self.web3.eth.getTransactionReceipt(txHash.transactionHash)
 
       if(receipt == null) {

@@ -54,7 +54,7 @@ module.exports = function setPayment (self) {
 
       let tx_receipt = await self.utils.createLCHandler(lcS0)
 
-      await self.utils.testLC()
+      //await self.utils.testLC()
 
       return _id
     },
@@ -137,15 +137,32 @@ module.exports = function setPayment (self) {
       lcS.id = lc.id
 
       // contact hub message node
+
       await self.storage.updateLC(lcS)
 
     },
 
-    confirmCloseLC: async function(lc_id) {
-      let oldState = await this.getLC(lc_id)
-      //console.log(oldState)
-      // todo state update validation
+    confirmCloseLC: async function(lc) {
+      let oldState = await this.getLC(lc.id)
 
+      // todo state update validation
+      let raw_lcS = {
+        isClosed: true,
+        nonce: _nonce,
+        numOpenVC: '0',
+        rootHash: '0x0',
+        partyA: oldState.partyA,
+        partyI: oldState.partyI,
+        balanceA: lc.balanceA,
+        balanceI: lc.balanceI
+      }
+
+      const _state = await self.utils.createLCStateUpdate(raw_lcS)
+      const _sig = await self.utils.signState(_state)
+
+      await self.storage.updateLC(lcS)
+
+      // todo: call close on contract (consensusCloseLC)
 
     },
 
@@ -156,12 +173,25 @@ module.exports = function setPayment (self) {
 
     // channel functions
 
-    openVC: async function(options) {
-      let lcState = await this.getLC(options.lcid)
-      //console.log(lcState)
+    openVC: async function(vc) {
+      let lcState = await this.getLC(vc.lcid)
+      
+      // generate init vc state
+
+      // pass vc state to counterparty
+
+      // generate merkle root
+
+      // generate new lc state
+
+      // pass lc state to hub
+
+      // store vc state
+      // store lc state
+      // listen for responses
     },
 
-    // TODO: replace agreement param with signature
+    // Called byt hub and counterparty
     // you must respond to any request before updating any other state (everything pulls from latest)
     joinVC: async function(vc) {
 

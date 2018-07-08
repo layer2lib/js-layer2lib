@@ -124,7 +124,7 @@ async function test(_db) {
   let lc1Stored = await lAlice.setPayment.getLC(id)
   //console.log(lc1Stored)
 
-  await lIngrid.setPayment.confirmCloseLC(id)
+  //await lIngrid.setPayment.confirmCloseLC(id)
 }
 
 test(gun)
