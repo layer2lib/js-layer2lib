@@ -195,11 +195,10 @@ module.exports = function setPayment (self) {
         partyB: options.partyB,
         balanceA: options.balanceA,
         balanceB: options.balanceB,
-        bond: options.bond
+        hubBond: options.bond
       }
-      console.log(raw_vcS0)
 
-      const _state = await self.utils.createLCStateUpdate(raw_vcS0)
+      const _state = await self.utils.createVCStateUpdate(raw_vcS0)
       const _sig = await self.utils.signState(_state)
 
       const vcS0 = raw_vcS0

@@ -71,7 +71,7 @@ module.exports = function(self) {
     createVCStateUpdate: async function createVCStateUpdate(state) {
     // generate state update to sign
       const hash = self.web3.utils.soliditySha3(
-        { type: 'bytes32', value: state.channelId },
+        //{ type: 'bytes32', value: state.channelId },
         { type: 'uint256', value: state.nonce },
         { type: 'address', value: state.partyA },
         { type: 'address', value: state.partyB },
