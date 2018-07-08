@@ -31,7 +31,7 @@ async function test(_db) {
   const lcS0 = {
     partyA: _partyA,
     partyI: _partyI,
-    balanceA: '0.000001',
+    balanceA: '0.00001',
     balanceI: '0.00002'
   }
 
@@ -54,7 +54,7 @@ async function test(_db) {
   const lcS0_b = {
     partyA: _partyB,
     partyI: _partyI,
-    balanceA: '0.000004',
+    balanceA: '0.00004',
     balanceI: '0.00002'
   }
 

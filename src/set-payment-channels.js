@@ -202,7 +202,7 @@ module.exports = function setPayment (self) {
       const _sig = await self.utils.signState(_state)
 
       const vcS0 = raw_vcS0
-      vcS0.lcid = options.lcid
+      vcS0.lcId = options.lcid
       vcS0.id = _id
       vcS0.stateHash = _state
       vcS0.sig = _sig
@@ -218,13 +218,46 @@ module.exports = function setPayment (self) {
       let merkle = new self.merkleTree(elems)
 
       let vcRootHash = self.utils.bufferToHex(merkle.getRoot())
-      console.log(vcRootHash)
+
       // generate new lc state
+
+      let _nonce = parseInt(lcState.nonce, 10)
+      _nonce = _nonce+1
+      let _numVC = parseInt(lcState.numOpenVC, 10)
+      _numVC = _numVC+1
+      let _newBalA = parseFloat(lcState.balanceA, 10)
+      _newBalA = _newBalA - parseFloat(options.balanceA, 10)
+      _newBalA = _newBalA.toFixed(18)
+      let _newBalI = parseFloat(lcState.balanceI, 10)
+      _newBalI = _newBalI - parseFloat(options.balanceB, 10)
+      // fix javascript precision on floating point math
+      _newBalI = _newBalI.toFixed(18)
+
+      let raw_lcS = {
+        isClosed: false,
+        nonce: _nonce,
+        numOpenVC: _numVC,
+        rootHash: vcRootHash,
+        partyA: lcState.partyA,
+        partyI: lcState.partyI,
+        balanceA: _newBalA.toString(),
+        balanceI: _newBalI.toString()
+      }
+
+      const _lcstate = await self.utils.createLCStateUpdate(raw_lcS)
+      const _lcsig = await self.utils.signState(_lcstate)
+
+      let lcS = raw_lcS
+      lcS.id = lcState.id
+      lcS.stateHash = _lcstate,
+      lcS.sig = _lcsig
 
       // pass lc state to hub
 
       // store vc state
+      await self.storage.storeVChannel(vcS0)
       // store lc state
+      await self.storage.updateLC(lcS)
       // listen for responses
     },
 
