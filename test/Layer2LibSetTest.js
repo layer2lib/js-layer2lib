@@ -39,7 +39,7 @@ async function test(_db) {
   await lAlice.setPayment.init()
   const id = await lAlice.setPayment.createLC(lcS0)
   let lc0Stored = await lAlice.setPayment.getLC(id)
-  //console.log(lc0Stored)
+  console.log(lc0Stored)
 
 
   // Bob
@@ -122,7 +122,7 @@ async function test(_db) {
 
   await lAlice.setPayment.initiateCloseLC(lcS2)
   let lc1Stored = await lAlice.setPayment.getLC(id)
-  console.log(lc1Stored)
+  //console.log(lc1Stored)
 
   await lIngrid.setPayment.confirmCloseLC(id)
 }

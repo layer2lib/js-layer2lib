@@ -137,7 +137,7 @@ module.exports = function setPayment (self) {
 
     confirmCloseLC: async function(lc_id) {
       let oldState = await this.getLC(lc_id)
-      console.log(oldState)
+      //console.log(oldState)
       // todo state update validation
 
 
