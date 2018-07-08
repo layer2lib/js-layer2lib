@@ -210,6 +210,7 @@ module.exports = function setPayment (self) {
       // pass vc state to counterparty
 
       // generate merkle root
+      // todo: dont assume two channels
       let buf = self.utils.hexToBuffer(_state)
       let elems = []
       elems.push(buf)
@@ -220,7 +221,7 @@ module.exports = function setPayment (self) {
       let vcRootHash = self.utils.bufferToHex(merkle.getRoot())
 
       // generate new lc state
-
+      // initiator should always be balance A, joiner is balance B
       let _nonce = parseInt(lcState.nonce, 10)
       _nonce = _nonce+1
       let _numVC = parseInt(lcState.numOpenVC, 10)
@@ -255,16 +256,91 @@ module.exports = function setPayment (self) {
       // pass lc state to hub
 
       // store vc state
-      await self.storage.storeVChannel(vcS0)
+      let s = await self.storage.storeVChannel(vcS0)
+      //console.log(s)
       // store lc state
       await self.storage.updateLC(lcS)
       // listen for responses
+      return _id
     },
 
     // Called byt hub and counterparty
     // you must respond to any request before updating any other state (everything pulls from latest)
     joinVC: async function(vc) {
+      let lcState = await this.getLC(vc.lcId)
 
+      let raw_vcS0 = {
+        nonce: '0',
+        partyA: vc.partyA,
+        partyB: vc.partyB,
+        balanceA: vc.balanceA,
+        balanceB: vc.balanceB,
+        hubBond: vc.bond
+      }
+
+      const _sig = await self.utils.signState(vc.stateHash)
+
+      const vcS0 = raw_vcS0
+      vcS0.lcId = vc.lcId
+      vcS0.id = vc.id
+      vcS0.stateHash = vc.stateHash
+      vcS0.sig = _sig
+
+      // pass vc state to counterparty
+
+      // generate merkle root
+      // todo: dont assume two channels
+      let buf = self.utils.hexToBuffer(vc.stateHash)
+      let elems = []
+      elems.push(buf)
+      elems.push(self.utils.hexToBuffer('0x0000000000000000000000000000000000000000000000000000000000000000'))
+
+      let merkle = new self.merkleTree(elems)
+
+      let vcRootHash = self.utils.bufferToHex(merkle.getRoot())
+
+      // generate new lc state
+
+      let _nonce = parseInt(lcState.nonce, 10)
+      _nonce = _nonce+1
+      let _numVC = parseInt(lcState.numOpenVC, 10)
+      _numVC = _numVC+1
+      let _newBalA = parseFloat(lcState.balanceA, 10)
+      _newBalA = _newBalA - parseFloat(vc.balanceB, 10)
+      _newBalA = _newBalA.toFixed(18)
+      let _newBalI = parseFloat(lcState.balanceI, 10)
+      _newBalI = _newBalI - parseFloat(vc.balanceA, 10)
+      // fix javascript precision on floating point math
+      _newBalI = _newBalI.toFixed(18)
+
+      let raw_lcS = {
+        isClosed: false,
+        nonce: _nonce,
+        numOpenVC: _numVC,
+        rootHash: vcRootHash,
+        partyA: lcState.partyA,
+        partyI: lcState.partyI,
+        balanceA: _newBalA.toString(),
+        balanceI: _newBalI.toString()
+      }
+
+      const _lcstate = await self.utils.createLCStateUpdate(raw_lcS)
+      const _lcsig = await self.utils.signState(_lcstate)
+
+      let lcS = raw_lcS
+      lcS.id = lcState.id
+      lcS.stateHash = _lcstate,
+      lcS.sig = _lcsig
+
+      // pass lc state to hub
+
+      // store vc state
+      let s = await self.storage.storeVChannel(vcS0)
+      //console.log(s)
+      // store lc state
+      await self.storage.updateLC(lcS)
+      // listen for responses
+      return vc.id
 
     },
 
@@ -345,10 +421,6 @@ module.exports = function setPayment (self) {
     },
 
     getAllTransactions: async function() {
-
-    },
-
-    getVC: async function(channelID) {
 
     },
 

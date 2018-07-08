@@ -39,7 +39,7 @@ async function test(_db) {
   await lAlice.setPayment.init()
   const id = await lAlice.setPayment.createLC(lcS0)
   let lc0Stored = await lAlice.setPayment.getLC(id)
-  console.log(lc0Stored)
+  //console.log(lc0Stored)
 
 
   // Bob
@@ -62,6 +62,7 @@ async function test(_db) {
   await lBob.setPayment.init()
   const id_b = await lBob.setPayment.createLC(lcS0_b)
   let lc0Stored_b = await lBob.setPayment.getLC(id_b)
+  console.log(lc0Stored_b)
 
 
   // Ingrid
@@ -97,10 +98,12 @@ async function test(_db) {
 
   let vcid = await lAlice.setPayment.openVC(vcS0)
   let vc0Stored = await lAlice.setPayment.getVC(vcid)
+  //console.log(vc0Stored)
 
   // bob joins when they see a request with given vcid
   // find some way to get the state from alice to bob's db
-  //await lBob.setPayment.joinVC(vc_id)
+  vc0Stored.lcId = id_b
+  await lBob.setPayment.joinVC(vc0Stored)
 
 
 
