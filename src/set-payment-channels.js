@@ -92,6 +92,12 @@ module.exports = function setPayment (self) {
 
     },
 
+    updateLCsigs: async function(lc_id, sig) {
+      let lcState = await this.getLC(lc.id)
+      lcState.sig_counterparty = sig
+      await self.storage.updateLC(lcState)
+    },
+
 
     updateLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
