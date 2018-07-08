@@ -98,16 +98,26 @@ module.exports = function setPayment (self) {
       await self.storage.updateLC(lcState)
     },
 
-
+    // just allowed to update the balance of an lc
     updateLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
       
       // console.log(oldState)
       // todo state update validation
 
+      let _nonce = parseInt(oldState.nonce, 10)
+      _nonce = _nonce+1
 
+      // todo network send to hub
     },
 
+    confirmUpdateLC: async function(lc) {
+      let oldState = await this.getLC(lc.id)
+      
+      // console.log(oldState)
+      // todo state update validation
+
+    },
 
     initiateCloseLC: async function(lc) {
       // todo call consensus close with double signed close state
@@ -173,15 +183,43 @@ module.exports = function setPayment (self) {
 
     // channel functions
 
-    openVC: async function(vc) {
-      let lcState = await this.getLC(vc.lcid)
+    openVC: async function(options) {
+      let lcState = await this.getLC(options.lcid)
       
       // generate init vc state
+      const _id = self.utils.getNewChannelId()
+
+      let raw_vcS0 = {
+        nonce: '0',
+        partyA: options.partyA,
+        partyB: options.partyB,
+        balanceA: options.balanceA,
+        balanceB: options.balanceB,
+        bond: options.bond
+      }
+      console.log(raw_vcS0)
+
+      const _state = await self.utils.createLCStateUpdate(raw_vcS0)
+      const _sig = await self.utils.signState(_state)
+
+      const vcS0 = raw_vcS0
+      vcS0.lcid = options.lcid
+      vcS0.id = _id
+      vcS0.stateHash = _state
+      vcS0.sig = _sig
 
       // pass vc state to counterparty
 
       // generate merkle root
+      let buf = self.utils.hexToBuffer(_state)
+      let elems = []
+      elems.push(buf)
+      elems.push(self.utils.hexToBuffer('0x0000000000000000000000000000000000000000000000000000000000000000'))
 
+      let merkle = new self.merkleTree(elems)
+
+      let vcRootHash = self.utils.bufferToHex(merkle.getRoot())
+      console.log(vcRootHash)
       // generate new lc state
 
       // pass lc state to hub
@@ -206,6 +244,10 @@ module.exports = function setPayment (self) {
     // TODO: before updating any channel state we should check that the channel
     // is not closed. Check previous channel state for close flag
     updateVCState: async function(id, updateState) {
+
+    },
+
+    confirmVCState: async function(id, updateState) {
 
     },
 

@@ -16,7 +16,7 @@ const gun = new Gun({ radisk: false, localStorage: true })
 
 async function test(_db) {
   let _partyA = '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416'
-  let _partyB = 'b1dd709d7eb8138f25b71103d41d50ba8708e816'
+  let _partyB = '0xb1dd709d7eb8138f25b71103d41d50ba8708e816'
   let _partyI = '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe'
 
   // ALICE
@@ -91,7 +91,8 @@ async function test(_db) {
     partyA: _partyA,
     partyB: _partyB,
     balanceA: '0.000005',
-    balanceB: '0.000004'
+    balanceB: '0.000004',
+    bond: '0.000009'
   }
 
   let vcid = await lAlice.setPayment.openVC(vcS0)
@@ -101,10 +102,7 @@ async function test(_db) {
   // find some way to get the state from alice to bob's db
   //await lBob.setPayment.joinVC(vc_id)
 
-  let lcS1 = lc0Stored2
 
-
-  await lAlice.setPayment.updateLC(lc0Stored)
 
   // both alice and bob update request to hub db for their lc channels
 
