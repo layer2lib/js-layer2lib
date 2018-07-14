@@ -49,6 +49,7 @@ module.exports = function setPayment (self) {
       //console.log(self.utils.bufferToHex(self.utils.ecrecover(_state, _sig.v, _sig.r, _sig.s)))
 
       //TODO: contact hub with lcS0, wait for signature response
+      // store the res signature
 
       await self.storage.storeLC(lcS0)
 
