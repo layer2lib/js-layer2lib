@@ -1,4 +1,4 @@
-declare module "js-layer2lib" {
+declare module 'js-layer2lib' {
   export default class Layer2lib {
     web3: any;
     merkleTree: any;
@@ -21,31 +21,9 @@ declare module "js-layer2lib" {
      */
     getMainnetBalance(address: string): string;
     initGSC(options: any): void;
-    createGSCAgreement(options: any): void;
+    storeGSCAgreement(options: any): void;
     getGSCAgreement(ID: string): Promise<Agreement>; //agreement
     joinGSCAgreement(agreement: Agreement): Promise<void>;
-  }
-
-  export class BrowserStorageProxy extends BaseStorageProxy {
-    constructor(localforage:any, name?:string);
-  }
-
-  export class MemStorageProxy extends BaseStorageProxy {
-    constructor(url: string, options: L2Options);
-  }
-
-  export class RedisStorageProxy extends BaseStorageProxy {
-    constructor(redis:any);
-  }
-
-  export class BaseStorageProxy implements L2Database {
-    constructor(redis:any);
-    keys(): [string];
-    logdriver(): void;
-    serialize(): string;
-    deserialize(obj: string): void;
-    set(k: string, v: any): void;
-    get(k: string): any;
   }
 
   export interface L2Options {
@@ -66,14 +44,87 @@ declare module "js-layer2lib" {
     subChannels?: any;
   }
 
+  // ============== START HERE =====================
+  type StrObject = { [key: string]: string };
+  type BigNumber = any;
+
+  type VCID = string;
+  type LCID = string;
+  type Address = string;
+
+  /*
+  interface PartyKey {
+    id: Address
+    pubkey: string
+  }
+  */
+
+  export interface State {
+    id: string;
+    nonce: string;
+    isClosed?: boolean;
+    party: Address;
+    counterparty: Address;
+    sig: string;
+    sig_counterpary?: string;
+  }
+  /*
+  interface Balances {
+    balanceA: BigNumber
+    balanceB: BigNumber
+  }
+  */
+  export interface LCState extends State {
+    openVCs: number;
+    vcRootHash: string;
+    balanceA: BigNumber;
+    balanceB: BigNumber;
+  }
+
+  export interface VCState extends State {
+    lcId: string;
+    balanceA: BigNumber;
+    balanceB: BigNumber;
+    appState: StrObject | null; // challenger?: address;
+  }
+
+  /*
+  interface PaymentState extends LCState {
+    sender: Address
+    balance: string
+  }
+  */
+
   export interface L2Database {
-    // connect(address: string, options: any): void;
-    // terminate(): void;
-    keys(): [string];
     logdriver(): void;
-    serialize(): string;
-    deserialize(obj: string): void;
-    set(k: string, v: any): void;
+    set(k: string, v: any): void; // for misc data
     get(k: string): any;
+
+    storeLC(data: LCState): Promise<LCState>;
+    updateLC(data: LCState): Promise<LCState>; // replace if same nonce
+    getLC(ledgerID: LCID): Promise<LCState>; // latest by nonce
+    getLCElder(id: LCID): Promise<LCState | null>;
+
+    getLCbyNonce(id: LCID, seq: number): Promise<LCState | null>;
+    getLCs(cb: (lc: LCState) => void): void; // TODO replace above
+    getLCsList(): Promise<LCState[]>;
+
+    delLC(id: LCID): Promise<void>;
+
+    storeVChannel(data: VCState): Promise<VCState>;
+    delVChannel(chan: VCID): Promise<void>;
+    // replace if same nonce
+    updateVChannel(data: VCState): Promise<VCState>;
+    getVChannel(id: VCID): Promise<VCState | null>; // latest by nonce
+    getVChannelElder(id: VCID): Promise<VCState | null>; // latest by nonce
+    getVChannelbyNonce(id: VCID, seq: number): Promise<VCState | null>;
+
+    getVChannels(ledger: LCID, cb: (lc: VCState) => void): void; // latest by nonce
+    getVChannelsList(ledger: LCID): Promise<VCState[]>;
+    getAllVChannels(cb: (lc: VCState) => void): void;
+    getAllVChannelsList(): Promise<VCState[]>;
+
+    getVChannelStateCount(id: string): Promise<number>;
+    getLCStateCount(id: string): Promise<number>;
   }
 }

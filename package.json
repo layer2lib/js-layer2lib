@@ -1,16 +1,16 @@
 {
   "name": "js-layer2lib",
-  "version": "0.0.1",
+  "version": "0.0.6",
   "description": "An ethereum layer 2 scalability js library",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
-    "postinstall": "npm run contracts",
-    "contracts": "cd contracts && npm i",
-    "test": "node test/layer2libTest.js",
-    "test-random": "node test/randomTest.js",
-    "testvc": "node test/layer2libVCTest.js",
-    "test-random": "node test/randomTest.js"
+    "test": "GUN_ENV=false node test/layer2libTest.js",
+    "testset": "GUN_ENV=false node test/Layer2LibSetTest.js",
+    "testvc": "GUN_ENV=false node test/Layer2LibVCTest.js",
+    "test-random": "GUN_ENV=false node test/randomTest.js",
+    "build": "babel src -d dist",
+    "deploy": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",
@@ -23,18 +23,22 @@
   },
   "homepage": "https://github.com/layer2lib/js-layer2lib#readme",
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "bignumber.js": "^7.1.0",
-    "bluebird": "^3.5.1",
     "buffer": "^5.0.7",
+    "crypto": "^1.0.1",
     "crypto-js": "^3.1.9-1",
     "ethereumjs-tx": "^1.3.4",
     "ethereumjs-util": "^5.1.5",
     "mongodb": "^3.1.0-beta4",
-    "web3": "^0.20.1",
-    "web3-latest": "npm:web3"
+    "web3": "1.0.0-beta.34"
   },
   "devDependencies": {
-    "fakeredis": "^2.0.0",
-    "redis": "^2.8.0"
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-latest": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "gun": "^0.9.9993",
+    "layer2storage": "^0.0.18"
   }
 }

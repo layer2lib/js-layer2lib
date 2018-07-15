@@ -1,3 +1,7 @@
 node_modules
-/build
+build
+.DS_Store
+/coverage
 /contracts/general-state-channels/build/contracts/*
+/dist
+data.json

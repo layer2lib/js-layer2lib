@@ -2,32 +2,25 @@
 const Web3 = require('web3')
 const web3 = new Web3()
 const Layer2lib = require('../src/index.js')
-const Promise = require('bluebird');
+const rand = require('../src/random.js').RandomPieceGenerator
+const mergeRand = require('../src/random.js').MergedRandomGenerator
+const GunProxy = require('layer2storage').GunStorageProxy;
+const Gun = require("gun");
 
-const redisFake = require("fakeredis");
-const redis = require("redis");
-
-// connect to Redis locally otherwise use fakeredis
-var redisClient = redis.createClient();
-redisClient.on('error', err => {
-  if (err.code !== 'ECONNREFUSED') return;
-  redisClient.quit();
-  console.warn('!!! Redis connection failed, defaulting to fakeredis');
-  test(redisFake.createClient());
-});
-redisClient.on('connect', () => test(redisClient));
+const gun = new Gun()
+test(gun);
 
 let battleEthIntAddress = '0x'
 let etherPaymentExtAddress = '0x'
 let CTFregistryAddress = '0x'
 
-async function test(redisClient) {
-  const redis = Promise.promisifyAll(redisClient);
-  const redisProxy = new Layer2lib.RedisStorageProxy(redis);
+let attackTable = ['12', '6', '25']
 
+async function test(gun) {
   // ALICE ----------------------
+  const proxyAlice = new GunProxy(gun, `layer2/Alice`);
   let optionsAlice = {
-    db: redisProxy,
+    db: proxyAlice,
     privateKey: '0x2c339e1afdbfd0b724a4793bf73ec3a4c235cceb131dcd60824a06cefbef9875'
   }
 
@@ -46,8 +39,8 @@ async function test(redisClient) {
     types: ['Battle-Ether'],
     partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe', // Player Alice public Key
     partyB: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416', // Game Hub public key
-    balanceA: web3.toWei(0.1, 'ether'),
-    balanceB: web3.toWei(0.2, 'ether')
+    balanceA: web3.utils.toWei('0.1', 'ether'),
+    balanceB: web3.utils.toWei('0.2', 'ether')
   }
 
   let entryID = agreementAlice.ID + agreementAlice.dbSalt
@@ -71,8 +64,9 @@ async function test(redisClient) {
 
 
   // Ingrid ------------------
+  const proxyIngrid = new GunProxy(gun, 'layer2/Ingrid');
   let optionsIngrid = {
-    db: redisProxy,
+    db: proxyIngrid,
     privateKey: '0x9eb0e84b7cadfcbbec8d49ae7112b25e0c1cb158ecd2160c301afa1f4a1029c8'
   }
 
@@ -112,14 +106,15 @@ async function test(redisClient) {
   // Initiate Bob
 
   // BOB -----------------------
+  const proxyBob = new GunProxy(gun, 'layer2/bob');
   let optionsBob = {
-    db: redisProxy,
+    db: proxyBob,
     privateKey: '0xaee55c1744171b2d3fedbbc885a615b190d3dd7e79d56e520a917a95f8a26579'
   }
 
   let lBob = new Layer2lib("https://rinkeby.infura.io", optionsBob)
 
-  web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'))
+  web3.setProvider(new web3.providers.HttpProvider('http://localhost:7545'))
 
   lBob.initGSC()
 
@@ -129,8 +124,8 @@ async function test(redisClient) {
     types: ['Battle-Ether'],
     partyA: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc', // Viewer or performer public key
     partyB: '0xd4EA3b21C312D7C6a1c744927a6F80Fe226A8416', // Spank Hub public key
-    balanceA: web3.toWei(0.1, 'ether'),
-    balanceB: web3.toWei(0.2, 'ether')
+    balanceA: web3.utils.toWei('0.1', 'ether'),
+    balanceB: web3.utils.toWei('0.2', 'ether')
   }
 
   let entryID_b = agreementBob.ID + agreementBob.dbSalt
@@ -188,9 +183,9 @@ async function test(redisClient) {
     agreementID: 'battleHub1337',
     type: 'battleEther',
     counterparty: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
-    bond: web3.toWei(0.03, 'ether')
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
+    bond: web3.utils.toWei('0.03', 'ether')
   }
 
   await lAlice.openGSCChannel(channelAlice)
@@ -215,9 +210,9 @@ async function test(redisClient) {
     agreementID: 'battleHub420',
     type: 'battleEther',
     counterparty: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
-    bond: web3.toWei(0.05, 'ether')
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
+    bond: web3.utils.toWei('0.05', 'ether')
   }
 
 
@@ -263,7 +258,7 @@ async function test(redisClient) {
   await lAlice.gsc.updateAgreement(Ingrid_agreement_1)
 
 
-  // Ingrid calls join channel on Alice-------------
+  // Ingrid calls join channel on Bob-------------
 
   let chanIngrid_2 = JSON.parse(JSON.stringify(Bob_chan))
   chanIngrid_2.dbSalt = 'Ingrid-b'
@@ -295,22 +290,47 @@ async function test(redisClient) {
 
   // // --------------------------------------------------
 
+  // TODO: Get Bob's random half and calculate the damage done
+
+  let Alice_rands = new rand('test', 100)
+  let Bob_rands = new rand('test2', 100)
+
+  // Get user attack index
+  let dmg = attackTable[2]
+
+  let random = new mergeRand(Alice_rands.hashes[Alice_rands.hashes.length-1], Bob_rands.hashes[Bob_rands.hashes.length-1])
+  console.log('RANDOM NUMBER = '+ random.getCurrentRandom())
+
+  let dmgModifier = (1/100) * (random.getCurrentRandom()%100)
+  console.log('DMG Modifier: '+dmgModifier)
+
+  let newDmg = Math.floor(dmg-(dmg*dmgModifier))
+  console.log('New DMG: '+newDmg)
+
+  let partyBHealth = 100 - newDmg
+
+  //console.log(Alice_rands)
+  //console.log(Bob_rands)
+
   let updateState = {
+    isClose: 0,
+    nonce: 1,
     dbSalt: 'Alice', // for testing multiple layer2 instances on same db
     agreementID: 'battleHub420',
     channelID: 'respek',
     type: 'battleEther',
     partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
     partyB: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
-    balanceA: web3.toWei(0.03, 'ether'),
-    balanceB: web3.toWei(0.05, 'ether'),
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
     hpA: 100,
-    hpB: 100,
-    attack: 5,
-    ultimateNonce: 0,
+    hpB: partyBHealth,
+    attack: 2,
+    ultimateNonceA: 1,
+    ultimateNonceB: 0,
     turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
-    randomA: '0x1337',
-    randomB: '0x4200'
+    randomA: Alice_rands.hashes[Alice_rands.hashes.length-1],
+    randomB: Bob_rands.hashes[Bob_rands.hashes.length-1]
   }
 
   // // Send VC update state
@@ -321,11 +341,75 @@ async function test(redisClient) {
   console.log(Alice_Virtuals)
 
   let Alice_Vstate = await lAlice.gsc.getStates('respekAliceV')
-  console.log(Alice_Vstate)
+  //console.log(Alice_Vstate)
 
   Alice_Virtuals.dbSalt = 'Bob'
-  // confirmChannelUpdate(Alice_Virtuals, updateState)
+  await lAlice.gsc.confirmVCUpdate(Alice_Virtuals, updateState)
   Alice_Virtuals.dbSalt = 'Alice'
+
+  // Get user attack index
+  dmg = attackTable[1]
+
+  random = new mergeRand(Alice_rands.hashes[Alice_rands.hashes.length-2], Bob_rands.hashes[Bob_rands.hashes.length-2])
+  console.log('RANDOM NUMBER = '+ random.getCurrentRandom())
+
+  dmgModifier = (1/100) * (random.getCurrentRandom()%100)
+  console.log('DMG Modifier: '+dmgModifier)
+
+  newDmg = Math.floor(dmg-(dmg*dmgModifier))
+  console.log('New DMG: '+newDmg)
+
+  let partyAHealth = 100 - newDmg
+
+  let updateState2 = {
+    isClose: 0,
+    nonce: 2,
+    dbSalt: 'Bob', // for testing multiple layer2 instances on same db
+    agreementID: 'battleHub1337',
+    channelID: 'respek',
+    type: 'battleEther',
+    partyA: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    partyB: '0x4c88305c5f9e4feb390e6ba73aaef4c64284b7bc',
+    balanceA: web3.utils.toWei('0.03', 'ether'),
+    balanceB: web3.utils.toWei('0.05', 'ether'),
+    hpA: partyAHealth,
+    hpB: partyBHealth,
+    attack: 1,
+    ultimateNonceA: 1,
+    ultimateNonceB: 0,
+    turn: '0x1e8524370b7caf8dc62e3effbca04ccc8e493ffe',
+    randomA: Alice_rands.hashes[Alice_rands.hashes.length-2],
+    randomB: Bob_rands.hashes[Bob_rands.hashes.length-2]
+  }
+
+  await lBob.gsc.initiateUpdateVCstate('respekBob', updateState2, false)
+
+  let Bob_Virtuals = await lBob.gsc.getVirtuals('respekBob')
+  console.log(Bob_Virtuals)
+
+  // Generate a state that pushed HP of a party to 0
+  // Signal this as a close state
+  // Get both parties sigs
+  // Send to Ingrid
+  // Have Ingrid call update channel state on channelAlice with the adjusted wager winnings
+
+  // assume Alice wins
+  // Ingrid constructs update channel to adjust bobs balance ledger, this
+  updateState = {
+    isClose: 1,
+    balanceA: web3.utils.toWei('0.08', 'ether'),
+    balanceB: web3.utils.toWei('0', 'ether'),
+    bond: web3.utils.toWei('0', 'ether')
+  }
+  Ingrid_agreement = await lIngrid.getGSCAgreement('battleHub420Ingrid')
+  //console.log(Ingrid_agreement)
+  await lIngrid.gsc.initiateUpdateChannelState('respekIngrid-b', updateState, false)
+
+  Ingrid_chan_2 = await lIngrid.gsc.getChannel('respekIngrid-b')
+  console.log(Ingrid_chan_2)
+
+  // TODO fix db keys
+  // build proper handling of updage state with close flag
 
   // Bob_chan = await lBob.gsc.getChannel('respekBob')
   // //console.log(Bob_chan)
@@ -368,7 +452,7 @@ async function test(redisClient) {
   // let Alice_tx_chan = await lAlice.gsc.getTransactions('respekAlice')
   // //console.log(txs_agreement)
 
-  
+
   // // --------------------------------------------------
 
   // // Send ether in channel and close channel
@@ -377,8 +461,8 @@ async function test(redisClient) {
 
   // // updateState = {
   // //   isClose: 1,
-  // //   balanceA: web3.toWei(0.07, 'ether'),
-  // //   balanceB: web3.toWei(0.01, 'ether')
+  // //   balanceA: web3.utils.toWei('0.07', 'ether'),
+  // //   balanceB: web3.utils.toWei('0.01', 'ether')
   // // }
   // // Bob_agreement = await lBob.getGSCAgreement('spankHub1337Bob')
   // // //console.log(Bob_agreement)
@@ -454,5 +538,4 @@ async function test(redisClient) {
   // await lBob.gsc.closeByzantineChannel('respekBob')
 
   console.log('Agreement finalized, quiting...')
-  redisClient.quit()
 }

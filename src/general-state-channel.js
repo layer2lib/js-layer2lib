@@ -1,8 +1,8 @@
 'use strict'
 
-const metachannel = require('../contracts/general-state-channels/build/contracts/MetaChannel.json')
-const msig = require('../contracts/general-state-channels/build/contracts/MultiSig.json')
-const reg = require('../contracts/general-state-channels/build/contracts/CTFRegistry.json')
+const metachannel = require('../contracts/MetaChannel.json')
+const msig = require('../contracts/MultiSig.json')
+const reg = require('../contracts/CTFRegistry.json')
 const BigNumber = require('bignumber.js')
 
 module.exports = function gsc (self) {
@@ -17,7 +17,7 @@ module.exports = function gsc (self) {
     },
 
     createAgreement: async function(agreement) {
-      let entryID = agreement.ID+agreement.dbSalt
+      let entryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
@@ -46,6 +46,7 @@ module.exports = function gsc (self) {
       rawStates[metachannelCTFaddress] = metaCTFbytes
 
       agreement.metachannelCTFaddress = metachannelCTFaddress
+      agreement.metachannelCTFbytes = metaCTFbytes
       let metaSig = self.utils.sign(agreement.metachannelCTFaddress, self.privateKey)
       let mr = self.utils.bufferToHex(metaSig.r)
       let ms = self.utils.bufferToHex(metaSig.s)
@@ -69,7 +70,7 @@ module.exports = function gsc (self) {
 
       agreement.stateSerialized = self.utils.serializeState(initialState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       agreement.stateSignatures = []
       let state0sig = self.utils.sign(stateHash, self.privateKey)
 
@@ -93,11 +94,11 @@ module.exports = function gsc (self) {
 
       // TODO: call deployed msig
       let openTxHash = await self.utils.executeOpenAgreement(
-        msig.abi, 
-        msigAddress, 
-        agreement.stateSerialized, 
-        self.etherExtension, 
-        sigs[0], 
+        msig.abi,
+        msigAddress,
+        agreement.stateSerialized,
+        self.etherExtension,
+        sigs[0],
         agreement.balanceA,
         agreement.partyA
       )
@@ -115,7 +116,7 @@ module.exports = function gsc (self) {
 
 
       self.publicKey = self.utils.bufferToHex(self.utils.ecrecover(stateHash, state0sig.v, state0sig.r, state0sig.s))
-      
+
       Object.assign(agreements[entryID], agreement)
       // Object.assign(txs[entryID], txList)
       // Object.assign(rawStates[entryID], rawStatesList)
@@ -128,7 +129,7 @@ module.exports = function gsc (self) {
 
     // TODO: Replace agreement with just the state sig from counterparty
     joinAgreement: async function(agreement, state) {
-      let entryID = agreement.ID+agreement.dbSalt
+      let entryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
@@ -139,8 +140,9 @@ module.exports = function gsc (self) {
       if(!rawStates.hasOwnProperty(entryID)) rawStates[entryID] = []
 
       rawStates[entryID].push(state)
+      rawStates[agreement.metachannelCTFaddress] = agreement.metachannelCTFbytes
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -159,19 +161,19 @@ module.exports = function gsc (self) {
 
       self.publicKey = self.utils.bufferToHex(
         self.utils.ecrecover(
-          stateHash, 
-          sig.v, 
-          sig.r, 
+          stateHash,
+          sig.v,
+          sig.r,
           sig.s
           )
         )
 
       let joinTxHash = await self.utils.executeJoinAgreement(
-        msig.abi, 
-        agreement.address, 
-        agreement.stateSerialized, 
-        self.etherExtension, 
-        agreement.stateSignatures[0][1], 
+        msig.abi,
+        agreement.address,
+        agreement.stateSerialized,
+        self.etherExtension,
+        agreement.stateSignatures[0][1],
         agreement.balanceB,
         agreement.partyB
       )
@@ -198,7 +200,7 @@ module.exports = function gsc (self) {
     },
 
     updateAgreement: async function(agreement) {
-      let entryID = agreement.ID+agreement.dbSalt
+      let entryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(entryID)) agreements[entryID] = {}
 
@@ -209,8 +211,20 @@ module.exports = function gsc (self) {
       console.log('Agreement Sigs updated in db')
     },
 
+    updateChannel: async function(channel) {
+      let entryID = channel.ID
+      let channels = await self.storage.get('channels') || {}
+      if(!channels.hasOwnProperty(entryID)) channels[entryID] = {}
+
+      Object.assign(channels[entryID], channel)
+
+      await self.storage.set('channels', channels)
+
+      console.log('Channel Sigs updated in db')
+    },
+
     updateChannelSigs: async function(channel) {
-      let entryID = channel.ID+channel.dbSalt
+      let entryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(entryID)) return
 
@@ -239,11 +253,11 @@ module.exports = function gsc (self) {
 
       oldState[0] = 1
       oldState[1] = oldState[1] + 1
-      
+
       rawStates[agreementID].push(oldState)
       agreement.stateSerialized = self.utils.serializeState(oldState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
 
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
@@ -273,7 +287,7 @@ module.exports = function gsc (self) {
     },
 
     confirmCloseAgreement: async function(agreement, state) {
-      let agreementID = agreement.ID+agreement.dbSalt   
+      let agreementID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(agreementID)) return
 
@@ -282,17 +296,17 @@ module.exports = function gsc (self) {
 
       let rawStates = await self.storage.get('states') || {}
       if(!rawStates.hasOwnProperty(agreementID)) return
-      
+
       rawStates[agreementID].push(state[state.length-1])
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
       let v = sig.v
       let sigs = [r,s,v]
 
-      agreement.stateSignatures[agreement.stateSignatures.length-1].push(sigs) 
+      agreement.stateSignatures[agreement.stateSignatures.length-1].push(sigs)
 
       let tx = {
         agreement: agreement.ID,
@@ -320,9 +334,9 @@ module.exports = function gsc (self) {
       let agreement = agreements[agreementID]
 
       let finalTxHash = await self.utils.executeCloseAgreement(
-        msig.abi, 
-        agreement.address, 
-        agreement.stateSerialized, 
+        msig.abi,
+        agreement.address,
+        agreement.stateSerialized,
         agreement.stateSignatures[agreement.stateSignatures.length-1],
         agreement.partyB // TODO: dont assume which party is calling this, it may be neither
       )
@@ -333,7 +347,7 @@ module.exports = function gsc (self) {
     startSettleAgreement: async function(agreementID) {
       // Require that there are no open channels!
 
-      // TODO: instantiate metachannel, call startSettle 
+      // TODO: instantiate metachannel, call startSettle
     },
 
     challengeAgreement: async function(agreementID) {
@@ -359,7 +373,7 @@ module.exports = function gsc (self) {
 
     // channel functions
 
-    // When Ingrid receives both agreements 
+    // When Ingrid receives both agreements
     hubConfirmVC: async function(channelA, channelB, agreementA, agreementB, channelState) {
 
     },
@@ -368,12 +382,12 @@ module.exports = function gsc (self) {
     // Alice creates channel agreement for Bob with Ingrid
     // Bob confirms and creates agreement for Alice with Ingrid
     openChannel: async function(channel) {
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = agreements[AgreeEntryID]
 
-      let ChanEntryID = channel.ID+channel.dbSalt
+      let ChanEntryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
@@ -433,6 +447,7 @@ module.exports = function gsc (self) {
       let elem = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
       let elems = []
+      agreement.channels = agreement.channels || [];
       for(var i=0; i<agreement.channels.length; i++) { elems.push(self.utils.hexToBuffer(agreement.channels[i])) }
 
       elems.push(self.utils.hexToBuffer(elem))
@@ -452,8 +467,9 @@ module.exports = function gsc (self) {
       // grab latest state and modify it
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
       newState[5] = channelRoot
-      // set nonce 
+      // set nonce
       newState[1]++
+      agreement.nonce = newState[1]
 
       // TODO module this
       if(agreement.types[0] === 'Ether') {
@@ -470,7 +486,7 @@ module.exports = function gsc (self) {
 
       agreement.stateSerialized = self.utils.serializeState(newState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
 
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
@@ -513,11 +529,11 @@ module.exports = function gsc (self) {
     // TODO: replace agreement param with signature
     // you must respond to any request before updating any other state (everything pulls from latest)
     joinChannel: async function(channel, agreement, channelState) {
-      let AgreeEntryID = agreement.ID+channel.dbSalt
+      let AgreeEntryID = agreement.ID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
 
-      let ChanEntryID = channel.ID+channel.dbSalt
+      let ChanEntryID = channel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) channels[ChanEntryID] = {}
 
@@ -537,8 +553,9 @@ module.exports = function gsc (self) {
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
 
       newState[5] = agreement.channelRootHash
-      // set nonce 
+      // set nonce
       newState[1]++
+      agreement.nonce = newState[1]
 
       // TODO module this
       if(agreement.types[0] === 'Ether') {
@@ -556,13 +573,13 @@ module.exports = function gsc (self) {
 
       // TODO: Check the incoming agreement (from Alice) on new channel creation
       // has Alices signature. When signatures are in their own database, in append
-      // only log format keyed by the channel or agreement they belong to, we will 
+      // only log format keyed by the channel or agreement they belong to, we will
       // check that the ecrecover of the raw channel state passed matches the supplied
       // sig. ecrecover(rawChannelStateHash, sig)
 
       //TODO: check that the channel state provided is valid
 
-      // let channelHash = self.web3.sha3(channel.stateSerialized, {encoding: 'hex'})
+      // let channelHash = self.web3.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
       // // calculate channel root hash
       // let elem = self.utils.sha3(channelHash)
@@ -580,7 +597,7 @@ module.exports = function gsc (self) {
       // if(channelRoot != agreement.stateRaw[4]) return
 
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -628,7 +645,7 @@ module.exports = function gsc (self) {
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -672,6 +689,15 @@ module.exports = function gsc (self) {
         }
       }
 
+      // TODO !!!!!!!!!!!!!!!!!!!
+      // This will transfer the ledger wager based on winner
+      console.log(channel.type)
+      if(channel.type == 'battleEther') {
+        console.log('WEEEÉ')
+        if(updateState.isClose === 1) {
+        }
+      }
+
       rawStates[ChanEntryID].push(chanState)
 
       channel.stateSerialized = self.utils.serializeState(chanState)
@@ -680,9 +706,11 @@ module.exports = function gsc (self) {
       // calculate channel root hash
       let elem = self.utils.sha3(channel.stateSerialized, {encoding: 'hex'})
 
+      agreement.channels = agreement.channels || [];
       let elems = agreement.channels.slice(0)
- 
-      for(var i=0; i<agreement.channels.length; i++) { 
+
+
+      for(var i=0; i<agreement.channels.length; i++) {
         if(oldStateHash === elems[i]) {
           agreement.channels[i] = elem
           elems[i] = elem
@@ -703,6 +731,7 @@ module.exports = function gsc (self) {
       let newState = JSON.parse(JSON.stringify(oldStates[oldStates.length-1]))
       newState[5] = channelRoot
       newState[1]++
+      agreement.nonce = newState[1]
 
       if(updateState.isClose === 1) {
         newState[5] = '0x0'
@@ -714,7 +743,7 @@ module.exports = function gsc (self) {
 
       agreement.stateSerialized = self.utils.serializeState(newState)
 
-      let stateHash = self.web3.sha3(agreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(agreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -737,7 +766,7 @@ module.exports = function gsc (self) {
         nonce: tx_nonce,
         timestamp: Date.now(),
         data: updateState,
-        txHash: self.web3.sha3(updateState.toString(), {encoding: 'hex'})
+        txHash: self.web3.utils.sha3(updateState.toString(), {encoding: 'hex'})
       }
       txs[ChanEntryID].push(tx)
 
@@ -758,12 +787,12 @@ module.exports = function gsc (self) {
       let txs = await self.storage.get('transactions') || {}
       if(!txs.hasOwnProperty(id)) return
 
-      let ChanEntryID = updateState.channelID + updateState.dbSalt
+      let ChanEntryID = updateState.channelID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = agreements[AgreeEntryID]
@@ -775,7 +804,13 @@ module.exports = function gsc (self) {
 
       // TODO: ensure party A is calling this to start battle
       let virtual = channel
-      let attackTable = ['12', '4', '9', '14', '6']
+      let attackTable = ['12', '6', '25']
+
+      // TODO: Calculate damage on counterparty based on random halves and attack chosen
+      let damage = attackTable[updateState.attack]
+      console.log('DAMAGE: '+damage)
+      console.log(updateState.attack)
+      // TODO verify damage and ultimate isn't called early
 
       // require updateState.attack is in index
       // attatch Alice random seed half for the attack
@@ -783,10 +818,10 @@ module.exports = function gsc (self) {
       virtual.BobSeed = updateState.randomB
 
       let vInputs = []
-      vInputs.push(0) // is close
+      vInputs.push(updateState.isClose) // is close
       vInputs.push(1) // is force push channel
       vInputs.push(1) // channel sequence
-      vInputs.push(0) // timeout length ms
+      vInputs.push(updateState.nonce) // timeout length ms
       vInputs.push(self.battleEtherInterpreter) // ether payment interpreter library address
       vInputs.push(channel.ID) // ID of channel
       vInputs.push(agreement.metachannelCTFaddress) // counterfactual metachannel address
@@ -803,14 +838,16 @@ module.exports = function gsc (self) {
       vInputs.push(updateState.attack)
       vInputs.push(virtual.AliceSeed)
       vInputs.push(virtual.BobSeed)
-      vInputs.push(updateState.ultimateNonce)
+      vInputs.push(updateState.ultimateNonceA)
+      vInputs.push(updateState.ultimateNonceB)
       vInputs.push(updateState.turn) // Mark whos turn it is, must be other person for next state update
 
       // TODO If attack is ulimate (last attack in index) then update the ultimateNonce == sequence
 
       virtual.stateSerialized =  self.utils.serializeState(vInputs)
+      virtual.stateRaw = vInputs
 
-      let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(virtual.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -819,8 +856,8 @@ module.exports = function gsc (self) {
 
       virtual.stateSignatures = []
 
-      rawStates[ChanEntryID+'V'] = []
-      rawStates[ChanEntryID+'V'].push(vInputs)
+      rawStates[ChanEntryID] = []
+      rawStates[ChanEntryID].push(vInputs)
 
       virtual.stateSignatures[virtual.stateSignatures.length] = sigs
 
@@ -834,7 +871,7 @@ module.exports = function gsc (self) {
     },
 
     confirmVCUpdate: async function(updateVC, updateState) {
-      let id = updateVC.ID + updateVC.dbSalt
+      let id = updateVC.channelID
       let txs = await self.storage.get('transactions') || {}
       if(!txs.hasOwnProperty(id)) return
 
@@ -852,7 +889,7 @@ module.exports = function gsc (self) {
 
       let vInputs = virtual.stateRaw
 
-      let stateHash = self.web3.sha3(virtual.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(virtual.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -861,13 +898,13 @@ module.exports = function gsc (self) {
 
       virtual.stateSignatures = []
 
-      rawStates[ChanEntryID+'V'] = []
-      rawStates[ChanEntryID+'V'].push(vInputs)
+      rawStates[id] = []
+      rawStates[id].push(vInputs)
 
       virtual.stateSignatures[virtual.stateSignatures.length].push(sigs)
 
       // store the channel
-      Object.assign(virtuals[ChanEntryID], virtual)
+      Object.assign(virtuals[id], virtual)
       await self.storage.set('virtuals', virtuals)
 
       // store state
@@ -876,12 +913,12 @@ module.exports = function gsc (self) {
     },
 
     confirmUpdateChannelState: async function(updateChannel, updateAgreement, updateState) {
-      let ChanEntryID = updateChannel.ID+updateChannel.dbSalt
+      let ChanEntryID = updateChannel.ID
       let channels = await self.storage.get('channels') || {}
       if(!channels.hasOwnProperty(ChanEntryID)) return
       let channel = await this.getChannel(ChanEntryID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -916,7 +953,7 @@ module.exports = function gsc (self) {
       // add latest state
       rawStates[AgreeEntryID].push(newState)
 
-      let stateHash = self.web3.sha3(updateAgreement.stateSerialized, {encoding: 'hex'})
+      let stateHash = self.web3.utils.sha3(updateAgreement.stateSerialized, {encoding: 'hex'})
       let sig = self.utils.sign(stateHash, self.privateKey)
       let r = self.utils.bufferToHex(sig.r)
       let s = self.utils.bufferToHex(sig.s)
@@ -938,7 +975,7 @@ module.exports = function gsc (self) {
         nonce: tx_nonce,
         timestamp: Date.now(),
         data: updateState,
-        txHash: self.web3.sha3(updateState.toString(), {encoding: 'hex'})
+        txHash: self.web3.utils.sha3(updateState.toString(), {encoding: 'hex'})
       }
       txs[ChanEntryID].push(tx)
 
@@ -961,7 +998,7 @@ module.exports = function gsc (self) {
       if(!channels.hasOwnProperty(channelID)) return
       let channel = await this.getChannel(channelID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -979,9 +1016,9 @@ module.exports = function gsc (self) {
       let sigs = agreement.metaSignatures
 
       let TxHash = await self.utils.executeDeployCTF(
-        reg.abi, 
-        self.registryAddress, 
-        metaCTF, 
+        reg.abi,
+        self.registryAddress,
+        metaCTF,
         sigs,
         agreement.partyB, // TODO: dont assume which party is calling this, it may be neither
         metaCTFaddress
@@ -993,7 +1030,7 @@ module.exports = function gsc (self) {
       let chanState = rawStates[channelID]
       let agreeState = rawStates[AgreeEntryID]
 
-      
+
       let TxHash2 = await self.utils.executeSettleChannel(
         metachannel.abi,
         agreement.metachannelDeployedAddress,
@@ -1001,13 +1038,13 @@ module.exports = function gsc (self) {
         self.utils.serializeState(agreeState[agreeState.length-1]),
         agreement.stateSignatures[agreement.stateSignatures.length-1],
         agreement.partyB,
-        agreement.channels
+        agreement.channels || []
       )
 
       // store the new agreement
       Object.assign(agreements[AgreeEntryID], agreement)
       await self.storage.set('agreements', agreements)
-      // TODO: instantiate metachannel, call startSettle 
+      // TODO: instantiate metachannel, call startSettle
     },
 
     challengeSettleChannel: async function(channelID) {
@@ -1019,7 +1056,7 @@ module.exports = function gsc (self) {
       if(!channels.hasOwnProperty(channelID)) return
       let channel = await this.getChannel(channelID)
 
-      let AgreeEntryID = channel.agreementID+channel.dbSalt
+      let AgreeEntryID = channel.agreementID
       let agreements = await self.storage.get('agreements') || {}
       if(!agreements.hasOwnProperty(AgreeEntryID)) return
       let agreement = await this.getAgreement(AgreeEntryID)
@@ -1045,10 +1082,10 @@ module.exports = function gsc (self) {
 
       // calculate channel root hash
       let elem = self.utils.sha3(newStateSerialized, {encoding: 'hex'})
-
+      currentAgreement.channels = currentAgreement.channels || []
       let elems = currentAgreement.channels.slice(0)
- 
-      for(var i=0; i<currentAgreement.channels.length; i++) { 
+
+      for(var i=0; i<currentAgreement.channels.length; i++) {
         if(oldStateHash === elems[i]) {
           elems[i] = elem
         }
