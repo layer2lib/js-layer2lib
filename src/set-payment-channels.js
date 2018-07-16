@@ -1,8 +1,9 @@
 'use strict'
 
+const axios = require('axios')
+const BigNumber = require('bignumber.js')
 const LC = require('../contracts/LedgerChannel.json')
 const EC = require('../contracts/ECTools.json')
-const BigNumber = require('bignumber.js')
 
 module.exports = function setPayment (self) {
   return {
@@ -11,7 +12,12 @@ module.exports = function setPayment (self) {
       // of the channels are being challenged when online
       self.ledgerAddress = '0x009d610444387202fec65eb056b0a7c141e4b9ed'
       self.abi = LC.abi
-
+      self.api = axios.create({
+        baseURL: 'http://localhost:8080/',
+        timeout: 5000,
+        // TODO: hub api auth
+        // headers: { 'X-Custom-Header': 'foobar' }
+      });
     },
 
     createLC: async function(options) {
@@ -48,9 +54,10 @@ module.exports = function setPayment (self) {
 
       //console.log(self.utils.bufferToHex(self.utils.ecrecover(_state, _sig.v, _sig.r, _sig.s)))
 
-      //TODO: contact hub with lcS0, wait for signature response
-      // store the res signature
+      // contact hub with lcS0, wait for signature response
+      const sigResponse = await self.api.post('/v1/lc/open', lcS0)
 
+      // store the res signature
       await self.storage.storeLC(lcS0)
 
       let tx_receipt = await self.utils.createLCHandler(lcS0)
@@ -62,7 +69,7 @@ module.exports = function setPayment (self) {
 
     // TODO: Replace agreement with just the state sig from counterparty
     joinLC: async function(lc) {
-      //TODO: verify format of lc 
+      //TODO: verify format of lc
       // need lc data updated to database before just id will work
       //let lc = await this.getLC(id)
       let raw_lcS0 = {
@@ -102,7 +109,7 @@ module.exports = function setPayment (self) {
     // just allowed to update the balance of an lc
     updateLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
-      
+
       // console.log(oldState)
       // todo state update validation
 
@@ -114,7 +121,7 @@ module.exports = function setPayment (self) {
 
     confirmUpdateLC: async function(lc) {
       let oldState = await this.getLC(lc.id)
-      
+
       // console.log(oldState)
       // todo state update validation
 
@@ -186,7 +193,7 @@ module.exports = function setPayment (self) {
 
     openVC: async function(options) {
       let lcState = await this.getLC(options.lcid)
-      
+
       // generate init vc state
       const _id = self.utils.getNewChannelId()
 

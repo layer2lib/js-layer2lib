@@ -6,6 +6,7 @@ if (!process.env.FIREBASE_KEY_PATH) {
 const admin = require('firebase-admin');
 const serviceAccountJson = require(process.env.FIREBASE_KEY_PATH)
 
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountJson)
 });
@@ -24,7 +25,7 @@ async function test(_db) {
   const proxyAlice = new FirebaseProxy(_db, `layer2/Alice`);
   let optionsAlice = {
     db: proxyAlice,
-    privateKey: '0x9eb0e84b7cadfcbbec8d49ae7112b25e0c1cb158ecd2160c301afa1f4a1029c8'
+    privateKey: '0x9eb0e84b7cadfcbbec8d49ae7112b25e0c1cb158ecd2160c301afa1f4a1029c8',
   }
 
   let lAlice = new Layer2lib('https://rinkeby.infura.io', optionsAlice)
