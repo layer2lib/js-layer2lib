@@ -7,7 +7,7 @@
   "scripts": {
     "test": "GUN_ENV=false node test/layer2libTest.js",
     "testset": "GUN_ENV=false node test/Layer2LibSetTest.js",
-    "testset:fb": "FIREBASE_KEY_PATH='/path/to/your/key.json' node test/Layer2LibSetTest-fb.js",
+    "testset:fb": "FIREBASE_KEY_PATH='/home/lex/Certs/layer2hub-firebase-adminsdk-4apv0-0c4f82578f.json' node --inspect-brk test/Layer2LibSetTest-fb.js",
     "testvc": "GUN_ENV=false node test/Layer2LibVCTest.js",
     "test-random": "GUN_ENV=false node test/randomTest.js",
     "build": "babel src -d dist",
