@@ -44,27 +44,27 @@ async function test(_db) {
   console.log(lc0Stored)
 
 
-  // // Bob
-  // const proxyBob = new GunProxy(_db, `layer2/Bob`);
-  // let optionsBob = {
-  //   db: proxyBob,
-  //   privateKey: '0x42b83487fcc52252abd33f7c1d32006545388d0036e1ed3ae75c86a62a5c85d1'
-  // }
+  // Bob
+  const proxyBob = new FirebaseProxy(_db, `layer2/Bob`);
+  let optionsBob = {
+    db: proxyBob,
+    privateKey: '0x42b83487fcc52252abd33f7c1d32006545388d0036e1ed3ae75c86a62a5c85d1'
+  }
 
-  // let lBob = new Layer2lib('https://rinkeby.infura.io', optionsBob)
+  let lBob = new Layer2lib('https://rinkeby.infura.io', optionsBob)
 
-  // const lcS0_b = {
-  //   partyA: _partyB,
-  //   partyI: _partyI,
-  //   balanceA: '0.00004',
-  //   balanceI: '0.00002'
-  // }
+  const lcS0_b = {
+    partyA: _partyB,
+    partyI: _partyI,
+    balanceA: '0.00004',
+    balanceI: '0.00002'
+  }
 
 
-  // await lBob.setPayment.init()
-  // const id_b = await lBob.setPayment.createLC(lcS0_b)
-  // let lc0Stored_b = await lBob.setPayment.getLC(id_b)
-  // console.log(lc0Stored_b)
+  await lBob.setPayment.init()
+  const id_b = await lBob.setPayment.createLC(lcS0_b)
+  let lc0Stored_b = await lBob.setPayment.getLC(id_b)
+  console.log(lc0Stored_b)
 
 
   // // Ingrid
