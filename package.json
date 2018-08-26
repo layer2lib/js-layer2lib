@@ -6,7 +6,8 @@
   "types": "./src/index.d.ts",
   "scripts": {
     "test": "GUN_ENV=false node test/layer2libTest.js",
-    "testset": "GUN_ENV=false node test/layer2libSetTest.js",
+    "testset": "GUN_ENV=false node test/Layer2LibSetTest.js",
+    "testset:fb": "FIREBASE_KEY_PATH='/home/lex/Certs/layer2hub-firebase-adminsdk-4apv0-0c4f82578f.json' node test/Layer2LibSetTest-fb.js",
     "testvc": "GUN_ENV=false node test/Layer2LibVCTest.js",
     "test-random": "GUN_ENV=false node test/randomTest.js",
     "build": "babel src -d dist",
@@ -23,23 +24,23 @@
   },
   "homepage": "https://github.com/layer2lib/js-layer2lib#readme",
   "dependencies": {
+    "axios": "^0.18.0",
+    "babel-polyfill": "^6.26.0",
     "bignumber.js": "^7.1.0",
-    "bluebird": "^3.5.1",
     "buffer": "^5.0.7",
+    "crypto": "^1.0.1",
     "crypto-js": "^3.1.9-1",
     "ethereumjs-tx": "^1.3.4",
     "ethereumjs-util": "^5.1.5",
-    "gun": "^0.9.9991",
-    "mongodb": "^3.1.0-beta4",
-    "web3": "1.0.0-beta.34",
-    "babel-polyfill": "^6.26.0"
+    "web3": "1.0.0-beta.34"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
-    "gun": "^0.9.9991",
-    "layer2storage": "0.0.4"
+    "firebase-admin": "^5.12.1",
+    "gun": "^0.9.9993",
+    "layer2storage": "github:layer2lib/layer2storage#firebase"
   }
 }

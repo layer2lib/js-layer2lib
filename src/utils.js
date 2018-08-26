@@ -1,8 +1,8 @@
 const Buffer = require('buffer').Buffer
 const ethutil = require('ethereumjs-util')
 const TX = require('ethereumjs-tx')
-const Promise = require('bluebird')
 const BigNumber = require('bignumber.js')
+const crypto = require('crypto')
 
 module.exports = function(self) {
   return {
@@ -10,54 +10,15 @@ module.exports = function(self) {
       return self.web3.eth.getBlock('latest').timestamp
     },
 
-    increaseTime: function increaseTime(duration) {
-      const id = Date.now()
-
-      return new Promise((resolve, reject) => {
-        self.web3.currentProvider.sendAsync({
-          jsonrpc: '2.0',
-          method: 'evm_increaseTime',
-          params: [duration],
-          id: id,
-        }, e1 => {
-          if (e1) return reject(e1)
-
-          self.web3.currentProvider.sendAsync({
-            jsonrpc: '2.0',
-            method: 'evm_mine',
-            id: id+1,
-          }, (e2, res) => {
-            return e2 ? reject(e2) : resolve(res)
-          })
-        })
-      })
+    recoverSigner: function recoverSigner(state, sig) {
+      const pubkey = ethutil.ecrecover(state, sig.v, sig.r, sig.s)
+      const addrBuf = ethutil.pubToAddress(pubkey)
+      return this.bufferToHex(addrBuf)
     },
 
-    increaseTimeTo: function increaseTimeTo(target) {
-      let now = this.latestTime()
-      if (target < now) throw Error(`Cannot increase current time(${now}) to a moment in the past(${target})`)
-      let diff = target - now
-      return this.increaseTime(diff)
-    },
-
-    assertThrowsAsync: async function assertThrowsAsync(fn, regExp) {
-      let f = () => {};
-      try {
-        await fn();
-      } catch(e) {
-        f = () => {throw e};
-      } finally {
-        assert.throws(f, regExp);
-      }
-    },
-
-    duration: {
-      seconds: function(val) { return val},
-      minutes: function(val) { return val * this.seconds(60) },
-      hours:   function(val) { return val * this.minutes(60) },
-      days:    function(val) { return val * this.hours(24) },
-      weeks:   function(val) { return val * this.days(7) },
-      years:   function(val) { return val * this.days(365)}
+    signState: function signState(state) {
+      // TODO: deal with the protocol this uses to hash and sign...
+      return self.web3.eth.accounts.sign(state, self.privateKey)
     },
 
     deployContract: async function deployContract(bytes, signer) {
@@ -88,9 +49,43 @@ module.exports = function(self) {
       //return '0x213c5c4a205fa2ca5833befd0fa34b2f5cb64c8f'
     },
 
-    testLC: async function testLC(contractABI, address) {
+    // SET-PAYMENT HELPERS
+
+    createLCStateUpdate: async function createLCStateUpdate(state) {
+    // generate state update to sign
+      const hash = self.web3.utils.soliditySha3(
+        { type: 'bool', value: state.isClose }, // isclose
+        //{ type: 'bytes32', value: web3.sha3('lc2', {encoding: 'hex'}) }, // lcid
+        { type: 'uint256', value: state.nonce }, // sequence
+        { type: 'uint256', value: state.numOpenVC }, // open VCs
+        { type: 'bytes32', value: state.rootHash }, // VC root hash
+        { type: 'address', value: state.partyA }, // partyA
+        { type: 'address', value: state.partyI }, // hub
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceA) },
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceI) }
+      ) 
+
+      return hash
+    },
+
+    createVCStateUpdate: async function createVCStateUpdate(state) {
+    // generate state update to sign
+      const hash = self.web3.utils.soliditySha3(
+        //{ type: 'bytes32', value: state.channelId },
+        { type: 'uint256', value: state.nonce },
+        { type: 'address', value: state.partyA },
+        { type: 'address', value: state.partyB },
+        { type: 'uint256', value: state.hubBond },
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceA) },
+        { type: 'uint256', value: self.web3.utils.toWei(state.balanceB) }
+      )
+
+      return hash
+    },
+
+    testLC: async function testLC() {
       //console.log(contractABI)
-      var newContract = new self.web3.eth.Contract(contractABI, address)
+      var newContract = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
       //var contractInstance = newContract.at(address)
       //let c = new self.web3.eth.Contract(contractABI, address)
       let name = await newContract.methods.NAME().call()
@@ -99,7 +94,96 @@ module.exports = function(self) {
       console.log(name)
       console.log(ver)
       console.log(numChan)
+      return
     },
+
+    createLCHandler: async function createLCHandler(state) {
+      var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
+
+      const callData = lc.methods.createChannel(state.id, state.partyI, '0').encodeABI()
+      let gas = await self.web3.eth.getGasPrice()
+      const nonce = await self.web3.eth.getTransactionCount(state.partyA)
+
+      const rawTx = {
+        nonce: await self.web3.utils.toHex(nonce),
+        gasPrice: await self.web3.utils.toHex(gas),
+        gasLimit: await self.web3.utils.toHex(250000),
+        to: self.ledgerAddress,
+        value: await self.web3.utils.numberToHex(self.web3.utils.toWei(state.balanceA)),
+        data: callData,
+        from: state.partyA
+      }
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0xba0c15d2c36a7f848a699b3a767abccee471de54ceb81d03bd3d7687c4c48141'
+      await this.waitForConfirm({transactionHash:txHash})
+      //await this.waitForConfirm(txHash)
+      return txHash
+    },
+
+    joinLCHandler: async function createLCHandler(state) {
+      var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
+
+      const callData = lc.methods.joinChannel(state.id).encodeABI()
+      let gas = await self.web3.eth.getGasPrice()
+      const nonce = await self.web3.eth.getTransactionCount(state.partyI)
+
+      const rawTx = {
+        nonce: await self.web3.utils.toHex(nonce),
+        gasPrice: await self.web3.utils.toHex(gas),
+        gasLimit: await self.web3.utils.toHex(250000),
+        to: self.ledgerAddress,
+        value: await self.web3.utils.numberToHex(self.web3.utils.toWei(state.balanceI)),
+        data: callData,
+        from: state.partyI
+      }
+
+      const tx = new TX(rawTx, 3)
+      tx.sign(this.hexToBuffer(self.privateKey))
+      const serialized = tx.serialize()
+
+      //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      let txHash = '0xffaca6f4a3eec5b17a58cfdaac7676be46f8deef34ee6e6ad9a5550a3bf8685a'
+      await this.waitForConfirm({transactionHash:txHash})
+      //await this.waitForConfirm(txHash)
+      return txHash
+    },
+
+    consensusCloseLCHandler: async function consensusCloseLCHandler(state) {
+      // var lc = new self.web3.eth.Contract(self.abi, self.ledgerAddress)
+
+      // const callData = lc.methods.joinChannel(state.id).encodeABI()
+      // let gas = await self.web3.eth.getGasPrice()
+      // const nonce = await self.web3.eth.getTransactionCount(state.partyI)
+
+      // const rawTx = {
+      //   nonce: await self.web3.utils.toHex(nonce),
+      //   gasPrice: await self.web3.utils.toHex(gas),
+      //   gasLimit: await self.web3.utils.toHex(250000),
+      //   to: self.ledgerAddress,
+      //   value: await self.web3.utils.numberToHex(self.web3.utils.toWei(state.balanceI)),
+      //   data: callData,
+      //   from: state.partyI
+      // }
+
+      // const tx = new TX(rawTx, 3)
+      // tx.sign(this.hexToBuffer(self.privateKey))
+      // const serialized = tx.serialize()
+
+      // //let txHash = await self.web3.eth.sendSignedTransaction(this.bufferToHex(serialized))
+      // let txHash = '0xffaca6f4a3eec5b17a58cfdaac7676be46f8deef34ee6e6ad9a5550a3bf8685a'
+      // await this.waitForConfirm({transactionHash:txHash})
+      // //await this.waitForConfirm(txHash)
+      // return txHash
+    },
+
+
+    // OLD GSC HELPERS
+
     // TODO: combine open and join agreement function to executeAgreement.
     // this will just require swaping the method sig
     executeOpenAgreement: async function executeOpenAgreement(
@@ -444,14 +528,13 @@ module.exports = function(self) {
     },
 
     waitForConfirm: async function(txHash) {
-      //console.log('waiting for '+txHash+' to be confirmed...')
+      //console.log('waiting for '+txHash.transactionHash+' to be confirmed...')
       let receipt = await self.web3.eth.getTransactionReceipt(txHash.transactionHash)
 
       if(receipt == null) {
         await this.timeout(1000)
         await this.waitForConfirm(txHash)
       } else {
-        //console.log('Contract Address: '+ receipt.contractAddress)
         return
       }
     },
@@ -552,6 +635,12 @@ module.exports = function(self) {
 
     bufferToHex: function bufferToHex(buffer) {
       return '0x'+ buffer.toString('hex')
+    },
+
+    getNewChannelId: function getNewChannelId () {
+      const buf = crypto.randomBytes(32)
+      const channelId = this.bufferToHex(buf)
+      return channelId
     }
   }
 }
